@@ -55,6 +55,7 @@ const EMPTY_FORM: EditForm = { name: "", blurb: "", content: "" };
 
 export function PromptPacksPanel({ state, onChange, recommendations = [] }: PromptPacksPanelProps) {
   const [detailsPackId, setDetailsPackId] = useState<string | null>(null);
+  const [copiedPackId, setCopiedPackId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<EditForm>(EMPTY_FORM);
   const [addingNew, setAddingNew] = useState(false);
@@ -134,6 +135,30 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
   function cancelAdd() {
     setAddingNew(false);
     setNewForm(EMPTY_FORM);
+  }
+
+  async function copyPackContent(pack: ResolvedPack) {
+    try {
+      await navigator.clipboard.writeText(pack.content);
+      setCopiedPackId(pack.id);
+      window.setTimeout(() => {
+        setCopiedPackId((current) => current === pack.id ? null : current);
+      }, 1600);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = pack.content;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedPackId(pack.id);
+      window.setTimeout(() => {
+        setCopiedPackId((current) => current === pack.id ? null : current);
+      }, 1600);
+    }
   }
 
   return (
@@ -397,10 +422,24 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
                 <p>{packCardSummary(detailsPack).useWhen}</p>
               </section>
               <section>
-                <strong>Exact handoff text</strong>
-                <p className="prompt-pack-details-note">
-                  {detailsPack.enabled ? "Included in the next Builder Handoff." : "Not included unless you toggle it on."}
-                </p>
+                <div className="prompt-pack-preview-head">
+                  <div>
+                    <strong>Exact handoff text</strong>
+                    <p className="prompt-pack-details-note">
+                      {detailsPack.enabled ? "Included in the next Builder Handoff." : "Not included unless you toggle it on."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="pack-btn pack-btn-secondary prompt-pack-copy-btn"
+                    onClick={async () => {
+                      setCopiedPackId(detailsPack.id);
+                      await copyPackContent(detailsPack);
+                    }}
+                  >
+                    {copiedPackId === detailsPack.id ? "Copied" : "Copy prompt"}
+                  </button>
+                </div>
                 <pre className="pack-preview" aria-label={`${detailsPack.name} content preview`}>
                   {detailsPack.content}
                 </pre>

@@ -6771,6 +6771,17 @@ body,
   font-weight: 650;
 }
 
+.prompt-pack-preview-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prompt-pack-copy-btn {
+  flex-shrink: 0;
+}
+
 .prompt-pack-details-modal .pack-preview {
   max-height: 320px;
   border: 1px solid var(--line);
