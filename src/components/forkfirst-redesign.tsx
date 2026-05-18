@@ -3685,9 +3685,6 @@ function HandoffSavedPacksScreen({
             export, or restore the full package.
           </p>
         </div>
-        <button className="btn accent" type="button" onClick={onStartNewIdea}>
-          <Plus size={14} /> Start with an idea
-        </button>
       </div>
       <div className="smart-search">
         <Search size={16} aria-hidden="true" />
