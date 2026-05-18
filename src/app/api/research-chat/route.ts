@@ -44,6 +44,7 @@ function compactRepo(repo: ClassifiedRepo) {
   return {
     name: repo.fullName,
     url: repo.url,
+    homepage: repo.homepage,
     description: `<UNTRUSTED_REPO_CONTENT>${repo.description}</UNTRUSTED_REPO_CONTENT>`,
     type: kind.label,
     category: repo.category,
@@ -150,6 +151,48 @@ function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages
       { heading: "What to build", items: ["A smaller, clearer product for one specific user.", "Opinionated onboarding.", "One core workflow.", "Saved user decisions.", "A handoff/export that makes the result immediately useful."] },
       { heading: "What to avoid", items: ["Do not clone the repo's identity.", "Do not copy code before checking license and setup.", "Do not add features just because the starter repo has them."] }
     ], `Inspect ${best.fullName}, keep only the parts that accelerate the first milestone, then write the Builder Handoff around the user problem and the product gap.${docWeakness ? " At least one repo has weak docs, so verify setup before committing to it." : ""}`);
+  }
+
+  if (/\b(anything else|what else|recommend|suggest|add on|add-on|add to|could i add|should i add|features?|differentiator|next feature)\b/.test(lower)) {
+    const best = repos[0];
+    const kind = getRepoKindInsight(best);
+    const repoHomepages = repos
+      .filter((repo) => repo.homepage)
+      .map((repo) => `${repo.fullName}: ${repo.homepage}`)
+      .slice(0, 3);
+    const isReferenceHeavy = repos.some((repo) => repo.category === "reference" || repo.category === "gap");
+    return formatBuilderReply("Yes. I would add around the gap, not around the repo.", [
+      {
+        heading: "Best additions",
+        items: [
+          "A tighter first-run flow that asks the user one clear question and gets them to value fast.",
+          "A saved workspace/history so users can come back to the same research and handoff later.",
+          "A plain-English comparison view that says what to keep, replace, or ignore from each repo.",
+          "A one-click handoff package for the user's builder instead of making them figure out files manually."
+        ]
+      },
+      {
+        heading: "What I would avoid",
+        items: [
+          "Do not copy every feature from the starter repo.",
+          "Do not add accounts, payments, dashboards, or admin tools until the core workflow works.",
+          "Do not treat an awesome list or SDK as a finished product foundation without inspecting linked projects."
+        ]
+      },
+      {
+        heading: "Why",
+        items: [
+          `${best.fullName} is the current best lead, but its best use is: ${kind.reuseAdvice}`,
+          isReferenceHeavy
+            ? "The current results include reference-style leads, so the product opportunity is packaging the workflow better than the raw repo does."
+            : "The current results give you working code signals, so the opportunity is shaping a better product experience on top."
+        ]
+      },
+      {
+        heading: "Live sites found",
+        items: repoHomepages.length ? repoHomepages : ["No project website link is in the current top repo metadata, so inspect GitHub or search for a demo before committing."]
+      }
+    ], "Pick one user outcome for v1, then make the handoff tell your AI builder exactly which repo parts support that outcome.");
   }
 
   if (lower.includes("why these three") || lower.includes("why these")) {
@@ -337,7 +380,11 @@ export async function POST(request: Request) {
         ...recentMessages.map((message) => ({
           role: message.role,
           content: message.content
-        }))
+        })),
+        {
+          role: "user",
+          content: body.data.prompt
+        }
       ]
     });
 

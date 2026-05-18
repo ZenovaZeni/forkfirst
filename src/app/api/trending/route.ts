@@ -24,6 +24,7 @@ export type TrendingRepo = {
   stars: number;
   language: string | null;
   htmlUrl: string;
+  homepage: string | null;
   license: string | null;
   updatedAt: string | null;
   createdAt: string | null;
@@ -36,6 +37,7 @@ type GitHubSearchItem = {
   stargazers_count: number;
   language: string | null;
   html_url: string;
+  homepage: string | null;
   license: { spdx_id: string } | null;
   updated_at: string | null;
   created_at: string | null;
@@ -154,6 +156,7 @@ export async function POST(request: Request) {
       stars: item.stargazers_count,
       language: item.language,
       htmlUrl: item.html_url,
+      homepage: item.homepage,
       license: item.license?.spdx_id ?? null,
       updatedAt: item.updated_at,
       createdAt: item.created_at,

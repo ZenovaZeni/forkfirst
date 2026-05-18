@@ -34,9 +34,21 @@ export function nextStepFor(repo: ClassifiedRepo): string {
   return buildRepoNarrative(repo).next;
 }
 
+function safeHomepage(value: string | null | undefined) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function RepoCard({ repo, rank, featured = false, compact = false, saved = false, onSave }: RepoCardProps) {
   const narrative = buildRepoNarrative(repo);
   const [expanded, setExpanded] = useState(false);
+  const homepage = safeHomepage(repo.homepage);
 
   return (
     <article className={`repo-card ${repo.category} ${featured ? "featured-repo" : ""} ${compact ? "compact-repo" : ""}`}>
@@ -115,6 +127,12 @@ export function RepoCard({ repo, rank, featured = false, compact = false, saved 
           View GitHub
           <ExternalLink size={14} />
         </a>
+        {homepage ? (
+          <a href={homepage} target="_blank" rel="noreferrer" className="github-action">
+            View site
+            <ExternalLink size={14} />
+          </a>
+        ) : null}
       </div>
     </article>
   );

@@ -549,6 +549,9 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
   const lower = message.toLowerCase();
   const repoNames = repos.map((repo) => repo.fullName).join(", ");
   const best = repos[0];
+  const projectSites = repos
+    .map((repo) => ({ name: repo.fullName, url: safeExternalUrl(repo.homepage) }))
+    .filter((item): item is { name: string; url: string } => Boolean(item.url));
 
   if (lower.includes("opportunity gap")) {
     return formatChatFallback("The real opportunity gap", [
@@ -568,6 +571,14 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
         `Watch out: Confirm setup, license, docs, and recent issues before building on it.`
       ]
     })), `If one looks close, choose it as the foundation and then tell ForkFirst what you want to build from it.`);
+  }
+
+  if (/\b(anything else|what else|recommend|suggest|add on|add-on|add to|could i add|should i add|features?|differentiator|next feature)\b/.test(lower)) {
+    return formatChatFallback("Yes. Add around the gap, not around the repo.", [
+      { heading: "Best additions", items: ["A better first-run flow than the repo has.", "Saved work/history so users can return to the same idea.", "A plain-English comparison that says what to keep, replace, or ignore.", "A one-click builder handoff so users do not have to figure out files manually."] },
+      { heading: "Avoid for v1", items: ["Do not copy every feature from the starter repo.", "Do not add accounts, billing, teams, or dashboards until the core workflow works.", "Do not treat an awesome list, SDK, or scraper as the whole product unless it actually has an app flow."] },
+      { heading: "Project sites found", items: projectSites.length ? projectSites.map((site) => `${site.name}: ${site.url}`) : ["No project website links are in the current top repo metadata."] }
+    ], `Use ${best.fullName} for leverage, then make the v1 outcome clearer than the raw repo.`);
   }
 
   if (lower.includes("build") || lower.includes("mvp") || lower.includes("handoff")) {
@@ -630,6 +641,16 @@ function foundationFromTrendingRepo(repo: TrendingRepo): FoundationDraft {
   };
 }
 
+function RepoSiteLink({ url, className = "btn ghost" }: { url: string | null | undefined; className?: string }) {
+  const safeUrl = safeExternalUrl(url);
+  if (!safeUrl) return null;
+  return (
+    <a className={className} href={safeUrl} target="_blank" rel="noreferrer">
+      <ExternalLink size={13} /> Open project site
+    </a>
+  );
+}
+
 function classifiedFromTrendingRepo(repo: TrendingRepo, category?: TrendingCategory): ClassifiedRepo {
   const [owner = "", name = repo.fullName] = repo.fullName.split("/");
   return {
@@ -649,7 +670,7 @@ function classifiedFromTrendingRepo(repo: TrendingRepo, category?: TrendingCateg
     createdAt: repo.createdAt,
     updatedAt: repo.updatedAt,
     archived: false,
-    homepage: null,
+    homepage: repo.homepage ?? null,
     category: "reference",
     summary: trendingRepoUse(repo, category),
     score: {
@@ -793,6 +814,18 @@ function stripRepoContent(value: string | null | undefined) {
     .replaceAll("<UNTRUSTED_REPO_CONTENT>", "")
     .replaceAll("</UNTRUSTED_REPO_CONTENT>", "")
     .trim();
+}
+
+function safeExternalUrl(value: string | null | undefined) {
+  const trimmed = stripRepoContent(value);
+  if (!trimmed) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 function cleanReadmeText(value: string | null | undefined) {
@@ -2181,6 +2214,7 @@ function FeaturedRepo({
         <a className="btn ghost" href={repo.url} target="_blank" rel="noreferrer">
           <ExternalLink size={13} /> Open on GitHub
         </a>
+        <RepoSiteLink url={repo.homepage} />
         <button className="icon-btn" title={saved ? "Saved" : "Save"} type="button" onClick={() => onSave(repo)}>
           {saved ? <Check size={15} /> : <Bookmark size={15} />}
         </button>
@@ -2215,6 +2249,11 @@ function FeaturedRepo({
               }}>
                 Copy repo name
               </button>
+              {safeExternalUrl(repo.homepage) ? (
+                <a role="menuitem" href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">
+                  Open project site
+                </a>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -2252,6 +2291,7 @@ function CompactRepo({
           <span className="lbl">Fit</span>
         </div>
         <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
+        <RepoSiteLink url={repo.homepage} />
         <button className="btn ghost" type="button" onClick={() => onUse(repo)}>Use this one</button>
       </div>
     </article>
@@ -2905,12 +2945,14 @@ function RepoDrawer({
               <div className="kv"><span className="k">Forks</span><span className="v">{repo.forks.toLocaleString()}</span></div>
               <div className="kv"><span className="k">Language</span><span className="v">{repo.language ?? "Mixed"}</span></div>
               <div className="kv"><span className="k">License</span><span className="v">{repo.license ?? "Inspect"}</span></div>
+              {safeExternalUrl(repo.homepage) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">{safeExternalUrl(repo.homepage)}</a></span></div> : null}
               <div className="kv"><span className="k">Last commit</span><span className="v">{repo.pushedAt ? new Date(repo.pushedAt).toLocaleDateString() : "Inspect"}</span></div>
             </div>
           ) : null}
         </div>
         <div className="drawer-foot">
           <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use as my starting point</button>
+          <RepoSiteLink url={repo.homepage} />
           <a className="btn ghost" href={repo.url} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open on GitHub</a>
           <button className="btn ghost" type="button" onClick={() => onSave(repo)}>{saved ? <Check size={14} /> : <Bookmark size={14} />} {saved ? "Saved" : "Save"}</button>
         </div>
@@ -3385,6 +3427,7 @@ function LibraryScreen({
             <div className="lib-actions">
               <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use as foundation</button>
               <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
+              <RepoSiteLink url={repo.homepage} />
               <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
                 <ExternalLink size={13} />
               </a>
@@ -3788,6 +3831,7 @@ function LiveTrendingScreen({
                 <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSaveRepo(asSavedRepo)}>
                   <Bookmark size={12} /> {saved ? "Saved" : "Save"}
                 </button>
+                <RepoSiteLink url={repo.homepage} />
                 <a className="btn ghost icon-only" href={repo.htmlUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}><ExternalLink size={12} /></a>
               </div>
             </article>
@@ -3878,6 +3922,7 @@ function TrendingRepoDrawer({
             <div className="kv"><span className="k">Stars</span><span className="v">{repo.stars.toLocaleString()}</span></div>
             <div className="kv"><span className="k">Language</span><span className="v">{repo.language ?? "Mixed"}</span></div>
             <div className="kv"><span className="k">License</span><span className="v">{repo.license ?? "Inspect"}</span></div>
+            {safeExternalUrl(repo.homepage) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">{safeExternalUrl(repo.homepage)}</a></span></div> : null}
             <div className="kv"><span className="k">Updated</span><span className="v">{repo.updatedAt ? new Date(repo.updatedAt).toLocaleDateString() : "Inspect"}</span></div>
             <div className="kv"><span className="k">Created</span><span className="v">{repo.createdAt ? new Date(repo.createdAt).toLocaleDateString() : "Inspect"}</span></div>
           </div>
@@ -3895,6 +3940,7 @@ function TrendingRepoDrawer({
           <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSave(repo)}>
             <Bookmark size={14} /> {saved ? "Saved in library" : "Save to library"}
           </button>
+          <RepoSiteLink url={repo.homepage} />
           <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open on GitHub</a>
         </div>
       </aside>

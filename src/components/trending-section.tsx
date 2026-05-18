@@ -193,7 +193,7 @@ export function TrendingSection({ githubToken, fullPage = false }: Props) {
       createdAt: null,
       updatedAt: repo.updatedAt,
       archived: false,
-      homepage: null,
+      homepage: repo.homepage ?? null,
       category: "reference" as const,
       score: {
         total: 60,
