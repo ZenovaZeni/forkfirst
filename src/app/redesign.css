@@ -5105,6 +5105,14 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 28px; letter-spacing: -0.04em; line-height: 1;
 }
 .tokens-card .sub { font-size: 11.5px; color: color-mix(in srgb, white 78%, transparent); }
+.build-progress-card .num {
+  font-size: 20px;
+  line-height: 1.12;
+  letter-spacing: 0;
+}
+.build-progress-card .sub {
+  line-height: 1.35;
+}
 
 /* ──────────────────────────────────────────────────────────────────────
    SEND-TO buttons row

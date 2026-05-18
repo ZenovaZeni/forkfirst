@@ -1596,7 +1596,8 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
 function Sidebar({
   active,
   go,
-  savingsLog,
+  savedBuildPackCount,
+  savedRepoCount,
   recentChats,
   activeChatId,
   onOpenChat,
@@ -1605,16 +1606,18 @@ function Sidebar({
 }: {
   active: Screen;
   go: (screen: Screen) => void;
-  savingsLog: SavingsLog;
+  savedBuildPackCount: number;
+  savedRepoCount: number;
   recentChats: ResearchChat[];
   activeChatId: string | null;
   onOpenChat: (chat: ResearchChat) => void;
   onRenameChat: (chatId: string, title: string) => void;
   onDeleteChat: (chatId: string) => void;
 }) {
-  const formattedHandoffTokens = formatTokensShort(savingsLog.totalHandoffTokens);
   const firstRecentIsActive = ["app", "loading", "results", "more", "branding", "generating", "ready"].includes(active);
   const visibleChats = recentChats.slice(0, 6);
+  const handoffLabel = `${savedBuildPackCount.toLocaleString()} saved handoff${savedBuildPackCount === 1 ? "" : "s"}`;
+  const repoLabel = `${savedRepoCount.toLocaleString()} repo${savedRepoCount === 1 ? "" : "s"} saved for later`;
   const [menuChatId, setMenuChatId] = useState<string | null>(null);
   const [renameChat, setRenameChat] = useState<ResearchChat | null>(null);
   const [deleteChat, setDeleteChat] = useState<ResearchChat | null>(null);
@@ -1688,10 +1691,10 @@ function Sidebar({
         <div className="rail-empty">Your idea checks will appear here.</div>
       )}
       <div className="nav-foot">
-        <div className="tokens-card">
-          <div className="lbl">Handoff tokens</div>
-          <div className="num">~{formattedHandoffTokens}</div>
-          <div className="sub">{savingsLog.count ? `${savingsLog.count} exported handoff${savingsLog.count === 1 ? "" : "s"} - estimated from text length` : "none exported yet"}</div>
+        <div className="tokens-card build-progress-card">
+          <div className="lbl">Build progress</div>
+          <div className="num">{handoffLabel}</div>
+          <div className="sub">{savedBuildPackCount || savedRepoCount ? repoLabel : "Save a repo or create a handoff and it will show here."}</div>
         </div>
         <button className={`rail-item ${active === "trending" ? "active" : ""}`} type="button" onClick={() => go("trending")}>
           <Star size={16} /><span className="ttl">Trending</span>
@@ -1771,17 +1774,15 @@ function Sidebar({
   );
 }
 
-function SavingsRing({ savingsLog }: { savingsLog: SavingsLog }) {
-  const formatted = formatTokensShort(savingsLog.totalHandoffTokens);
-
+function SavingsRing({ savedBuildPackCount, savedRepoCount }: { savedBuildPackCount: number; savedRepoCount: number }) {
   return (
-    <div className="savings-ring" style={{ "--ring-pct": savingsLog.count ? 0.62 : 0 } as React.CSSProperties} title="Estimated handoff token count">
+    <div className="savings-ring build-progress-pill" style={{ "--ring-pct": savedBuildPackCount ? 0.72 : savedRepoCount ? 0.36 : 0 } as React.CSSProperties} title="Build progress">
       <div className="ring-circle">
-        <span className="ring-inner">T</span>
+        <span className="ring-inner">B</span>
       </div>
       <div className="ring-text">
-        <span className="big">~{formatted} tokens</span>
-        <span className="lbl">{savingsLog.count ? "handoff estimate" : "no exports yet"}</span>
+        <span className="big">{savedBuildPackCount} handoff{savedBuildPackCount === 1 ? "" : "s"}</span>
+        <span className="lbl">{savedRepoCount} repo{savedRepoCount === 1 ? "" : "s"} saved</span>
       </div>
     </div>
   );
@@ -5201,7 +5202,8 @@ export function ForkFirstRedesignApp() {
           <Sidebar
             active={screen}
             go={go}
-            savingsLog={savingsLog}
+            savedBuildPackCount={savedBuildPacks.length}
+            savedRepoCount={savedRepos.length}
             recentChats={chats}
             activeChatId={activeChatId}
             onOpenChat={openChat}
@@ -5364,7 +5366,7 @@ export function ForkFirstRedesignApp() {
           </main>
           <MobileNav active={screen} go={go} recentChats={chats} activeChatId={activeChatId} onOpenChat={openChat} />
         </div>
-        <SavingsRing savingsLog={savingsLog} />
+        <SavingsRing savedBuildPackCount={savedBuildPacks.length} savedRepoCount={savedRepos.length} />
       </div>
       <RepoDrawer
         repo={drawerRepo}
