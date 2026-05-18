@@ -2487,7 +2487,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .library-tabs button.active {
   border-color: color-mix(in srgb, var(--accent) 36%, var(--line));
   background: var(--accent);
-  color: var(--accent-ink);
+  color: #FFFFFF;
   box-shadow: var(--shadow-1);
 }
 .library-tabs strong {
