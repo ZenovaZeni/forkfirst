@@ -2437,6 +2437,46 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.04em;
   margin: 0 0 24px;
 }
+.library-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper-2);
+}
+.library-tabs button {
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  font-weight: 750;
+}
+.library-tabs button.active {
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--line));
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-1);
+}
+.library-tabs strong {
+  min-width: 26px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+}
 .library-section-head {
   display: flex;
   justify-content: space-between;

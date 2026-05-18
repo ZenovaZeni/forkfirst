@@ -3529,6 +3529,7 @@ function LibraryScreen({
   onSetBoard: (repo: ClassifiedRepo, board: string) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [activePanel, setActivePanel] = useState<"handoffs" | "repos">("handoffs");
   const filteredBuildPacks = savedBuildPacks.filter((pack) => includesSmartSearch([
     pack.title,
     pack.idea,
@@ -3552,95 +3553,124 @@ function LibraryScreen({
     <section className="library" data-screen-label="06 Library">
       <h2>Library</h2>
       <p style={{ color: "var(--muted)", margin: "0 0 24px", fontSize: 15 }}>
-        Saved Build Packs and repos. None of this is on a server - it lives in your browser.
+        Saved handoffs and repos. None of this is on a server - it lives in your browser.
       </p>
+      <div className="library-tabs" role="tablist" aria-label="Library sections">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activePanel === "handoffs"}
+          className={activePanel === "handoffs" ? "active" : ""}
+          onClick={() => setActivePanel("handoffs")}
+        >
+          <span>Handoffs</span>
+          <strong>{savedBuildPacks.length}</strong>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activePanel === "repos"}
+          className={activePanel === "repos" ? "active" : ""}
+          onClick={() => setActivePanel("repos")}
+        >
+          <span>Repos</span>
+          <strong>{savedRepos.length}</strong>
+        </button>
+      </div>
       <div className="smart-search">
         <Search size={16} aria-hidden="true" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Smart search library by idea, repo, board, language, or handoff text..."
+          placeholder={activePanel === "handoffs" ? "Search saved handoffs by idea, repo, builder, or text..." : "Search saved repos by name, board, language, or topic..."}
           aria-label="Search library"
         />
         {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
       </div>
-      <div className="library-section-head">
-        <div>
-          <span className="eyebrow">Build Packs</span>
-          <h3>Saved handoffs</h3>
-        </div>
-        <span>{query ? `${filteredBuildPacks.length} of ${savedBuildPacks.length}` : `${savedBuildPacks.length} saved`}</span>
-      </div>
-      <div className="build-pack-grid">
-        {filteredBuildPacks.length ? filteredBuildPacks.map((pack) => (
-          <article key={pack.id} className="build-pack-card">
-            <div className="top">
-              <div>
-                <strong>{pack.title}</strong>
-                <span>{pack.starterRepo}</span>
-              </div>
-              <span className={`status ${pack.status}`}>{pack.status}</span>
+      {activePanel === "handoffs" ? (
+        <>
+          <div className="library-section-head">
+            <div>
+              <span className="eyebrow">Handoffs</span>
+              <h3>Saved handoffs</h3>
             </div>
-            <p>{pack.idea || "Saved builder handoff draft."}</p>
-            <div className="pack-meta">
-              <span>{pack.qualityScore}% ready</span>
-              <span>~{formatTokensShort(pack.tokenEstimate)} tokens</span>
-              <span>{BUILD_TARGETS.find((item) => item.id === pack.target)?.label ?? pack.target}</span>
+            <span>{query ? `${filteredBuildPacks.length} of ${savedBuildPacks.length}` : `${savedBuildPacks.length} saved`}</span>
+          </div>
+          <div className="build-pack-grid">
+            {filteredBuildPacks.length ? filteredBuildPacks.map((pack) => (
+              <article key={pack.id} className="build-pack-card">
+                <div className="top">
+                  <div>
+                    <strong>{pack.title}</strong>
+                    <span>{pack.starterRepo}</span>
+                  </div>
+                  <span className={`status ${pack.status}`}>{pack.status}</span>
+                </div>
+                <p>{pack.idea || "Saved builder handoff draft."}</p>
+                <div className="pack-meta">
+                  <span>{pack.qualityScore}% ready</span>
+                  <span>~{formatTokensShort(pack.tokenEstimate)} tokens</span>
+                  <span>{BUILD_TARGETS.find((item) => item.id === pack.target)?.label ?? pack.target}</span>
+                </div>
+                <div className="pack-actions">
+                  <button className="btn accent" type="button" onClick={() => onOpenBuildPack(pack)}>Open</button>
+                  <button className="btn ghost" type="button" onClick={() => onDownloadBuildPack(pack)}><Download size={13} /> .md</button>
+                  <button className="btn ghost danger" type="button" onClick={() => onDeleteBuildPack(pack.id)}>Delete</button>
+                </div>
+              </article>
+            )) : (
+              <article className="build-pack-card empty">
+                <strong>{savedBuildPacks.length ? "No matching handoffs" : "No saved handoffs yet"}</strong>
+                <p>{savedBuildPacks.length ? "Try a product phrase, repo, builder, or file name." : "Generate a builder handoff and ForkFirst will autosave the editable packet here."}</p>
+              </article>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="library-section-head repo-head">
+            <div>
+              <span className="eyebrow">Repos</span>
+              <h3>Saved repos</h3>
             </div>
-            <div className="pack-actions">
-              <button className="btn accent" type="button" onClick={() => onOpenBuildPack(pack)}>Open</button>
-              <button className="btn ghost" type="button" onClick={() => onDownloadBuildPack(pack)}><Download size={13} /> .md</button>
-              <button className="btn ghost danger" type="button" onClick={() => onDeleteBuildPack(pack.id)}>Delete</button>
-            </div>
-          </article>
-        )) : (
-          <article className="build-pack-card empty">
-            <strong>{savedBuildPacks.length ? "No matching Build Packs" : "No saved Build Packs yet"}</strong>
-            <p>{savedBuildPacks.length ? "Try a product phrase, starter repo, builder, or file name." : "Generate a Builder Handoff and ForkFirst will autosave the editable packet here."}</p>
-          </article>
-        )}
-      </div>
-      <div className="library-section-head repo-head">
-        <div>
-          <span className="eyebrow">Repo library</span>
-          <h3>Saved starter repos</h3>
-        </div>
-        <span>{query ? `${filteredRepos.length} of ${savedRepos.length}` : `${savedRepos.length} saved`}</span>
-      </div>
-      <div className="lib-grid">
-        {filteredRepos.length ? filteredRepos.map((repo) => (
-          <article key={repo.fullName} className="lib-card">
-            <div className="top">
-              <button className="nm" type="button" onClick={() => onOpen(repo)}>{repo.fullName}</button>
-              <span className={`tag ${repoTagClass(repo)}`}>{repoCategoryLabel(repo)} / {repo.score.total}%</span>
-            </div>
-            <div className="d">{repoSummary(repo)}</div>
-            <div className="row">
-              <span><Star size={12} /> {repo.stars.toLocaleString()}</span>
-              <span><GitFork size={12} /> {repo.forks.toLocaleString()}</span>
-              <span>{repo.license ?? "Inspect"}</span>
-            </div>
-            <div className="lib-actions">
-              <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use as foundation</button>
-              <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
-              <RepoSiteLink url={repo.homepage} />
-              <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
-                <ExternalLink size={13} />
-              </a>
-            </div>
-            <BoardPicker
-              value={repoBoardLabel(repo, savedRepoBoards)}
-              onChange={(board) => onSetBoard(repo, board)}
-              label={`Board for ${repo.fullName}`}
-            />
-          </article>
-        )) : (
-          <article className="lib-card">
-            <div className="top"><span className="nm">{savedRepos.length ? "No matching repos" : "No saved repos yet"}</span></div>
-            <div className="d">{savedRepos.length ? "Try a repo name, language, board, license, or topic." : "Save a repo from results or trending and it will appear here with board assignment."}</div>
-          </article>
-        )}
-      </div>
+            <span>{query ? `${filteredRepos.length} of ${savedRepos.length}` : `${savedRepos.length} saved`}</span>
+          </div>
+          <div className="lib-grid">
+            {filteredRepos.length ? filteredRepos.map((repo) => (
+              <article key={repo.fullName} className="lib-card">
+                <div className="top">
+                  <button className="nm" type="button" onClick={() => onOpen(repo)}>{repo.fullName}</button>
+                  <span className={`tag ${repoTagClass(repo)}`}>{repoCategoryLabel(repo)} / {repo.score.total}%</span>
+                </div>
+                <div className="d">{repoSummary(repo)}</div>
+                <div className="row">
+                  <span><Star size={12} /> {repo.stars.toLocaleString()}</span>
+                  <span><GitFork size={12} /> {repo.forks.toLocaleString()}</span>
+                  <span>{repo.license ?? "Inspect"}</span>
+                </div>
+                <div className="lib-actions">
+                  <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use as foundation</button>
+                  <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
+                  <RepoSiteLink url={repo.homepage} />
+                  <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
+                    <ExternalLink size={13} />
+                  </a>
+                </div>
+                <BoardPicker
+                  value={repoBoardLabel(repo, savedRepoBoards)}
+                  onChange={(board) => onSetBoard(repo, board)}
+                  label={`Board for ${repo.fullName}`}
+                />
+              </article>
+            )) : (
+              <article className="lib-card">
+                <div className="top"><span className="nm">{savedRepos.length ? "No matching repos" : "No saved repos yet"}</span></div>
+                <div className="d">{savedRepos.length ? "Try a repo name, language, board, license, or topic." : "Save a repo from results or trending and it will appear here with board assignment."}</div>
+              </article>
+            )}
+          </div>
+        </>
+      )}
     </section>
   );
 }
