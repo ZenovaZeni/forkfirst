@@ -2142,8 +2142,8 @@ function EmptyApp({
       </h1>
       <p className="sub">
         {foundationDraft
-          ? "Tell ForkFirst what you want to make from this foundation. We will inspect the repo around your goal before any handoff gets built."
-          : "Describe the product you want to build. ForkFirst will find close GitHub repos, recommend the best foundation, and prepare the builder handoff before coding starts."}
+          ? "Tell ForkFirst what you want to build from this repo. We will inspect it before the handoff."
+          : "Tell ForkFirst what you want to build. We will find a strong repo foundation and prep the handoff."}
       </p>
       {foundationDraft ? (
         <div className="foundation-attach" aria-label="Selected foundation repo">
