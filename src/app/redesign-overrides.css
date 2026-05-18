@@ -1089,6 +1089,11 @@ body {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   animation: topbarChatIn 160ms ease-out;
+  touch-action: pan-y;
+}
+
+.mobile-swipe-handle {
+  display: none;
 }
 
 .topbar-chat-drawer-head {
@@ -1184,6 +1189,25 @@ body {
   to {
     opacity: 1;
     transform: translateX(0) scale(1);
+  }
+}
+
+@media (max-width: 860px) {
+  .mobile-swipe-handle {
+    display: block;
+    width: 42px;
+    height: 4px;
+    margin: -4px auto 2px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--muted) 42%, transparent);
+  }
+
+  .drawer {
+    touch-action: pan-y;
+  }
+
+  .library {
+    touch-action: pan-y;
   }
 }
 

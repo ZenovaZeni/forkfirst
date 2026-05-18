@@ -4793,11 +4793,30 @@ input, textarea, select { font: inherit; color: inherit; }
 .packs .prompt-packs-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 12px;
   margin-bottom: 14px;
 }
+.packs .prompt-pack-search {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 46%),
+    color-mix(in srgb, var(--paper-2) 92%, var(--accent-soft));
+  box-shadow: 0 14px 34px -30px color-mix(in srgb, var(--accent) 72%, black);
+}
+.packs .prompt-pack-search > span,
+.packs .prompt-pack-search svg {
+  color: var(--accent);
+}
+.packs .prompt-pack-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 68%, var(--line));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 16px 38px -30px color-mix(in srgb, var(--accent) 84%, black);
+}
 .packs .prompt-pack-row {
   min-height: 116px;
+  display: flex;
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--paper-2);
@@ -4822,6 +4841,7 @@ input, textarea, select { font: inherit; color: inherit; }
   flex-direction: column;
   gap: 12px;
   min-height: 100%;
+  width: 100%;
   padding: 18px;
 }
 .packs .pack-card-top {
@@ -4860,15 +4880,17 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .packs .pack-card-fit {
   display: grid;
-  gap: 3px;
-  margin: 0;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--line));
+  gap: 5px;
+  margin: auto 0 0;
+  padding: 11px 12px 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-left: 3px solid var(--accent);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--paper) 54%, transparent);
+  background: color-mix(in srgb, var(--accent-soft) 22%, var(--paper));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--paper) 36%, transparent);
 }
 .packs .pack-card-fit strong {
-  color: var(--muted);
+  color: var(--accent);
   font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.11em;
@@ -4884,7 +4906,6 @@ input, textarea, select { font: inherit; color: inherit; }
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--line) 64%, transparent);
 }

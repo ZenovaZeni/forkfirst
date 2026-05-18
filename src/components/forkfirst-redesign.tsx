@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -1787,14 +1787,154 @@ function SavingsRing({ savingsLog }: { savingsLog: SavingsLog }) {
   );
 }
 
+function useLongPress(onLongPress: () => void, delay = 520) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const firedRef = useRef(false);
+
+  const clear = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
+
+  const start = useCallback(() => {
+    firedRef.current = false;
+    clear();
+    timerRef.current = setTimeout(() => {
+      firedRef.current = true;
+      onLongPress();
+    }, delay);
+  }, [clear, delay, onLongPress]);
+
+  const wasLongPress = useCallback(() => firedRef.current, []);
+
+  return {
+    bind: {
+      onPointerDown: start,
+      onPointerLeave: clear,
+      onPointerUp: clear,
+      onPointerCancel: clear
+    },
+    wasLongPress
+  };
+}
+
+function useSwipeDownDismiss(onDismiss: () => void, threshold = 72) {
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+
+  return {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => {
+      if (event.pointerType === "mouse") return;
+      startRef.current = { x: event.clientX, y: event.clientY };
+    },
+    onPointerUp: (event: PointerEvent<HTMLElement>) => {
+      const start = startRef.current;
+      startRef.current = null;
+      if (!start) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (dy > threshold && Math.abs(dx) < 80) onDismiss();
+    },
+    onPointerCancel: () => {
+      startRef.current = null;
+    }
+  };
+}
+
+function useHorizontalSwipe(onLeft: () => void, onRight: () => void, threshold = 72) {
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+
+  return {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => {
+      if (event.pointerType === "mouse") return;
+      startRef.current = { x: event.clientX, y: event.clientY };
+    },
+    onPointerUp: (event: PointerEvent<HTMLElement>) => {
+      const start = startRef.current;
+      startRef.current = null;
+      if (!start) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy) * 1.35) return;
+      if (dx < 0) onLeft();
+      else onRight();
+    },
+    onPointerCancel: () => {
+      startRef.current = null;
+    }
+  };
+}
+
+function RecentChatsDrawer({
+  recentChats,
+  activeChatId,
+  onClose,
+  onNewChat,
+  onOpenChat
+}: {
+  recentChats: ResearchChat[];
+  activeChatId: string | null;
+  onClose: () => void;
+  onNewChat: () => void;
+  onOpenChat: (chat: ResearchChat) => void;
+}) {
+  const swipeDown = useSwipeDownDismiss(onClose);
+  return (
+    <>
+      <button className="chat-drawer-scrim" type="button" aria-label="Close recent chats" onClick={onClose} />
+      <aside className="topbar-chat-drawer" role="dialog" aria-label="Recent chats">
+        <div className="mobile-swipe-handle" aria-hidden="true" />
+        <div className="topbar-chat-drawer-head" {...swipeDown}>
+          <div>
+            <span className="eyebrow">Recent</span>
+            <strong>Chats</strong>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close recent chats">
+            <X size={14} />
+          </button>
+        </div>
+        <button type="button" className="topbar-new-chat" onClick={onNewChat}>
+          <Plus size={15} />
+          New idea check
+        </button>
+        <div className="topbar-chat-list">
+          {recentChats.slice(0, 10).length ? recentChats.slice(0, 10).map((chat) => (
+            <button
+              key={chat.id}
+              type="button"
+              className={activeChatId === chat.id ? "active" : ""}
+              onClick={() => onOpenChat(chat)}
+            >
+              <span>{chat.title}</span>
+              <small>{relativeChatTime(chat.updatedAt)}</small>
+            </button>
+          )) : (
+            <div className="mobile-chat-empty">Your recent idea checks will show here.</div>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
 function MobileNav({
   active,
-  go
+  go,
+  recentChats,
+  activeChatId,
+  onOpenChat
 }: {
   active: Screen;
   go: (screen: Screen) => void;
+  recentChats: ResearchChat[];
+  activeChatId: string | null;
+  onOpenChat: (chat: ResearchChat) => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const longPressNew = useLongPress(() => {
+    setMoreOpen(false);
+    setChatDrawerOpen(true);
+  });
   const primary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
     { screen: "trending", label: "Trends", icon: <Star size={15} /> },
     { screen: "handoff", label: "Handoff", icon: <Download size={15} /> },
@@ -1807,10 +1947,24 @@ function MobileNav({
   const moreIsActive = secondary.some((item) => item.screen === active);
   const navigate = (screen: Screen) => {
     setMoreOpen(false);
+    setChatDrawerOpen(false);
     go(screen);
+  };
+  const openChatFromDrawer = (chat: ResearchChat) => {
+    setChatDrawerOpen(false);
+    onOpenChat(chat);
   };
   return (
     <>
+      {chatDrawerOpen ? (
+        <RecentChatsDrawer
+          recentChats={recentChats}
+          activeChatId={activeChatId}
+          onClose={() => setChatDrawerOpen(false)}
+          onNewChat={() => navigate("app")}
+          onOpenChat={openChatFromDrawer}
+        />
+      ) : null}
       {moreOpen ? (
         <div className="mobile-more-menu" role="menu" aria-label="More navigation">
           {secondary.map((item) => (
@@ -1836,8 +1990,16 @@ function MobileNav({
         <button
           type="button"
           className={`mobile-new-fab ${active === "app" ? "active" : ""}`}
-          onClick={() => navigate("app")}
+          onClick={(event) => {
+            if (longPressNew.wasLongPress()) {
+              event.preventDefault();
+              return;
+            }
+            navigate("app");
+          }}
+          {...longPressNew.bind}
           aria-label="Start a new idea chat"
+          title="Tap for new chat. Hold for recent chats."
         >
           <span className="fab-icon"><Plus size={22} /></span>
           <span>New</span>
@@ -1931,46 +2093,16 @@ function Topbar({
         </div>
       </header>
       {chatDrawerOpen ? (
-        <>
-          <button className="chat-drawer-scrim" type="button" aria-label="Close recent chats" onClick={() => setChatDrawerOpen(false)} />
-          <aside className="topbar-chat-drawer" role="dialog" aria-label="Recent chats">
-            <div className="topbar-chat-drawer-head">
-              <div>
-                <span className="eyebrow">Recent</span>
-                <strong>Chats</strong>
-              </div>
-              <button type="button" onClick={() => setChatDrawerOpen(false)} aria-label="Close recent chats">
-                <X size={14} />
-              </button>
-            </div>
-            <button
-              type="button"
-              className="topbar-new-chat"
-              onClick={() => {
-                setChatDrawerOpen(false);
-                go("app");
-              }}
-            >
-              <Plus size={15} />
-              New idea check
-            </button>
-            <div className="topbar-chat-list">
-              {recentChats.slice(0, 10).length ? recentChats.slice(0, 10).map((chat) => (
-                <button
-                  key={chat.id}
-                  type="button"
-                  className={activeChatId === chat.id ? "active" : ""}
-                  onClick={() => openChatFromDrawer(chat)}
-                >
-                  <span>{chat.title}</span>
-                  <small>{relativeChatTime(chat.updatedAt)}</small>
-                </button>
-              )) : (
-                <div className="mobile-chat-empty">Your recent idea checks will show here.</div>
-              )}
-            </div>
-          </aside>
-        </>
+        <RecentChatsDrawer
+          recentChats={recentChats}
+          activeChatId={activeChatId}
+          onClose={() => setChatDrawerOpen(false)}
+          onNewChat={() => {
+            setChatDrawerOpen(false);
+            go("app");
+          }}
+          onOpenChat={openChatFromDrawer}
+        />
       ) : null}
     </>
   );
@@ -2960,6 +3092,7 @@ function ReadyCard({
 }) {
   const [previewFile, setPreviewFile] = useState<HandoffDocTab | null>(null);
   const previewText = previewFile ? docs[previewFile] : "";
+  const previewSwipeDown = useSwipeDownDismiss(() => setPreviewFile(null));
   return (
     <div className="t t-assist">
       <div className="who">
@@ -3039,7 +3172,8 @@ function ReadyCard({
         <div className="file-preview-layer" role="dialog" aria-modal="true" aria-label={`${previewFile} preview`}>
           <button className="file-preview-backdrop" type="button" aria-label="Close file preview" onClick={() => setPreviewFile(null)} />
           <div className="file-preview-modal">
-            <div className="file-preview-head">
+            <div className="mobile-swipe-handle" aria-hidden="true" />
+            <div className="file-preview-head" {...previewSwipeDown}>
               <div>
                 <span>Build Pack file</span>
                 <h3>{previewFile}</h3>
@@ -3080,6 +3214,7 @@ function RepoDrawer({
   onUse: (repo: ClassifiedRepo) => void;
 }) {
   const [tab, setTab] = useState("overview");
+  const swipeDown = useSwipeDownDismiss(onClose);
   useEffect(() => {
     if (repo) setTab("overview");
   }, [repo]);
@@ -3088,7 +3223,8 @@ function RepoDrawer({
     <>
       <div className="overlay" onClick={onClose} />
       <aside className="drawer">
-        <div className="drawer-head">
+        <div className="mobile-swipe-handle" aria-hidden="true" />
+        <div className="drawer-head" {...swipeDown}>
           <button className="close" type="button" onClick={onClose} aria-label="Close">
             <X size={16} />
           </button>
@@ -3557,6 +3693,10 @@ function LibraryScreen({
 }) {
   const [query, setQuery] = useState("");
   const [activePanel, setActivePanel] = useState<"handoffs" | "repos">("handoffs");
+  const librarySwipe = useHorizontalSwipe(
+    () => setActivePanel("repos"),
+    () => setActivePanel("handoffs")
+  );
   const filteredBuildPacks = savedBuildPacks.filter((pack) => includesSmartSearch([
     pack.title,
     pack.idea,
@@ -3577,7 +3717,7 @@ function LibraryScreen({
   ].join(" "), query));
 
   return (
-    <section className="library" data-screen-label="06 Library">
+    <section className="library" data-screen-label="06 Library" {...librarySwipe}>
       <h2>Library</h2>
       <p style={{ color: "var(--muted)", margin: "0 0 24px", fontSize: 15 }}>
         Saved handoffs and repos. None of this is on a server - it lives in your browser.
@@ -4128,12 +4268,14 @@ function TrendingRepoDrawer({
   onSave: (repo: TrendingRepo) => void;
   onUse: (repo: TrendingRepo) => void;
 }) {
+  const swipeDown = useSwipeDownDismiss(onClose);
   if (!repo) return null;
   return (
     <>
       <div className="overlay" onClick={onClose} />
       <aside className="drawer trending-drawer">
-        <div className="drawer-head">
+        <div className="mobile-swipe-handle" aria-hidden="true" />
+        <div className="drawer-head" {...swipeDown}>
           <button className="close" type="button" onClick={onClose} aria-label="Close trending repo details">
             <X size={16} />
           </button>
@@ -5220,7 +5362,7 @@ export function ForkFirstRedesignApp() {
               <ChatComposerBar disabled={chatSending || !result} onSubmit={sendFollowUp} />
             ) : null}
           </main>
-          <MobileNav active={screen} go={go} />
+          <MobileNav active={screen} go={go} recentChats={chats} activeChatId={activeChatId} onOpenChat={openChat} />
         </div>
         <SavingsRing savingsLog={savingsLog} />
       </div>

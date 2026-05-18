@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 import {
   applyPromptPackRecommendations,
   type PromptPackRecommendation,
@@ -22,6 +22,28 @@ type PromptPacksPanelProps = {
   onChange: (next: PromptPackState) => void;
   recommendations?: PromptPackRecommendation[];
 };
+
+function useSwipeDownDismiss(onDismiss: () => void, threshold = 72) {
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+
+  return {
+    onPointerDown: (event: PointerEvent<HTMLElement>) => {
+      if (event.pointerType === "mouse") return;
+      startRef.current = { x: event.clientX, y: event.clientY };
+    },
+    onPointerUp: (event: PointerEvent<HTMLElement>) => {
+      const start = startRef.current;
+      startRef.current = null;
+      if (!start) return;
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      if (dy > threshold && Math.abs(dx) < 80) onDismiss();
+    },
+    onPointerCancel: () => {
+      startRef.current = null;
+    }
+  };
+}
 
 type EditForm = {
   name: string;
@@ -59,6 +81,7 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
   const enabledCount = resolved.filter((pack) => pack.enabled).length;
   const totalTokens = estimateTokens(enabledPackMarkdown(state));
   const detailsPack = detailsPackId ? resolved.find((pack) => pack.id === detailsPackId) ?? null : null;
+  const detailsSwipeDown = useSwipeDownDismiss(() => setDetailsPackId(null));
 
   function handleToggle(id: string) {
     onChange(togglePack(state, id));
@@ -354,8 +377,9 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
             aria-labelledby="prompt-pack-details-title"
             onClick={(event) => event.stopPropagation()}
           >
+            <div className="mobile-swipe-handle" aria-hidden="true" />
             <header className="prompt-pack-details-header">
-              <div>
+              <div {...detailsSwipeDown}>
                 <span>{detailsPack.enabled ? "Active prompt pack" : "Available prompt pack"}</span>
                 <h2 id="prompt-pack-details-title">{detailsPack.name}</h2>
               </div>
