@@ -28,7 +28,7 @@ export const browserVoiceInputCopy = {
   listening: "Listening...",
   idle: "Browser voice input",
   unsupported: "This browser does not support browser voice input. You can still type your idea.",
-  privacy: "Browser voice input may use your browser or device speech service. ForkFirst does not store audio."
+  privacy: "Uses your browser or device speech service. ForkFirst does not store audio."
 } as const;
 
 export function getBrowserSpeechRecognition(source: SpeechRecognitionGlobal): BrowserSpeechRecognitionConstructor | null {
