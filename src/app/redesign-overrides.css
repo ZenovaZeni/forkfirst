@@ -793,6 +793,7 @@ body {
     align-self: center;
     margin-top: 0;
     gap: 2px;
+    grid-template-rows: 30px;
     color: var(--accent);
     font-size: 11px;
   }

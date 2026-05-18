@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -1807,13 +1807,20 @@ function useLongPress(onLongPress: () => void, delay = 520) {
   }, [clear, delay, onLongPress]);
 
   const wasLongPress = useCallback(() => firedRef.current, []);
+  const preventContextMenu = useCallback((event: MouseEvent<HTMLElement>) => {
+    if (firedRef.current) event.preventDefault();
+  }, []);
 
   return {
     bind: {
       onPointerDown: start,
       onPointerLeave: clear,
       onPointerUp: clear,
-      onPointerCancel: clear
+      onPointerCancel: clear,
+      onTouchStart: start,
+      onTouchEnd: clear,
+      onTouchCancel: clear,
+      onContextMenu: preventContextMenu
     },
     wasLongPress
   };
@@ -2003,7 +2010,6 @@ function MobileNav({
           title="Tap for new chat. Hold for recent chats."
         >
           <span className="fab-icon"><Plus size={22} /></span>
-          <span>New</span>
         </button>
         {primary.slice(2).map((item) => (
           <button
@@ -2038,74 +2044,39 @@ function Topbar({
   theme,
   onToggleTheme,
   go,
-  screen,
-  recentChats,
-  activeChatId,
-  onOpenChat
+  screen
 }: {
   title: string;
   theme: Theme;
   onToggleTheme: () => void;
   go: (screen: Screen) => void;
   screen: Screen;
-  recentChats: ResearchChat[];
-  activeChatId: string | null;
-  onOpenChat: (chat: ResearchChat) => void;
 }) {
   const inChat = ["results", "more", "branding", "generating", "ready"].includes(screen);
-  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
-  const openChatFromDrawer = (chat: ResearchChat) => {
-    setChatDrawerOpen(false);
-    onOpenChat(chat);
-  };
   return (
-    <>
-      <header className="ws-topbar">
-        <div className="crumbs">
-          <button className="crumb-home crumb-wordmark" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
-            <span>Fork</span>
-            <span className="crumb-wordmark-accent">First</span>
+    <header className="ws-topbar">
+      <div className="crumbs">
+        <button className="crumb-home crumb-wordmark" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
+          <span>Fork</span>
+          <span className="crumb-wordmark-accent">First</span>
+        </button>
+        <span>/</span>
+        <strong>{title}</strong>
+      </div>
+      <div className="actions">
+        {inChat ? (
+          <button className="icon-btn" type="button" onClick={() => go("handoff")} title="Open handoff">
+            <ExternalLink size={16} />
           </button>
-          <span>/</span>
-          <strong>{title}</strong>
-        </div>
-        <div className="actions">
-          {inChat ? (
-            <button className="icon-btn" type="button" onClick={() => go("handoff")} title="Open handoff">
-              <ExternalLink size={16} />
-            </button>
-          ) : null}
-          <button className="icon-btn" type="button" onClick={onToggleTheme} title="Toggle theme">
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button
-            className={`icon-btn ${chatDrawerOpen ? "active" : ""}`}
-            type="button"
-            onClick={() => setChatDrawerOpen((open) => !open)}
-            title="Recent chats"
-            aria-expanded={chatDrawerOpen}
-            aria-haspopup="dialog"
-          >
-            <Bookmark size={16} />
-          </button>
-          <button className="icon-btn" type="button" onClick={() => go("settings")} title="Settings">
-            <SettingsIcon size={16} />
-          </button>
-        </div>
-      </header>
-      {chatDrawerOpen ? (
-        <RecentChatsDrawer
-          recentChats={recentChats}
-          activeChatId={activeChatId}
-          onClose={() => setChatDrawerOpen(false)}
-          onNewChat={() => {
-            setChatDrawerOpen(false);
-            go("app");
-          }}
-          onOpenChat={openChatFromDrawer}
-        />
-      ) : null}
-    </>
+        ) : null}
+        <button className="icon-btn" type="button" onClick={onToggleTheme} title="Toggle theme">
+          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+        <button className="icon-btn" type="button" onClick={() => go("settings")} title="Settings">
+          <SettingsIcon size={16} />
+        </button>
+      </div>
+    </header>
   );
 }
 
@@ -5217,9 +5188,6 @@ export function ForkFirstRedesignApp() {
               onToggleTheme={toggleTheme}
               go={go}
               screen={screen}
-              recentChats={chats}
-              activeChatId={activeChatId}
-              onOpenChat={openChat}
             />
             <div className="ws-route">
               {screen === "app" ? (
