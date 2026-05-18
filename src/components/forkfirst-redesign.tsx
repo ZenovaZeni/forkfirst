@@ -1922,7 +1922,10 @@ function Topbar({ title, theme, onToggleTheme, go, screen }: { title: string; th
   return (
     <header className="ws-topbar">
       <div className="crumbs">
-        <button className="crumb-home" type="button" onClick={() => go("landing")}>ForkFirst</button>
+        <button className="crumb-home crumb-wordmark" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
+          <span>Fork</span>
+          <span className="crumb-wordmark-accent">First</span>
+        </button>
         <span>/</span>
         <strong>{title}</strong>
       </div>

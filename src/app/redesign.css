@@ -1718,6 +1718,23 @@ input, textarea, select { font: inherit; color: inherit; }
   flex: 1; display: flex; align-items: center; gap: 8px;
   font-size: 13px; color: var(--muted);
 }
+.ws-topbar .crumb-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+.ws-topbar .crumb-wordmark-accent {
+  color: var(--accent);
+}
+.ws-topbar .crumb-wordmark:hover {
+  color: var(--ink);
+}
 .ws-topbar .crumbs strong { color: var(--ink); font-weight: 600; }
 .ws-topbar .actions { display: flex; gap: 6px; }
 .icon-btn {
