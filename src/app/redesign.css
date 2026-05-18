@@ -946,8 +946,8 @@ input, textarea, select { font: inherit; color: inherit; }
   overflow: hidden;
 }
 .builder-logo-img {
-  width: auto;
-  height: auto;
+  width: 112px;
+  height: 34px;
   max-width: 86%;
   max-height: 34px;
   object-fit: contain;
