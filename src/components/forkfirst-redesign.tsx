@@ -1116,14 +1116,16 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <TopNav go={go} />
 
       <section className="hero">
+        <p className="hero-eyebrow">Chat first. Build from something real.</p>
         <h1>
-          Find the best repo foundation
+          Don&apos;t make your <span className="accent-word">AI builder</span>
           <br />
-          <span className="muted-word">before your AI starts building.</span>
+          <span className="muted-word">start from zero.</span>
         </h1>
         <p className="hero-sub">
-          Describe your idea. ForkFirst searches GitHub, ranks real repos, explains which one to fork, study, or avoid,
-          then exports a Markdown handoff your AI builder can use inside the chosen repo.
+          Talk through your app idea like you would with ChatGPT. ForkFirst finds real GitHub projects that can become
+          your foundation, then creates the repo, prompt, and handoff files your AI builder needs to clone, customize,
+          and build your version faster.
         </p>
         <div className="hero-cta-row">
           <button className="btn accent xl" type="button" onClick={() => go("app")}>
@@ -1138,9 +1140,9 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           </button>
         </div>
         <div className="hero-meta">
-          <span>Idea to ranked repos</span>
-          <span>Best foundation decision</span>
-          <span>Builder handoff</span>
+          <span>Save tokens</span>
+          <span>Avoid blank-page builds</span>
+          <span>Start from code that already works</span>
         </div>
       </section>
 
@@ -1154,31 +1156,31 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           </div>
           <div className="hero-mock-body">
             <p className="hero-mock-prompt">
-              A local-first app that tracks job applications for solo founders<span className="cursor" />
+              &quot;I want a simple job tracker for founders applying to 20+ roles.&quot;<span className="cursor" />
             </p>
             <div className="hero-mock-results">
               <div className="hero-mock-result">
-                <span className="label">Best to fork / 87%</span>
+                <span className="label">Foundation found / 87%</span>
                 <span className="repo-name">ganainy/VibeHired-ai</span>
-                <span className="repo-desc">Job tracker, Kanban, resumes. Inspect license before reuse.</span>
+                <span className="repo-desc">Already has job tracking, Kanban flow, resumes, and useful app structure.</span>
                 <span className="fit-bar"><i style={{ width: "87%" }} /></span>
               </div>
               <div className="hero-mock-result">
-                <span className="label warn">Adjacent / 71%</span>
-                <span className="repo-name">berkinduz/job-apply-tracker</span>
-                <span className="repo-desc">Focused Next.js tracker. Useful data-model reference.</span>
+                <span className="label warn">ForkFirst handoff</span>
+                <span className="repo-name">Repo + prompt + build files</span>
+                <span className="repo-desc">Clone this foundation, keep the working parts, replace the brand and workflow, then build your version first.</span>
                 <span className="fit-bar"><i style={{ width: "71%" }} /></span>
               </div>
               <div className="hero-mock-result">
-                <span className="label ref">Read only / 58%</span>
-                <span className="repo-name">Abhiz2411/Job-tracker-application</span>
-                <span className="repo-desc">Small Kanban-style UI. Read for flow patterns.</span>
+                <span className="label ref">Ready for your AI builder</span>
+                <span className="repo-name">Claude Code · Codex · Cursor · Replit · Lovable · v0</span>
+                <span className="repo-desc">Give the packet to the builder you like, then come back to a prototype built from a working foundation.</span>
                 <span className="fit-bar"><i style={{ width: "58%" }} /></span>
               </div>
               <div className="hero-mock-result handoff-ready">
-                <span className="label">Builder handoff ready</span>
+                <span className="label">Also works with</span>
                 <span className="repo-name">STARTER_REPO.md + PRD + BUILD_PLAN + AGENTS.md</span>
-                <span className="repo-desc">Tells Codex, Claude Code, Cursor, or v0 what to clone, keep, replace, and build first.</span>
+                <span className="repo-desc">Gemini CLI, Antigravity, and other AI builders can use the same clear build packet.</span>
               </div>
             </div>
           </div>
@@ -1188,18 +1190,18 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <section className="section" id="how">
         <div className="section-head">
           <span className="eyebrow">How it works</span>
-          <h2>From <span className="accent-word">rough idea</span> to repo-backed builder handoff.</h2>
+          <h2>From <span className="accent-word">rough idea</span> to repo-backed AI build.</h2>
           <p>
-            ForkFirst is the step before your AI builder starts coding. It turns an idea into <span className="accent-key">repo evidence</span>, a <span className="accent-key">foundation
-            decision</span>, and files your builder can read in the cloned repo.
+            ForkFirst is the step before your AI builder starts coding. It helps you discover what already exists,
+            choose a working foundation, and package the instructions your builder needs to customize it.
           </p>
         </div>
         <div className="flow-lineup" aria-label="ForkFirst flow">
           {[
-            ["01", "Say the idea", "Type it like you would text a friend."],
-            ["02", "Rank real repos", "ForkFirst scores fit, activity, docs, license signals, and reuse risk."],
-            ["03", "Choose the foundation", "See what to fork, what to study, and what to avoid."],
-            ["04", "Hand off to your builder", "Export repo-root Markdown with the starter repo, product brief, build plan, and agent rules."]
+            ["01", "Chat through the idea", "Talk to ForkFirst like ChatGPT so it understands what you want to build."],
+            ["02", "Find what already exists", "ForkFirst searches GitHub for real projects most people would never know to search for."],
+            ["03", "Pick a working foundation", "See what can become your starting point, what is only a reference, and what to avoid."],
+            ["04", "Give your AI direction", "Get the repo, prompt, and files your builder needs to clone, customize, and build your version."]
           ].map(([step, title, body]) => (
             <div key={step} className="flow-step">
               <span>{step}</span>
@@ -1215,26 +1217,26 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           <span className="eyebrow">Why use it</span>
           <h2>Stop asking your AI builder to <span className="accent-word">guess the starting point.</span></h2>
           <p>
-            ForkFirst gives your builder repo evidence first: what already exists, which codebase is the best
-            foundation, and what should change for your version.
+            Blank-page AI builds burn tokens and drift fast. ForkFirst gives your builder a working codebase, a clear
+            first move, and instructions for turning someone else&apos;s useful foundation into your product.
           </p>
         </div>
         <div className="token-row">
           <div className="token-cell lead">
             <h3>Less guessing.<br />More shipping.</h3>
-            <p>Free tool, built to give your AI builder concrete repo context before it writes code.</p>
+            <p>Free tool, built to help your AI customize a working foundation instead of inventing everything.</p>
           </div>
           <div className="token-cell">
             <span className="big accent">Context</span>
-            <span className="lbl">Repo evidence, tradeoffs, and handoff docs before your AI starts building.</span>
+            <span className="lbl">Repo, prompt, and build files before your AI starts writing code.</span>
           </div>
           <div className="token-cell">
             <span className="big">60s</span>
-            <span className="lbl">From a half-formed idea to a complete handoff your builder can run.</span>
+            <span className="lbl">From a half-formed idea to a clear first build path.</span>
           </div>
           <div className="token-cell">
             <span className="big">3</span>
-            <span className="lbl">Real repos, ranked. Not 50 links to skim, not &quot;here&apos;s the docs.&quot;</span>
+            <span className="lbl">Real starting points, ranked. Not 50 links to skim.</span>
           </div>
         </div>
       </section>
@@ -1242,11 +1244,11 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <section className="section builder-section" id="builders">
         <div className="section-head">
           <span className="eyebrow">Use your favorite AI builder</span>
-          <h2>One handoff. Any <span className="accent-word">Markdown-friendly builder.</span></h2>
+          <h2>One handoff. Any <span className="accent-word">AI builder you like.</span></h2>
           <p>
-            ForkFirst exports a <span className="accent-key">repo-first Markdown handoff</span>, so Claude Code, Codex, Cursor, Replit, Lovable, v0,
-            Gemini CLI, Antigravity, and most AI builders can pick up the repo, product direction, rules, and first
-            build phase.
+            ForkFirst creates a <span className="accent-key">repo-first build packet</span>, so Claude Code, Codex, Cursor, Replit, Lovable, v0,
+            Gemini CLI, Antigravity, and most AI builders know what to clone, what to keep, what to replace, and what
+            to build first.
           </p>
         </div>
         <div className="builder-logo-cloud" aria-label="Supported AI builders">
@@ -1259,17 +1261,17 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
             </div>
           ))}
         </div>
-        <p className="builder-fineprint">If your tool can read Markdown, it can use a ForkFirst handoff.</p>
+        <p className="builder-fineprint">If your builder can read a prompt and files, it can use a ForkFirst handoff.</p>
       </section>
 
       <section className="section structure-section">
         <div className="packet-showcase">
           <div className="packet-copy">
             <span className="eyebrow">The foundation packet</span>
-            <h2>A <span className="accent-word">repo foundation</span> your AI builder can actually build from.</h2>
+            <h2>A <span className="accent-word">working foundation</span> your AI builder can build from.</h2>
             <p>
-              ForkFirst names the <span className="accent-key">starter repo</span>, gives <span className="accent-key">clone/open instructions</span>, and packages the product brief, build plan,
-              brand direction, and agent rules. Your builder starts with <span className="accent-key">working code, not a blank page.</span>
+              ForkFirst names the <span className="accent-key">starter repo</span>, gives <span className="accent-key">clone/open instructions</span>, and packages the prompt, product brief,
+              build plan, brand direction, and builder rules. Your builder starts with <span className="accent-key">working code, not a blank page.</span>
             </p>
           </div>
           <div className="foundation-visual" aria-label="Foundation packet and example builder outcome">
@@ -1293,7 +1295,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
                 <span>Local data</span>
               </div>
             </div>
-            <div className="foundation-arrow">first build ← repo + plan</div>
+            <div className="foundation-arrow">first build ← repo + prompt + files</div>
             <div className="packet-window">
               <div className="packet-files" role="tablist" aria-label="Sample Build Pack files">
                 {packetTabs.map(({ kind, title, filename }) => (
@@ -1326,7 +1328,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
                 ))}
               </div>
             </div>
-            <p className="foundation-note">ForkFirst prepares the foundation. Your AI builder does the implementation.</p>
+            <p className="foundation-note">ForkFirst prepares the foundation and directions. Your AI builder customizes and implements.</p>
           </div>
         </div>
       </section>
@@ -1345,7 +1347,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           </div>
           <div className="tcell">
             <span className="ticon"><GitFork size={18} /></span>
-            <h4>Open source and verifiable.</h4>
+            <h4>Public code and verifiable.</h4>
             <p>Read the code, run it locally, inspect the request flow, and <span className="trust-key">verify exactly</span> where provider keys are sent.</p>
           </div>
         </div>
@@ -1357,14 +1359,14 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           <h2>Want a human-reviewed <span className="accent-word">AI Builder Handoff?</span></h2>
           <p>
             ForkFirst is the public tool. For founders who want a sharper decision, Zenova can turn your idea into a
-            repo foundation audit, reuse-risk notes, and a Cursor/Codex/Claude-ready build packet.
+            working-foundation audit, reuse-risk notes, and a Cursor/Codex/Claude-ready build packet.
           </p>
         </div>
         <div className="service-grid" aria-label="AI Builder Handoff Audit options">
           {[
-            ["Quick Handoff", "$297", "Best for validating one idea and getting a starter repo recommendation."],
-            ["Deep Repo Audit", "$497", "Best for comparing several foundations, risks, docs, activity, and first milestones."],
-            ["Build Plan + Setup", "$997+", "Best when you want the handoff plus initial repo setup direction for an AI builder."]
+            ["Quick Handoff", "$297", "Best for one idea, one recommended foundation, and a clear first build prompt."],
+            ["Deep Repo Audit", "$497", "Best for comparing several working foundations, risks, docs, activity, and first milestones."],
+            ["Build Plan + Setup", "$997+", "Best when you want the handoff plus initial repo setup direction for your AI builder."]
           ].map(([title, price, body]) => (
             <article className="service-card" key={title}>
               <strong>{title}</strong>
@@ -1378,7 +1380,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <div className="cta-strip">
         <div>
           <h2>What are you <span className="accent-word">about to build?</span></h2>
-          <p>Find the strongest open-source foundation first, then hand your AI builder the repo, product direction, and rules.</p>
+          <p>Chat through the idea, find a working foundation, then hand your AI builder the repo, prompt, and files it needs.</p>
         </div>
         <div className="actions">
           <button className="btn accent xl" type="button" onClick={() => go("app")}>

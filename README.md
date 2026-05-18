@@ -6,32 +6,32 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-111111.svg)](https://nextjs.org/)
 [![BYOK](https://img.shields.io/badge/BYOK-demo_mode_ready-2647F0.svg)](#security-model)
 
-> Find the best open-source starting point for your app idea before your AI starts building.
+> Do not make your AI builder start from zero.
 
-ForkFirst searches GitHub, ranks real repos, explains which one to fork, study, or avoid, then exports a Markdown handoff your AI builder can use inside the chosen repo.
+Talk through your app idea like you would with ChatGPT. ForkFirst finds real GitHub projects that can become your foundation, then creates the repo, prompt, and handoff files your AI builder needs to clone, customize, and build your version faster.
 
 [Try the hosted demo](https://forkfirst.vercel.app) · [Read the security model](./SECURITY.md) · [View sample handoffs](#public-sample-handoffs)
 
 ## Why this exists
 
-AI coding tools are powerful, but they waste time and tokens when they invent foundations that already exist. ForkFirst is the step before Claude Code, Codex, Cursor, Replit, Lovable, v0, or Gemini CLI:
+AI coding tools are powerful, but they waste time and tokens when they invent from a blank page. ForkFirst is the step before Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, Antigravity, or any similar AI builder:
 
 1. Your plain-English idea.
-2. Ranked GitHub repos with fit, activity, docs, license-signal, and reuse-risk notes.
-3. A foundation decision: fork, study, avoid, or keep searching.
-4. Repo-root Markdown files: `STARTER_REPO.md`, `PRD.md`, `BUILD_PLAN.md`, `REPO_STARTER_NOTES.md`, `AGENTS.md`, and `CLAUDE.md`.
+2. Real GitHub projects most people would not know to search for.
+3. A working foundation, useful reference, or avoid signal.
+4. Repo, prompt, and handoff files for the AI builder you already use.
 
 ## 60-second flow
 
-1. Type the idea like you would say it to a friend.
-2. ForkFirst searches GitHub and ranks useful public repos.
-3. Pick the best foundation or ask follow-up questions.
-4. Click Builder Handoff.
-5. Put the generated packet into Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, or any builder that can read Markdown.
+1. Chat through the idea like you would with ChatGPT.
+2. ForkFirst searches GitHub for real projects that could become your starting point.
+3. Pick the working foundation, reference repo, or safer next search.
+4. Generate the Builder Handoff.
+5. Give the repo, prompt, and files to Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, Antigravity, or another AI builder.
 
 ## Screenshots
 
-| Start with an idea | Compare repo foundations | Export the builder handoff |
+| Start with an idea | Compare working foundations | Export the builder handoff |
 |---|---|---|
 | ![ForkFirst home screen](./public/screenshots/rebrand-desktop-paper.png) | ![ForkFirst repo results](./public/screenshots/results.png) | ![ForkFirst Build Pack](./public/screenshots/build-pack.png) |
 
@@ -45,7 +45,7 @@ These are example output packets checked against live GitHub Search API results 
 
 ## Features
 
-- Repo-first GitHub search and ranking.
+- Chat-first GitHub search and ranking.
 - Builder Handoff exports for Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, and generic Markdown.
 - `STARTER_REPO.md`, `PRD.md`, `BUILD_PLAN.md`, `REPO_STARTER_NOTES.md`, `AGENTS.md`, and `CLAUDE.md` style guidance.
 - Optional AI chat and idea refinement.
@@ -59,7 +59,7 @@ These are example output packets checked against live GitHub Search API results 
 
 ForkFirst is also the workflow behind a done-for-you Zenova service:
 
-> Send your app idea. We find the best open-source repo foundation, inspect reuse risks, and deliver a Cursor/Codex/Claude-ready build handoff.
+> Send your app idea. We find the best working repo foundation, inspect reuse risks, and deliver a Cursor/Codex/Claude-ready build handoff.
 
 Suggested service tiers:
 

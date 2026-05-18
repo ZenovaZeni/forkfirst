@@ -5,11 +5,11 @@ import "./redesign-overrides.css";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 const SITE_DESCRIPTION =
-  "Find the best repo to fork, then hand the plan to your AI.";
+  "Chat through your app idea, find a working GitHub foundation, and give your AI builder the repo, prompt, and files it needs.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "ForkFirst - idea check, before you build",
+  title: "ForkFirst - don't make your AI builder start from zero",
   description: SITE_DESCRIPTION,
   manifest: "/manifest.json",
   appleWebApp: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     apple: "/brand/favicon/apple-touch-icon.png"
   },
   openGraph: {
-    title: "ForkFirst - idea check, before you build",
+    title: "ForkFirst - don't make your AI builder start from zero",
     description: SITE_DESCRIPTION,
     images: [
       {
