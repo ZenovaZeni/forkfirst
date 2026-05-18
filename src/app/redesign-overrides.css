@@ -915,6 +915,7 @@ body {
 
   .starter-rich {
     padding: 18px 14px;
+    min-height: 0;
   }
 
   .starter-rich .meta-rich {

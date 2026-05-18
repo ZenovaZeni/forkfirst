@@ -2132,7 +2132,7 @@ function EmptyApp({
   onSubmit: (promptOverride?: string) => void;
 }) {
   const [pasteUrl, setPasteUrl] = useState("");
-  const trending = useTrendingRepos("indie-apps");
+  const trending = useTrendingRepos("ai-agents");
   const repoPath = parseGitHubRepoInput(pasteUrl);
   const showRepoHint = pasteUrl.trim().length > 0 && !repoPath;
   return (
@@ -2205,8 +2205,8 @@ function EmptyApp({
       <div className="starters-trending">
         <div className="row-label">
           <span className="pulse" />
-          <span>Already have a direction? Start from a live repo</span>
-          <span className="row-label-right">GitHub Search - pushed in last 30 days</span>
+          <span>Trending repos for inspiration</span>
+          <span className="row-label-right">Popular picks from the Trending tab</span>
         </div>
         <div className="starter-grid">
           {trending.status === "loading" ? [1, 2, 3].map((item) => (
@@ -2240,15 +2240,22 @@ function EmptyApp({
                 onSelectFoundation(foundationFromTrendingRepo(repo));
               }}
             >
-              <span className="badge">GitHub</span>
-              <div className="who">
-                <span className="dot" />
-                {formatStars(repo.stars)} stars{repo.language ? ` - ${repo.language}` : ""}{repo.license ? ` - ${repo.license}` : ""}
+              <div className="starter-card-top">
+                <div className="who">
+                  <span className="dot" />
+                  {formatStars(repo.stars)} stars{repo.language ? ` - ${repo.language}` : ""}{repo.license ? ` - ${repo.license}` : ""}
+                </div>
+                <span className="badge">GitHub</span>
               </div>
               <div className="ttl-rich">{repo.fullName}</div>
               <div className="desc-rich">{repo.description || "No GitHub description provided."}</div>
+              {repo.topics.length ? (
+                <div className="starter-topics" aria-label={`${repo.fullName} topics`}>
+                  {repo.topics.slice(0, 3).map((topic) => <span key={topic}>{topic}</span>)}
+                </div>
+              ) : null}
               <div className="meta-rich">
-                <span className="mono" style={{ fontSize: 11 }}>pushed in last 30 days</span>
+                <span className="mono" style={{ fontSize: 11 }}>Top trending lead</span>
                 <span className="foundation-cta">Use as foundation</span>
               </div>
             </button>
