@@ -1,4 +1,5 @@
 import type { IdeaCheckResult } from "./idea-check";
+import type { ClassifiedRepo } from "../lib/analysis/types";
 
 export type ChatMessage = {
   id: string;
@@ -18,6 +19,19 @@ export type ResearchChat = {
   messages: ChatMessage[];
   result: IdeaCheckResult | null;
   wizardAnswers?: Record<string, string>;
+  workspace?: {
+    screen?: "results" | "more" | "branding" | "ready";
+    brand?: {
+      name: string;
+      audience: string;
+      vibe: string;
+      color: string;
+      notList: string[];
+    } | null;
+    selectedStarterRepo?: ClassifiedRepo | null;
+    followUps?: Array<{ role: "user" | "assistant"; content: string }>;
+    prompt?: string;
+  };
 };
 
 export type ResearchFolder = {

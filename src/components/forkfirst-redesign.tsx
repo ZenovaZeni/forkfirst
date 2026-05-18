@@ -85,6 +85,13 @@ function isScreen(value: unknown): value is Screen {
   return typeof value === "string" && SCREENS.includes(value as Screen);
 }
 
+type RestorableChatScreen = Exclude<NonNullable<ResearchChat["workspace"]>["screen"], undefined>;
+const RESTORABLE_CHAT_SCREENS: RestorableChatScreen[] = ["results", "more", "branding", "ready"];
+
+function isRestorableChatScreen(value: unknown): value is RestorableChatScreen {
+  return typeof value === "string" && RESTORABLE_CHAT_SCREENS.includes(value as RestorableChatScreen);
+}
+
 const ACCENT_OPTIONS: Array<{ id: RedesignAccent; label: string; color: string }> = [
   { id: "cobalt", label: "Cobalt", color: "#2647F0" },
   { id: "ember", label: "Ember", color: "#D8412F" },
@@ -2647,7 +2654,7 @@ function ReadyCard({
         <strong>ForkFirst</strong>
         <time>- now</time>
       </div>
-      <p className="say">Done. Download the zip, give it to your AI builder, and tell it to follow the handoff.</p>
+      <p className="say">Done. Download the zip, copy the prompt, then drop both into your AI builder and tell it to follow the handoff.</p>
       <div className="ready-card">
         <div className="ready-head">
           <span className="ready-ico">
@@ -2660,8 +2667,11 @@ function ReadyCard({
         </p>
         <div className="handoff-next-steps" aria-label="Next steps for using this handoff">
           <span><strong>1</strong> Download the zip</span>
-          <span><strong>2</strong> Give it to your AI builder</span>
-          <span><strong>3</strong> Say: follow this handoff and build Phase 1</span>
+          <span><strong>2</strong> Copy the prompt</span>
+          <span><strong>3</strong> Drop both into your AI builder</span>
+        </div>
+        <div className="handoff-builder-script">
+          <strong>What to say next:</strong> Use this zip as the project handoff. Read the prompt first, inspect the starter repo, then follow the handoff and build Phase 1.
         </div>
         <div className="ready-files">
           {READY_FILE_DEFS.map(({ kind, file }) => (
@@ -4088,20 +4098,56 @@ export function ForkFirstRedesignApp() {
     });
   }, []);
 
+  const persistActiveChatWorkspace = useCallback((screenOverride?: RestorableChatScreen) => {
+    if (!result || !activeChatId) return;
+    const nextScreen = screenOverride ?? (isRestorableChatScreen(screen) ? screen : "results");
+    const now = new Date().toISOString();
+    setChats((current) => {
+      const existing = current.find((chat) => chat.id === activeChatId);
+      if (!existing) return current;
+      const nextChat: ResearchChat = {
+        ...existing,
+        updatedAt: now,
+        result,
+        workspace: {
+          ...(existing.workspace ?? {}),
+          screen: nextScreen,
+          brand,
+          selectedStarterRepo,
+          followUps,
+          prompt: result.prompt || prompt
+        }
+      };
+      const next = [nextChat, ...current.filter((chat) => chat.id !== activeChatId)]
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, 30);
+      writeFeatureStorage(window.localStorage, { chats: next });
+      return next;
+    });
+  }, [activeChatId, brand, followUps, prompt, result, screen, selectedStarterRepo]);
+
   const openChat = useCallback((chat: ResearchChat) => {
+    const workspace = chat.workspace;
+    const restoredFollowUps = workspace?.followUps?.length
+      ? workspace.followUps
+      : chat.messages
+        .filter((message) => !(message.role === "user" && message.content === chat.result?.prompt))
+        .map((message) => ({ role: message.role, content: message.content }));
     setActiveChatId(chat.id);
     setResult(chat.result);
-    setSelectedStarterRepo(chat.result?.repos[0] ?? null);
+    setSelectedStarterRepo(workspace?.selectedStarterRepo ?? chat.result?.repos[0] ?? null);
     setActiveBuildPack(null);
     setFoundationDraft(null);
-    setPrompt(chat.messages.find((message) => message.role === "user")?.content ?? chat.result?.prompt ?? "");
-    setBrand(null);
+    setPrompt(workspace?.prompt || chat.messages.find((message) => message.role === "user")?.content || chat.result?.prompt || "");
+    setBrand(workspace?.brand ?? null);
     setError(null);
     setLoading(false);
-    setFollowUps(chat.messages
-      .filter((message) => !(message.role === "user" && message.content === chat.result?.prompt))
-      .map((message) => ({ role: message.role, content: message.content })));
-    setScreen(chat.result ? "results" : "app");
+    setFollowUps(restoredFollowUps);
+    const workspaceScreen = workspace?.screen;
+    const restoredScreen: Screen = chat.result
+      ? (isRestorableChatScreen(workspaceScreen) ? workspaceScreen : "results")
+      : "app";
+    setScreen(restoredScreen);
     window.scrollTo({ top: 0 });
     document.querySelector(".workspace")?.scrollTo({ top: 0 });
   }, []);
@@ -4198,6 +4244,11 @@ export function ForkFirstRedesignApp() {
       document.querySelector(".workspace")?.scrollTo({ top: 0 });
     });
   }, [screen]);
+
+  useEffect(() => {
+    if (!activeChatId || !result || !isRestorableChatScreen(screen)) return;
+    persistActiveChatWorkspace(screen);
+  }, [activeChatId, brand, followUps, persistActiveChatWorkspace, result, screen, selectedStarterRepo]);
 
   const openBuildPack = useCallback((pack: SavedBuildPack) => {
     setActiveBuildPack(pack);
@@ -4427,7 +4478,14 @@ export function ForkFirstRedesignApp() {
           createdAt: data.createdAt ?? now,
           result: data
         }],
-        result: data
+        result: data,
+        workspace: {
+          screen: "results",
+          brand: null,
+          selectedStarterRepo: data.repos[0] ?? null,
+          followUps: [],
+          prompt: displayPrompt
+        }
       };
       setResult(data);
       setSelectedStarterRepo(data.repos[0] ?? null);
@@ -4515,7 +4573,15 @@ export function ForkFirstRedesignApp() {
             createdAt: existing?.messages[index + 1]?.createdAt ?? now
           }))
         ],
-        result
+        result,
+        workspace: {
+          ...(existing?.workspace ?? {}),
+          screen: isRestorableChatScreen(screen) ? screen : "results",
+          brand,
+          selectedStarterRepo,
+          followUps: finalTurns,
+          prompt: result.prompt || prompt
+        }
       };
       setActiveChatId(chat.id);
       upsertChat(chat);
@@ -4524,7 +4590,7 @@ export function ForkFirstRedesignApp() {
     } finally {
       setChatSending(false);
     }
-  }, [activeChatId, chatSending, chats, followUps, keys, prompt, recordUsage, result, upsertChat]);
+  }, [activeChatId, brand, chatSending, chats, followUps, keys, prompt, recordUsage, result, screen, selectedStarterRepo, upsertChat]);
 
   const title =
     screen === "app" ? "new idea"
