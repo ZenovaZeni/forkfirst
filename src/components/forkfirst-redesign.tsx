@@ -161,6 +161,15 @@ const HANDOFF_DOC_TABS = ["STARTER_REPO.md", "PRD.md", "BUILD_PLAN.md", "REPO_ST
 type HandoffDocTab = (typeof HANDOFF_DOC_TABS)[number];
 type HandoffDocuments = Record<HandoffDocTab, string>;
 
+const HANDOFF_DOC_TAB_LABELS: Record<HandoffDocTab, string> = {
+  "STARTER_REPO.md": "STARTER.md",
+  "PRD.md": "PRD.md",
+  "BUILD_PLAN.md": "PLAN.md",
+  "REPO_STARTER_NOTES.md": "REPO_NOTES.md",
+  "AGENTS.md": "AGENTS.md",
+  "CLAUDE.md": "CLAUDE.md"
+};
+
 const BUILD_TARGETS: Array<{ id: BuildTarget; label: string; sub: string; logo?: string }> = [
   { id: "claude-code", label: "Claude Code", sub: "CLAUDE.md + AGENTS.md", logo: "/logos/anthropic.svg" },
   { id: "codex", label: "Codex", sub: "AGENTS.md", logo: "/logos/openai.svg" },
@@ -3433,7 +3442,7 @@ function HandoffView({
         <div className="handoff-doc">
           <div className="tabs">
             {HANDOFF_DOC_TABS.map((item) => (
-              <button key={item} className={`tab ${tab === item ? "is-active" : ""}`} type="button" onClick={() => setTab(item)}>{item}</button>
+              <button key={item} className={`tab ${tab === item ? "is-active" : ""}`} type="button" onClick={() => setTab(item)} title={item}>{HANDOFF_DOC_TAB_LABELS[item]}</button>
             ))}
           </div>
           <div className="doc-meta">
