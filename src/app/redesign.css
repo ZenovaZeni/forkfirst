@@ -4837,11 +4837,11 @@ input, textarea, select { font: inherit; color: inherit; }
   box-shadow: var(--shadow-1);
 }
 .packs .prompt-pack-row.pack-enabled {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  border-color: var(--line);
   background: color-mix(in srgb, var(--accent-soft) 38%, var(--paper-2));
 }
 .packs .prompt-pack-row.pack-recommended {
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-color: var(--line);
 }
 .packs .pack-row-main {
   display: flex;
@@ -4889,9 +4889,8 @@ input, textarea, select { font: inherit; color: inherit; }
   display: grid;
   gap: 5px;
   margin: auto 0 0;
-  padding: 11px 12px 11px 14px;
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
-  border-left: 3px solid var(--accent);
+  padding: 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
   border-radius: 10px;
   background: color-mix(in srgb, var(--accent-soft) 22%, var(--paper));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--paper) 36%, transparent);
