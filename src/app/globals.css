@@ -9773,3 +9773,26 @@ body {
   box-shadow: none !important;
   transform: translateX(50%) !important;
 }
+
+/* Prompt-pack details are a preview dialog, not a side drawer. */
+.prompt-pack-modal-backdrop {
+  display: grid !important;
+  place-items: center !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: clamp(14px, 3vw, 28px) !important;
+}
+
+.prompt-pack-modal-backdrop .prompt-pack-details-modal {
+  width: min(760px, calc(100vw - 32px)) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  border-radius: 20px !important;
+}
+
+@media (max-width: 640px) {
+  .prompt-pack-modal-backdrop .prompt-pack-details-modal {
+    width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 24px) !important;
+  }
+}
