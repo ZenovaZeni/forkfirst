@@ -20,7 +20,6 @@ import {
   Settings as SettingsIcon,
   Star,
   Sun,
-  ThumbsDown,
   X
 } from "lucide-react";
 import { KeySettings, type UserKeys } from "@/components/key-settings";
@@ -79,6 +78,10 @@ type Screen = "landing" | "app" | "loading" | "results" | "more" | "branding" | 
 type Theme = "light" | "dark";
 type ChatTurn = { role: "user" | "assistant"; content: string };
 type SettingsTab = "appearance" | "keys" | "usage" | "install";
+const THEME_STORAGE_KEY = "forkfirst:theme";
+const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
+const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
+const ACTIVE_CHAT_SESSION_KEY = "forkfirst:active-chat";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
 
@@ -91,6 +94,14 @@ const RESTORABLE_CHAT_SCREENS: RestorableChatScreen[] = ["results", "more", "bra
 
 function isRestorableChatScreen(value: unknown): value is RestorableChatScreen {
   return typeof value === "string" && RESTORABLE_CHAT_SCREENS.includes(value as RestorableChatScreen);
+}
+
+function themeFromStorage(value: string | null): Theme {
+  return value === "ink" || value === "dark" ? "dark" : "light";
+}
+
+function themeToStorage(value: Theme) {
+  return value === "dark" ? "ink" : "paper";
 }
 
 const ACCENT_OPTIONS: Array<{ id: RedesignAccent; label: string; color: string }> = [
@@ -831,7 +842,7 @@ function repoSummary(repo: ClassifiedRepo) {
 }
 
 const IDEA_STOPWORDS = new Set([
-  "about", "after", "again", "already", "also", "and", "app", "build", "builder", "can", "for", "from", "give",
+  "about", "after", "again", "already", "also", "and", "any", "app", "build", "builder", "but", "can", "for", "from", "give",
   "have", "into", "like", "make", "need", "needs", "one", "product", "project", "repo", "simple", "that", "the",
   "their", "this", "tool", "want", "with", "would", "your"
 ]);
@@ -2107,6 +2118,7 @@ function FeaturedRepo({
   onSave: (repo: ClassifiedRepo) => void;
   onUse: (repo: ClassifiedRepo) => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <article className="repo-card featured">
       <div className="rc-head">
@@ -2161,7 +2173,7 @@ function FeaturedRepo({
 
       <div className="rc-actions">
         <button className="btn accent" type="button" onClick={() => onUse(repo)}>
-          {cautious ? "Inspect before using" : "Use as my starting point"}
+          {cautious ? "Create handoff carefully" : "Use as my starting point"}
         </button>
         <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>
           Details
@@ -2172,12 +2184,40 @@ function FeaturedRepo({
         <button className="icon-btn" title={saved ? "Saved" : "Save"} type="button" onClick={() => onSave(repo)}>
           {saved ? <Check size={15} /> : <Bookmark size={15} />}
         </button>
-        <button className="icon-btn" title="Not a fit" type="button" onClick={() => onOpen(repo)}>
-          <ThumbsDown size={15} />
-        </button>
-        <button className="icon-btn" title="More" type="button" onClick={() => onOpen(repo)}>
-          <MoreHorizontal size={15} />
-        </button>
+        <div className="repo-action-menu">
+          <button
+            className="icon-btn"
+            title="More actions"
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((current) => !current)}
+          >
+            <MoreHorizontal size={15} />
+          </button>
+          {menuOpen ? (
+            <div className="repo-menu-popover" role="menu">
+              <button type="button" role="menuitem" onClick={() => {
+                setMenuOpen(false);
+                onOpen(repo);
+              }}>
+                View details
+              </button>
+              <button type="button" role="menuitem" onClick={() => {
+                setMenuOpen(false);
+                onSave(repo);
+              }}>
+                {saved ? "Remove from library" : "Save to library"}
+              </button>
+              <button type="button" role="menuitem" onClick={() => {
+                setMenuOpen(false);
+                navigator.clipboard.writeText(repo.fullName).catch(() => undefined);
+              }}>
+                Copy repo name
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </article>
   );
@@ -2459,9 +2499,6 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
 
   return (
     <>
-      <div className="t t-user">
-        <div className="bubble">Yes - create the AI-builder handoff.</div>
-      </div>
       <div className="t t-assist">
         <div className="who">
           <Mark />
@@ -2469,7 +2506,7 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
           <time>- now</time>
         </div>
         <p className="say">
-          Great. I&apos;ll turn the selected repo into the handoff your AI builder needs. A few product details help it customize the foundation instead of cloning it blindly.
+          Good. I&apos;ll package this repo as the foundation for your AI builder. Answer these only if you want the handoff tailored; otherwise skip through and ForkFirst will keep it simple.
         </p>
         <div className="brand-question">
           <span className="bq-step">Step {step} of 5</span>
@@ -3984,6 +4021,7 @@ export function ForkFirstRedesignApp() {
   const [followUps, setFollowUps] = useState<ChatTurn[]>([]);
   const [chatSending, setChatSending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const didPersistSessionRef = useRef(false);
 
   useEffect(() => {
     const storage = readFeatureStorage(window.localStorage);
@@ -4004,6 +4042,7 @@ export function ForkFirstRedesignApp() {
     setUsageEntries(storage.usageEntries);
     setSavingsLog(loadSavings());
     setAccent(storage.accent);
+    setTheme(themeFromStorage(window.localStorage.getItem(THEME_STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY)));
 
     const handoffPayload = new URLSearchParams(window.location.search).get("handoff");
     if (handoffPayload) {
@@ -4059,6 +4098,22 @@ export function ForkFirstRedesignApp() {
         window.history.replaceState({}, "", window.location.pathname);
         setToast("Shared Build Pack opened");
       });
+    } else {
+      const storedScreen = window.sessionStorage.getItem(ACTIVE_SCREEN_SESSION_KEY);
+      const storedChatId = window.sessionStorage.getItem(ACTIVE_CHAT_SESSION_KEY);
+      const restoredChat = storedChatId ? storage.chats.find((chat) => chat.id === storedChatId) : storage.chats[0];
+      if (isRestorableChatScreen(storedScreen) && restoredChat?.result && isRestorableChatScreen(restoredChat.workspace?.screen)) {
+        const workspace = restoredChat.workspace;
+        setActiveChatId(restoredChat.id);
+        setResult(restoredChat.result);
+        setSelectedStarterRepo(workspace?.selectedStarterRepo ?? restoredChat.result.repos[0] ?? null);
+        setPrompt(workspace?.prompt || restoredChat.messages.find((message) => message.role === "user")?.content || restoredChat.result.prompt || "");
+        setBrand(workspace?.brand ?? null);
+        setFollowUps(workspace?.followUps ?? []);
+        setScreen(workspace?.screen ?? "results");
+      } else if (isScreen(storedScreen) && !["landing", "loading", "results", "more", "branding", "generating", "ready"].includes(storedScreen)) {
+        setScreen(storedScreen);
+      }
     }
   }, []);
 
@@ -4067,6 +4122,16 @@ export function ForkFirstRedesignApp() {
     const timer = window.setTimeout(() => setToast(null), 1800);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!didPersistSessionRef.current) {
+      didPersistSessionRef.current = true;
+      return;
+    }
+    window.sessionStorage.setItem(ACTIVE_SCREEN_SESSION_KEY, screen);
+    if (activeChatId) window.sessionStorage.setItem(ACTIVE_CHAT_SESSION_KEY, activeChatId);
+    else window.sessionStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
+  }, [activeChatId, screen]);
 
   const go = useCallback((next: Screen) => {
     if (!isScreen(next)) return;
@@ -4208,6 +4273,15 @@ export function ForkFirstRedesignApp() {
   const persistAccent = useCallback((next: RedesignAccent) => {
     setAccent(next);
     writeFeatureStorage(window.localStorage, { accent: next });
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => {
+      const next = current === "dark" ? "light" : "dark";
+      window.localStorage.setItem(THEME_STORAGE_KEY, themeToStorage(next));
+      window.localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
+      return next;
+    });
   }, []);
 
   const recordUsage = useCallback((entry: UsageEntry) => {
@@ -4689,7 +4763,7 @@ export function ForkFirstRedesignApp() {
             onDeleteChat={deleteChat}
           />
           <main className={`workspace ${screen === "app" ? "start-mode" : "chat-mode"}`}>
-            <Topbar title={title} theme={theme} onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))} go={go} screen={screen} />
+            <Topbar title={title} theme={theme} onToggleTheme={toggleTheme} go={go} screen={screen} />
             <div className="ws-route">
               {screen === "app" ? (
                 <>

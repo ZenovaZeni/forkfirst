@@ -8568,6 +8568,49 @@ body,
   padding-top: 18px !important;
 }
 
+.repo-action-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.repo-menu-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 20;
+  display: grid;
+  min-width: 190px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-2);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--ink) 16%, transparent);
+}
+
+.repo-menu-popover button {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 650;
+  padding: 11px 13px;
+  text-align: left;
+}
+
+.repo-menu-popover button:last-child {
+  border-bottom: 0;
+}
+
+.repo-menu-popover button:hover,
+.repo-menu-popover button:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+  outline: none;
+}
+
 .repo-card .primary-action {
   border-color: var(--accent) !important;
   background: var(--accent) !important;
