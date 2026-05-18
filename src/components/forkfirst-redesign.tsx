@@ -11,6 +11,7 @@ import {
   Download,
   ExternalLink,
   GitFork,
+  MessageSquare,
   Mic,
   Moon,
   MoreHorizontal,
@@ -1756,8 +1757,21 @@ function SavingsRing({ savingsLog }: { savingsLog: SavingsLog }) {
   );
 }
 
-function MobileNav({ active, go }: { active: Screen; go: (screen: Screen) => void }) {
+function MobileNav({
+  active,
+  go,
+  recentChats,
+  activeChatId,
+  onOpenChat
+}: {
+  active: Screen;
+  go: (screen: Screen) => void;
+  recentChats: ResearchChat[];
+  activeChatId: string | null;
+  onOpenChat: (chat: ResearchChat) => void;
+}) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [chatsOpen, setChatsOpen] = useState(false);
   const primary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
     { screen: "trending", label: "Trends", icon: <Star size={15} /> },
     { screen: "handoff", label: "Handoff", icon: <Download size={15} /> },
@@ -1770,12 +1784,50 @@ function MobileNav({ active, go }: { active: Screen; go: (screen: Screen) => voi
   const moreIsActive = secondary.some((item) => item.screen === active);
   const navigate = (screen: Screen) => {
     setMoreOpen(false);
+    setChatsOpen(false);
     go(screen);
+  };
+  const openChatFromMobile = (chat: ResearchChat) => {
+    setMoreOpen(false);
+    setChatsOpen(false);
+    onOpenChat(chat);
   };
   return (
     <>
+      {chatsOpen ? (
+        <div className="mobile-chat-history" role="dialog" aria-label="Recent chats">
+          <div className="mobile-chat-history-head">
+            <strong>Recent chats</strong>
+            <button type="button" onClick={() => setChatsOpen(false)} aria-label="Close recent chats">
+              <X size={14} />
+            </button>
+          </div>
+          <div className="mobile-chat-history-list">
+            {recentChats.slice(0, 8).length ? recentChats.slice(0, 8).map((chat) => (
+              <button
+                key={chat.id}
+                type="button"
+                className={activeChatId === chat.id ? "active" : ""}
+                onClick={() => openChatFromMobile(chat)}
+              >
+                <span>{chat.title}</span>
+                <small>{relativeChatTime(chat.updatedAt)}</small>
+              </button>
+            )) : (
+              <div className="mobile-chat-empty">Your recent idea checks will show here.</div>
+            )}
+          </div>
+        </div>
+      ) : null}
       {moreOpen ? (
         <div className="mobile-more-menu" role="menu" aria-label="More navigation">
+          <button type="button" role="menuitem" onClick={() => {
+            setMoreOpen(false);
+            setChatsOpen(true);
+          }}>
+            <MessageSquare size={15} />
+            <span>Chats</span>
+          </button>
           {secondary.map((item) => (
             <button key={item.screen} type="button" role="menuitem" className={active === item.screen ? "active" : ""} onClick={() => navigate(item.screen)}>
               {item.icon}
@@ -1821,7 +1873,10 @@ function MobileNav({ active, go }: { active: Screen; go: (screen: Screen) => voi
           className={moreIsActive || moreOpen ? "active" : ""}
           aria-expanded={moreOpen}
           aria-haspopup="menu"
-          onClick={() => setMoreOpen((open) => !open)}
+          onClick={() => {
+            setChatsOpen(false);
+            setMoreOpen((open) => !open);
+          }}
         >
           <MoreHorizontal size={15} />
           <span>More</span>
@@ -5023,7 +5078,7 @@ export function ForkFirstRedesignApp() {
               <ChatComposerBar disabled={chatSending || !result} onSubmit={sendFollowUp} />
             ) : null}
           </main>
-          <MobileNav active={screen} go={go} />
+          <MobileNav active={screen} go={go} recentChats={chats} activeChatId={activeChatId} onOpenChat={openChat} />
         </div>
         <SavingsRing savingsLog={savingsLog} />
       </div>
