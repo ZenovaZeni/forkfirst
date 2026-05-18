@@ -11,7 +11,7 @@ const baseKeys: UserKeys = {
 };
 
 describe("key status helpers", () => {
-  test("distinguishes saved keys from missing keys before verification", () => {
+  test("distinguishes configured keys from missing keys before verification", () => {
     const state = getSavedKeyState({ ...baseKeys, githubToken: "github_pat_x" });
 
     expect(state.github).toBe("saved");
@@ -22,6 +22,6 @@ describe("key status helpers", () => {
   test("formats status labels", () => {
     expect(keyStatusLabel("verified")).toBe("Verified");
     expect(keyStatusLabel("failed")).toBe("Failed");
-    expect(keyStatusLabel("saved")).toBe("Saved");
+    expect(keyStatusLabel("saved")).toBe("Configured");
   });
 });

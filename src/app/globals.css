@@ -155,7 +155,7 @@ a {
   height: 32px;
   border-radius: 9px;
   border: 1px solid rgba(88, 166, 255, 0.55);
-  background: linear-gradient(135deg, rgba(88, 166, 255, 0.95), rgba(63, 185, 80, 0.72));
+  background: var(--accent);
   box-shadow: 0 0 30px rgba(88, 166, 255, 0.36);
 }
 
@@ -884,9 +884,7 @@ a {
   width: min(860px, 100%);
   margin: 0;
   padding: 18px 0 max(18px, env(safe-area-inset-bottom));
-  background:
-    linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.96) 24%, rgba(13, 17, 23, 0.99)),
-    radial-gradient(circle at 50% 100%, rgba(88, 166, 255, 0.12), transparent 18rem);
+  background: rgba(13, 17, 23, 0.99);
   animation: composer-rise 220ms ease-out;
 }
 
@@ -998,9 +996,7 @@ a {
 
 .security-disclosure {
   border-color: color-mix(in srgb, var(--accent, var(--signal)) 26%, var(--line));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent, var(--signal)) 8%, transparent), transparent 54%),
-    color-mix(in srgb, var(--panel-2, var(--paper-2)) 44%, transparent);
+  background: color-mix(in srgb, var(--accent, var(--signal)) 8%, var(--panel-2, var(--paper-2)));
 }
 
 .security-disclosure ul {
@@ -1613,9 +1609,7 @@ a {
   width: min(820px, 100%);
   border: 1px solid rgba(88, 166, 255, 0.2);
   border-radius: 14px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(88, 166, 255, 0.1), transparent 17rem),
-    rgba(22, 27, 34, 0.86);
+  background: rgba(22, 27, 34, 0.86);
   padding: 13px;
 }
 
@@ -1907,9 +1901,7 @@ a {
   gap: 24px;
   border: 1px solid rgba(88, 166, 255, 0.26);
   border-radius: 14px;
-  background:
-    linear-gradient(90deg, rgba(88, 166, 255, 0.1), rgba(210, 153, 34, 0.035)),
-    rgba(22, 27, 34, 0.95);
+  background: rgba(22, 27, 34, 0.95);
   padding: 18px;
 }
 
@@ -2078,9 +2070,7 @@ a {
 .research-map {
   border: 1px solid var(--line);
   border-radius: 14px;
-  background:
-    radial-gradient(circle at 90% 10%, rgba(88, 166, 255, 0.08), transparent 16rem),
-    #0d1117;
+  background: #0d1117;
   padding: 16px;
 }
 
@@ -2308,9 +2298,7 @@ a {
   display: grid;
   grid-template-columns: minmax(240px, 0.9fr) minmax(320px, 1.1fr);
   gap: 18px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(210, 153, 34, 0.08), transparent 15rem),
-    rgba(22, 27, 34, 0.9);
+  background: rgba(22, 27, 34, 0.9);
 }
 
 .idea-gap-panel h3 {
@@ -2359,9 +2347,7 @@ a {
 
 .featured-repo {
   border-color: rgba(88, 166, 255, 0.22);
-  background:
-    radial-gradient(circle at 95% 0%, rgba(88, 166, 255, 0.08), transparent 12rem),
-    rgba(22, 27, 34, 0.92);
+  background: rgba(22, 27, 34, 0.92);
 }
 
 .featured-repo .repo-card-header {
@@ -2750,9 +2736,7 @@ a {
   align-items: stretch;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(88, 166, 255, 0.06), transparent 10rem),
-    rgba(22, 27, 34, 0.82);
+  background: rgba(22, 27, 34, 0.82);
   padding: 8px;
 }
 
@@ -2952,9 +2936,7 @@ a {
   scrollbar-gutter: stable;
   border: 1px solid rgba(88, 166, 255, 0.28);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(88, 166, 255, 0.11), transparent 16rem),
-    #161b22;
+  background: #161b22;
   box-shadow: 0 28px 100px rgba(0, 0, 0, 0.52);
   padding: 18px;
 }
@@ -2965,9 +2947,7 @@ a {
   overflow-y: auto;
   border: 1px solid rgba(88, 166, 255, 0.28);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(88, 166, 255, 0.11), transparent 16rem),
-    #161b22;
+  background: #161b22;
   box-shadow: 0 28px 100px rgba(0, 0, 0, 0.52);
   padding: 18px;
 }
@@ -2995,9 +2975,7 @@ a {
   width: min(480px, 100%);
   border: 1px solid rgba(88, 166, 255, 0.28);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(88, 166, 255, 0.13), transparent 14rem),
-    #161b22;
+  background: #161b22;
   box-shadow: 0 28px 100px rgba(0, 0, 0, 0.55);
   padding: 18px;
 }
@@ -3267,9 +3245,7 @@ a {
 @media (max-width: 860px) {
   body {
     overflow: auto;
-    background:
-      radial-gradient(circle at 50% 0%, rgba(88, 166, 255, 0.13), transparent 18rem),
-      var(--bg);
+    background: var(--bg);
   }
 
   .app-shell {
@@ -4219,9 +4195,7 @@ a {
 }
 
 .workspace {
-  background:
-    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--signal) 8%, transparent), transparent 26rem),
-    var(--bg);
+  background: var(--bg);
   padding: 0 clamp(28px, 5vw, 72px);
 }
 
@@ -4497,9 +4471,7 @@ a {
 
 .bottom-composer {
   left: calc(320px + ((100vw - 320px - min(860px, calc(100vw - 320px - 96px))) / 2));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), var(--bg) 28%, var(--bg)),
-    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--signal) 10%, transparent), transparent 18rem);
+  background: var(--bg);
 }
 
 .bottom-composer .ask-box {
@@ -4523,9 +4495,7 @@ a {
 }
 
 .repo-results-inline {
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--signal) 10%, transparent), transparent 17rem),
-    var(--panel);
+  background: var(--panel);
   box-shadow: var(--paper-shadow);
 }
 
@@ -5700,10 +5670,7 @@ body,
 }
 
 .theme-paper .workspace {
-  background:
-    radial-gradient(circle at 50% 8%, rgba(199, 68, 19, 0.095), transparent 24rem),
-    linear-gradient(180deg, rgba(255, 253, 248, 0.5), transparent 24rem),
-    var(--bg);
+  background: var(--bg);
 }
 
 .desktop-topbar {
@@ -5754,9 +5721,7 @@ body,
 .ask-box {
   border-radius: 20px;
   border-color: color-mix(in srgb, var(--line) 72%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 98%, var(--bg)), var(--panel)),
-    var(--panel);
+  background: var(--panel);
   box-shadow:
     0 1px 0 rgba(55, 45, 34, 0.05),
     0 26px 68px -46px rgba(55, 45, 34, 0.62);
@@ -5813,9 +5778,7 @@ body,
 .starter-preview div {
   min-height: 116px;
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 98%, var(--bg)), color-mix(in srgb, var(--panel-2) 28%, var(--panel))),
-    var(--panel);
+  background: var(--panel);
   padding: 17px;
 }
 
@@ -5857,9 +5820,7 @@ body,
 .repo-results-inline {
   border-radius: 20px;
   border-color: color-mix(in srgb, var(--signal) 18%, var(--line));
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--signal) 9%, transparent), transparent 16rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 98%, var(--bg)), var(--panel));
+  background: var(--panel);
   padding: 16px;
 }
 
@@ -5893,9 +5854,7 @@ body,
 .inline-repo {
   border-radius: 16px;
   border-color: color-mix(in srgb, var(--line) 82%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, transparent), color-mix(in srgb, var(--panel-2) 19%, var(--panel))),
-    var(--panel);
+  background: var(--panel);
   padding: 14px;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
@@ -5950,9 +5909,7 @@ body,
   grid-template-columns: minmax(0, 1fr) minmax(156px, 210px) auto;
   border-radius: 17px;
   border-color: color-mix(in srgb, var(--signal) 24%, var(--line));
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--signal) 9%, var(--panel)), color-mix(in srgb, var(--panel-2) 45%, var(--panel))),
-    var(--panel);
+  background: color-mix(in srgb, var(--signal) 9%, var(--panel));
   padding: 14px;
 }
 
@@ -6762,9 +6719,7 @@ body,
   align-items: flex-start;
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--line);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--signal) 14%, transparent), transparent 42%),
-    var(--panel);
+  background: var(--panel);
 }
 
 .prompt-pack-details-header span {
@@ -7445,9 +7400,7 @@ body,
 .bottom-composer {
   left: calc(264px + ((100vw - 264px - 300px - min(900px, calc(100vw - 264px - 300px - 80px))) / 2));
   width: min(900px, calc(100vw - 264px - 300px - 80px));
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--paper) 0%, transparent), var(--paper) 28%, var(--paper)),
-    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 18rem);
+  background: var(--paper);
 }
 
 .bottom-composer .ask-box {
@@ -7930,9 +7883,7 @@ body,
   width: min(760px, 100%);
   border-radius: 22px;
   border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 17rem),
-    var(--paper-2);
+  background: var(--paper-2);
   box-shadow: var(--shadow-2);
   padding: clamp(18px, 2.5vw, 28px);
 }

@@ -353,7 +353,7 @@ export function RightSidebar({
       {mode === "keys" ? (
         <>
           <p className="rail-context">
-            Bring your own keys. They are session-only by default, sent only for requests you trigger, and never written to app storage unless you opt in.
+            Bring your own keys. They are kept in sessionStorage by default, sent only for requests you trigger, and written to persistent localStorage only if you turn on Remember keys.
           </p>
           <section className="appearance-card" aria-label="Appearance settings">
             <div className="appearance-card-heading">

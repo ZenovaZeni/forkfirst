@@ -1117,33 +1117,30 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
 
       <section className="hero">
         <h1>
-          Don&apos;t start
+          Find the best repo foundation
           <br />
-          <span className="muted-word">from scratch.</span>
-          <br />
-          <span className="accent-word">Build from real code.</span>
+          <span className="muted-word">before your AI starts building.</span>
         </h1>
         <p className="hero-sub">
-          Describe your idea. ForkFirst finds <span className="accent-key">real GitHub projects</span> that already solve
-          part of it, then gives your AI builder the <span className="accent-key">repo, plan, brand, and rules</span> to
-          build your version faster.
+          Describe your idea. ForkFirst searches GitHub, ranks real repos, explains which one to fork, study, or avoid,
+          then exports a Markdown handoff your AI builder can use inside the chosen repo.
         </p>
         <div className="hero-cta-row">
           <button className="btn accent xl" type="button" onClick={() => go("app")}>
-            Find my foundation <ArrowRight size={18} />
+            Check my idea <ArrowRight size={18} />
           </button>
           <button
             className="btn ghost lg"
             type="button"
             onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}
           >
-            See the flow
+            See sample handoff
           </button>
         </div>
         <div className="hero-meta">
-          <span>Session-only keys by default</span>
-          <span>Works with your AI builder</span>
-          <span>Open source</span>
+          <span>Idea to ranked repos</span>
+          <span>Best foundation decision</span>
+          <span>Builder handoff</span>
         </div>
       </section>
 
@@ -1153,7 +1150,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
             <span className="dot" />
             <span className="dot" />
             <span className="dot" />
-            <span className="url">forkfirst.app / new idea</span>
+            <span className="url">forkfirst.vercel.app / new idea</span>
           </div>
           <div className="hero-mock-body">
             <p className="hero-mock-prompt">
@@ -1178,6 +1175,11 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
                 <span className="repo-desc">Small Kanban-style UI. Read for flow patterns.</span>
                 <span className="fit-bar"><i style={{ width: "58%" }} /></span>
               </div>
+              <div className="hero-mock-result handoff-ready">
+                <span className="label">Builder handoff ready</span>
+                <span className="repo-name">STARTER_REPO.md + PRD + BUILD_PLAN + AGENTS.md</span>
+                <span className="repo-desc">Tells Codex, Claude Code, Cursor, or v0 what to clone, keep, replace, and build first.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1186,7 +1188,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <section className="section" id="how">
         <div className="section-head">
           <span className="eyebrow">How it works</span>
-          <h2>From <span className="accent-word">rough idea</span> to repo-backed build plan.</h2>
+          <h2>From <span className="accent-word">rough idea</span> to repo-backed builder handoff.</h2>
           <p>
             ForkFirst is the step before your AI builder starts coding. It turns an idea into <span className="accent-key">repo evidence</span>, a <span className="accent-key">foundation
             decision</span>, and files your builder can read in the cloned repo.
@@ -1195,9 +1197,9 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
         <div className="flow-lineup" aria-label="ForkFirst flow">
           {[
             ["01", "Say the idea", "Type it like you would text a friend."],
-            ["02", "Find foundations", "ForkFirst ranks real repos by fit, docs, activity, and reuse risk."],
-            ["03", "Pick the direction", "Choose what to clone, what to study, and what to avoid."],
-            ["04", "Brief the builder", "Export the files that tell your AI what repo to open and what to build."]
+            ["02", "Rank real repos", "ForkFirst scores fit, activity, docs, license signals, and reuse risk."],
+            ["03", "Choose the foundation", "See what to fork, what to study, and what to avoid."],
+            ["04", "Hand off to your builder", "Export repo-root Markdown with the starter repo, product brief, build plan, and agent rules."]
           ].map(([step, title, body]) => (
             <div key={step} className="flow-step">
               <span>{step}</span>
@@ -1211,16 +1213,16 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <section className="section" id="why">
         <div className="section-head">
           <span className="eyebrow">Why use it</span>
-          <h2>Your AI builder is brilliant. It&apos;s also expensive when it&apos;s <span className="accent-word">guessing.</span></h2>
+          <h2>Stop asking your AI builder to <span className="accent-word">guess the starting point.</span></h2>
           <p>
-            ForkFirst gives Claude, Codex and Cursor a <span className="accent-key">real starting point</span> - code that
-            already works, written by humans who solved the problem first. <span className="accent-key">You ship faster, on less.</span>
+            ForkFirst gives your builder repo evidence first: what already exists, which codebase is the best
+            foundation, and what should change for your version.
           </p>
         </div>
         <div className="token-row">
           <div className="token-cell lead">
             <h3>Less guessing.<br />More shipping.</h3>
-            <p>Free tool, built to give your AI concrete context before it writes code.</p>
+            <p>Free tool, built to give your AI builder concrete repo context before it writes code.</p>
           </div>
           <div className="token-cell">
             <span className="big accent">Context</span>
@@ -1240,7 +1242,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       <section className="section builder-section" id="builders">
         <div className="section-head">
           <span className="eyebrow">Use your favorite AI builder</span>
-          <h2>Works with the builder you <span className="accent-word">already like.</span></h2>
+          <h2>One handoff. Any <span className="accent-word">Markdown-friendly builder.</span></h2>
           <p>
             ForkFirst exports a <span className="accent-key">repo-first Markdown handoff</span>, so Claude Code, Codex, Cursor, Replit, Lovable, v0,
             Gemini CLI, Antigravity, and most AI builders can pick up the repo, product direction, rules, and first
@@ -1349,10 +1351,34 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
         </div>
       </section>
 
+      <section className="section service-section" id="audit">
+        <div className="section-head">
+          <span className="eyebrow">Done-for-you option</span>
+          <h2>Want a human-reviewed <span className="accent-word">AI Builder Handoff?</span></h2>
+          <p>
+            ForkFirst is the public tool. For founders who want a sharper decision, Zenova can turn your idea into a
+            repo foundation audit, reuse-risk notes, and a Cursor/Codex/Claude-ready build packet.
+          </p>
+        </div>
+        <div className="service-grid" aria-label="AI Builder Handoff Audit options">
+          {[
+            ["Quick Handoff", "$297", "Best for validating one idea and getting a starter repo recommendation."],
+            ["Deep Repo Audit", "$497", "Best for comparing several foundations, risks, docs, activity, and first milestones."],
+            ["Build Plan + Setup", "$997+", "Best when you want the handoff plus initial repo setup direction for an AI builder."]
+          ].map(([title, price, body]) => (
+            <article className="service-card" key={title}>
+              <strong>{title}</strong>
+              <span>{price}</span>
+              <p>{body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <div className="cta-strip">
         <div>
           <h2>What are you <span className="accent-word">about to build?</span></h2>
-          <p>ForkFirst will tell you if it already exists - and give your AI everything it needs to ship the version that doesn&apos;t.</p>
+          <p>Find the strongest open-source foundation first, then hand your AI builder the repo, product direction, and rules.</p>
         </div>
         <div className="actions">
           <button className="btn accent xl" type="button" onClick={() => go("app")}>
@@ -1369,11 +1395,11 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           <span style={{ color: "var(--muted)", marginLeft: 12 }}>(c) 2026 / MIT</span>
         </button>
         <div className="right">
-          <a href="https://github.com/officialzenovaai/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
           <a href="/security">Security</a>
           <a href="/security">Privacy</a>
-          <a href="https://github.com/officialzenovaai/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
-          <a href="https://github.com/officialzenovaai/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
+          <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
+          <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
         </div>
       </footer>
     </div>
@@ -1851,7 +1877,7 @@ function EmptyApp({
       <p className="sub">
         {foundationDraft
           ? "Tell ForkFirst what you want to make from this foundation. We will inspect the repo around your goal before any handoff gets built."
-          : "Say it like you'd say it out loud. We'll find what already exists, before your AI burns through your tokens trying to invent it."}
+          : "Describe the product you want to build. ForkFirst will find close GitHub repos, recommend the best foundation, and prepare the builder handoff before coding starts."}
       </p>
       {foundationDraft ? (
         <div className="foundation-attach" aria-label="Selected foundation repo">
@@ -1913,7 +1939,7 @@ function EmptyApp({
       <div className="starters-trending">
         <div className="row-label">
           <span className="pulse" />
-          <span>Live GitHub starters</span>
+          <span>Already have a direction? Start from a live repo</span>
           <span className="row-label-right">GitHub Search - pushed in last 30 days</span>
         </div>
         <div className="starter-grid">
@@ -2269,8 +2295,8 @@ function ChatResults({
             <div className="next-step-card">
               <div>
                 <div className="nlbl">Next step</div>
-                <h4>Want me to write the Builder Handoff?</h4>
-                <p>I&apos;ll ask 5 quick questions about your brand, then bundle it all into one folder your AI builder can read.</p>
+                <h4>Turn this foundation into a builder handoff?</h4>
+                <p>I&apos;ll ask a few product questions, then create the Markdown files your AI builder needs: starter repo, PRD, build plan, repo notes, and agent rules.</p>
               </div>
               <button className="btn accent" type="button" onClick={onStartBranding}>
                 Start <ArrowRight size={14} />
@@ -2873,7 +2899,7 @@ function HandoffView({
         <div>
           <h2>
             Builder Handoff
-            <small>{packTitle} - autosaved locally as a Build Pack draft.</small>
+            <small>{starterName} to {packTitle}. Editable Markdown for your AI builder.</small>
           </h2>
         </div>
         <div className="handoff-actions">

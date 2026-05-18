@@ -36,7 +36,7 @@ and lists the rules for cases the quick start doesn't cover.
 | **Wordmark** | `forkfirst` (lowercase, in the wordmark only — see §4)           |
 | **Tagline**  | *Idea check, before you build.*                                   |
 | **Pitch**    | Find the best repo to fork — then hand the plan to your AI.       |
-| **Domain**   | `forkfirst.dev` (placeholder — update before launch)              |
+| **Domain**   | `forkfirst.vercel.app`                                            |
 | **Tone**     | Quiet confidence. Editorial restraint. Engineer-friendly. No emoji.|
 
 ### What ForkFirst does

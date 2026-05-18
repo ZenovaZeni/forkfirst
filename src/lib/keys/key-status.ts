@@ -13,7 +13,7 @@ export function getSavedKeyState(keys: UserKeys): KeyVerificationState {
   return {
     github: keys.githubToken.trim() ? "saved" : "missing",
     ai: keys.aiApiKey.trim() ? "saved" : "missing",
-    message: keys.githubToken.trim() || keys.aiApiKey.trim() ? "Keys are saved locally. Verify them to confirm they work." : "No keys saved yet.",
+    message: keys.githubToken.trim() || keys.aiApiKey.trim() ? "Keys are configured in this browser. Verify them to confirm they work." : "No keys configured yet.",
     checkedAt: null
   };
 }
@@ -21,6 +21,6 @@ export function getSavedKeyState(keys: UserKeys): KeyVerificationState {
 export function keyStatusLabel(status: KeyCheckStatus): string {
   if (status === "verified") return "Verified";
   if (status === "failed") return "Failed";
-  if (status === "saved") return "Saved";
+  if (status === "saved") return "Configured";
   return "Missing";
 }

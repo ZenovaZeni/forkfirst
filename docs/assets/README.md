@@ -1,31 +1,30 @@
 # ForkFirst release assets
 
-This folder holds release-ready screenshots used in the GitHub repo page, blog posts, and external link previews. The README in the project root pulls smaller copies from `public/screenshots/` so they ship inside the deployed app.
+Release screenshots live in `public/screenshots/` so the README can render them on GitHub and the deployed app can serve them directly.
 
 ## Regenerating
 
 ```bash
-npm run dev                                # in one terminal
-npx playwright install chromium            # first time only
-node scripts/capture-screenshots.mjs       # in another terminal
+npm run dev
+npx playwright install chromium
+node scripts/capture-screenshots.mjs
 ```
 
-The script writes a matching `*.png` to both `public/screenshots/` and `docs/assets/`.
+The capture script writes the current launch screenshots to `public/screenshots/`.
 
-## Naming convention
+## Current screenshots
 
 | File | Description |
 |---|---|
-| `01-home-paper.png` | Desktop home, Paper (light) theme |
-| `02-home-ink.png`   | Desktop home, Ink (dark) theme |
-| `03-chat-results.png` | Chat-style results after a demo prompt |
-| `04-saved-library.png` | Saved library drawer |
-| `05-build-pack.png` | Build Pack modal with editable Markdown |
-| `06-mobile-home.png` | Mobile home screen (390×844) |
-| `07-mobile-results.png` | Mobile chat/results |
+| `public/screenshots/home.png` | Desktop home screen |
+| `public/screenshots/rebrand-desktop-paper.png` | Desktop home, Paper theme |
+| `public/screenshots/rebrand-desktop-ink.png` | Desktop home, Ink theme |
+| `public/screenshots/rebrand-mobile-paper.png` | Mobile home screen |
+| `public/screenshots/results.png` | Ranked repo results after a demo prompt |
+| `public/screenshots/build-pack.png` | Builder Handoff modal with editable Markdown |
 
 ## Safety
 
-- Capture with a **fresh browser profile** so no real GitHub token or AI provider key is visible.
+- Capture with a fresh browser profile so no real GitHub token or AI provider key is visible.
 - Use demo prompts that do not contain personal information.
 - Crop or blur any usage cost numbers if you have run real paid calls in the captured browser.

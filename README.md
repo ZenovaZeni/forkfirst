@@ -1,27 +1,39 @@
 # ForkFirst
 
-> Do not start from scratch until you know what already exists.
+[![CI](https://github.com/ZenovaZeni/forkfirst/actions/workflows/ci.yml/badge.svg)](https://github.com/ZenovaZeni/forkfirst/actions/workflows/ci.yml)
+[![Deploy](https://img.shields.io/badge/deploy-forkfirst.vercel.app-000000.svg)](https://forkfirst.vercel.app)
+[![License: MIT](https://img.shields.io/badge/license-MIT-111111.svg)](./LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15-111111.svg)](https://nextjs.org/)
+[![BYOK](https://img.shields.io/badge/BYOK-demo_mode_ready-2647F0.svg)](#security-model)
 
-ForkFirst is a repo-first idea checker for AI builders. Describe what you want to build, let ForkFirst search GitHub for useful existing projects, then export a Builder Handoff your coding agent can actually use.
+> Find the best open-source starting point for your app idea before your AI starts building.
 
-It is the step before Claude Code, Codex, Cursor, Replit, Lovable, v0, or Gemini CLI.
+ForkFirst searches GitHub, ranks real repos, explains which one to fork, study, or avoid, then exports a Markdown handoff your AI builder can use inside the chosen repo.
+
+[Try the hosted demo](https://forkfirst.vercel.app) · [Read the security model](./SECURITY.md) · [View sample handoffs](#public-sample-handoffs)
 
 ## Why this exists
 
-AI coding tools are powerful, but they waste time and tokens when they invent foundations that already exist. ForkFirst gives the builder a better starting point:
+AI coding tools are powerful, but they waste time and tokens when they invent foundations that already exist. ForkFirst is the step before Claude Code, Codex, Cursor, Replit, Lovable, v0, or Gemini CLI:
 
 1. Your plain-English idea.
-2. Real GitHub repos that might be forked, studied, or avoided.
-3. Fit notes, reuse warnings, and license reminders.
-4. A Markdown handoff with the starter repo, PRD, build plan, brand notes, and agent instructions.
+2. Ranked GitHub repos with fit, activity, docs, license-signal, and reuse-risk notes.
+3. A foundation decision: fork, study, avoid, or keep searching.
+4. Repo-root Markdown files: `STARTER_REPO.md`, `PRD.md`, `BUILD_PLAN.md`, `REPO_STARTER_NOTES.md`, `AGENTS.md`, and `CLAUDE.md`.
 
 ## 60-second flow
 
 1. Type the idea like you would say it to a friend.
-2. ForkFirst plans GitHub searches and ranks useful public repos.
-3. Ask follow-up questions or save promising repos.
-4. Click Build Handoff.
+2. ForkFirst searches GitHub and ranks useful public repos.
+3. Pick the best foundation or ask follow-up questions.
+4. Click Builder Handoff.
 5. Put the generated packet into Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, or any builder that can read Markdown.
+
+## Screenshots
+
+| Start with an idea | Compare repo foundations | Export the builder handoff |
+|---|---|---|
+| ![ForkFirst home screen](./public/screenshots/rebrand-desktop-paper.png) | ![ForkFirst repo results](./public/screenshots/results.png) | ![ForkFirst Build Pack](./public/screenshots/build-pack.png) |
 
 ## Public sample handoffs
 
@@ -34,7 +46,7 @@ These are example output packets checked against live GitHub Search API results 
 ## Features
 
 - Repo-first GitHub search and ranking.
-- Builder Handoff exports for Claude Code, Codex, Cursor, Replit, Lovable-style workflows, and generic Markdown.
+- Builder Handoff exports for Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, and generic Markdown.
 - `STARTER_REPO.md`, `PRD.md`, `BUILD_PLAN.md`, `REPO_STARTER_NOTES.md`, `AGENTS.md`, and `CLAUDE.md` style guidance.
 - Optional AI chat and idea refinement.
 - Saved repos, boards, editable handoff docs, and shareable handoff URLs.
@@ -42,6 +54,18 @@ These are example output packets checked against live GitHub Search API results 
 - Prompt packs for reusable builder rules.
 - PWA install support.
 - Demo mode without paid keys.
+
+## AI Builder Handoff Audit
+
+ForkFirst is also the workflow behind a done-for-you Zenova service:
+
+> Send your app idea. We find the best open-source repo foundation, inspect reuse risks, and deliver a Cursor/Codex/Claude-ready build handoff.
+
+Suggested service tiers:
+
+- **Quick Handoff:** one idea, starter repo recommendation, and first build plan.
+- **Deep Repo Audit:** compare several foundations, docs, activity, license signals, and reuse risks.
+- **Build Plan + Setup:** handoff plus initial repo setup direction for an AI builder.
 
 ## Security model
 
@@ -83,10 +107,13 @@ Server-side fallback keys are dangerous on a public no-login site because visito
 
 ## Run locally
 
+Requires Node.js 20 or newer. No keys are required for demo mode.
+
 ```bash
-git clone https://github.com/officialzenovaai/forkfirst.git
+git clone https://github.com/ZenovaZeni/forkfirst.git
 cd forkfirst
 npm install
+cp .env.example .env.local   # optional
 npm run dev
 ```
 
@@ -112,7 +139,17 @@ npm run build
 
 Do not open public issues with secrets, tokens, or exploit details. Use a private GitHub Security Advisory:
 
-[Report a vulnerability privately](https://github.com/officialzenovaai/forkfirst/security/advisories/new)
+[Report a vulnerability privately](https://github.com/ZenovaZeni/forkfirst/security/advisories/new)
+
+## Docs
+
+- [BYOK guide](./docs/byok.md)
+- [Setup and cost notes](./docs/setup-and-cost.md)
+- [Demo prompts](./docs/demo-prompts.md)
+- [Privacy](./PRIVACY.md)
+- [Security](./SECURITY.md)
+- [Contributing](./CONTRIBUTING.md)
+- [Roadmap](./ROADMAP.md)
 
 ## Contributing
 

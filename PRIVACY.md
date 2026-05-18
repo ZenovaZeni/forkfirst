@@ -5,8 +5,8 @@ ForkFirst is designed as a local-first research tool.
 ## What Stays Local
 
 - User-entered keys are session-only by default. Persistent `localStorage` is opt-in with "Remember keys".
-- Saved chats and saved repos are stored in browser `localStorage`.
-- Idea checks are persisted to `.forkfirst/forkfirst.sqlite` only for local/self-hosted research history or when server-side DB mode is explicitly enabled.
+- Saved chats, saved repos, saved Build Packs, prompt packs, usage entries, and the optional "Remember keys" setting are stored in browser `localStorage`.
+- Idea checks are persisted to `.forkfirst/forkfirst.sqlite` only when `FORKFIRST_ENABLE_SERVER_DB=true`, including local or self-hosted runs. The default app experience keeps research state in the browser.
 
 ## What Is Sent To APIs
 
@@ -44,4 +44,4 @@ If you host ForkFirst for other users, configure durable rate limiting with `UPS
 
 Report security issues privately at:
 
-https://github.com/officialzenovaai/forkfirst/security/advisories/new
+https://github.com/ZenovaZeni/forkfirst/security/advisories/new

@@ -21,7 +21,7 @@ describe("checkRateLimit", () => {
 describe("checkRateLimitForRequest", () => {
   test("uses local fallback when durable env is not configured", async () => {
     const bucket = new Map<string, { count: number; windowStart: number }>();
-    const request = new Request("https://forkfirst.app/api/test", {
+    const request = new Request("https://example.test/api/test", {
       headers: { "x-forwarded-for": "203.0.113.9" }
     });
 
@@ -36,7 +36,7 @@ describe("checkRateLimitForRequest", () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify([{ result: 2 }, { result: 1 }]), { status: 200 })
     );
-    const request = new Request("https://forkfirst.app/api/test", {
+    const request = new Request("https://example.test/api/test", {
       headers: { "x-forwarded-for": "198.51.100.2" }
     });
 

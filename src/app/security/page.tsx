@@ -30,7 +30,7 @@ const trustCards = [
 ];
 
 const builderCards = ["Claude Code", "Codex", "Cursor", "Replit", "Lovable", "v0", "Gemini CLI", "Markdown"];
-const securityAdvisoryUrl = "https://github.com/officialzenovaai/forkfirst/security/advisories/new";
+const securityAdvisoryUrl = "https://github.com/ZenovaZeni/forkfirst/security/advisories/new";
 
 const sectionStyle = {
   borderTop: "1px solid #ded6c4",
@@ -78,6 +78,10 @@ export default function SecurityPage() {
           Default key storage is session-only. Remember keys is opt-in and stores keys in this browser&apos;s localStorage.
           Browser extensions, malware, someone with your unlocked device, or any future XSS bug could read browser
           storage, so use scoped, revocable keys with spend limits.
+        </p>
+        <p>
+          Saved chats, saved repos, saved Build Packs, prompt packs, and usage entries are stored in browser
+          localStorage by default. ForkFirst does not attach that data to a hosted user account.
         </p>
       </section>
 

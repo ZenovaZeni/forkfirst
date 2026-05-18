@@ -7,7 +7,7 @@ Thanks for helping make ForkFirst better. This project is small, focused, and BY
 Requires Node.js 20 or newer.
 
 ```bash
-git clone https://github.com/officialzenovaai/forkfirst.git
+git clone https://github.com/ZenovaZeni/forkfirst.git
 cd forkfirst
 npm install
 cp .env.example .env.local   # optional

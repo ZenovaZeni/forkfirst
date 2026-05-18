@@ -94,7 +94,7 @@ export default async function OGImage({
           }}
         >
           <span style={{ fontSize: 18, color: "#9b7848", fontWeight: 600 }}>
-            forkfirst.dev — find what&apos;s already out there
+            forkfirst.vercel.app - find the repo foundation first
           </span>
           <span
             style={{

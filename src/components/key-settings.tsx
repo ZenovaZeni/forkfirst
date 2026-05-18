@@ -79,7 +79,7 @@ export function KeySettings({
       <summary>
         <KeyRound size={15} />
         Keys and providers
-        <span>{verification.github === "verified" || verification.ai === "verified" ? "verified" : keys.githubToken || keys.aiApiKey ? "saved" : "optional"}</span>
+        <span>{verification.github === "verified" || verification.ai === "verified" ? "verified" : keys.githubToken || keys.aiApiKey ? "configured" : "optional"}</span>
       </summary>
       <div className="key-verify-strip">
         <span className={verification.github}>{`GitHub ${keyStatusLabel(verification.github)}`}</span>

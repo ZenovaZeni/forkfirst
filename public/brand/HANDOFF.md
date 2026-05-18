@@ -96,7 +96,7 @@ remain.
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="ForkFirst"/>
-<meta property="og:url" content="https://forkfirst.dev"/>  <!-- update to your real URL -->
+<meta property="og:url" content="https://forkfirst.vercel.app"/>
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image"/>

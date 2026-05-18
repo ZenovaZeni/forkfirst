@@ -119,7 +119,7 @@ Before tagging:
 > **Get started**
 >
 > ```bash
-> git clone https://github.com/officialzenovaai/forkfirst.git
+> git clone https://github.com/ZenovaZeni/forkfirst.git
 > cd forkfirst
 > npm install
 > npm run dev
@@ -138,4 +138,4 @@ Before tagging:
 **Remaining recommendations (non-blocking):**
 
 - Regenerate screenshots with `npm run screenshots` once the dev server is up to ensure they match the latest UI copy.
-- Confirm the public repo URL still matches `https://github.com/officialzenovaai/forkfirst`.
+- Confirm the public repo URL still matches `https://github.com/ZenovaZeni/forkfirst`.

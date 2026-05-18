@@ -8,7 +8,7 @@ ForkFirst is designed as a local-first builder tool that can also run as a publi
 - Keys are sent to the running Next.js API only when you verify a key, run repo research, use chat, or request live trending with a GitHub token.
 - The API forwards your request to GitHub or the chosen AI provider for that single call. Keys are not persisted server-side.
 - Optional server defaults in `.env.local` are loaded only by the server process.
-- Prompts, verdicts, and repo results are persisted locally in `.forkfirst/forkfirst.sqlite` only when server-side DB mode is explicitly enabled or when running local/self-host flows that use the local database.
+- Prompts, verdicts, and repo results are persisted in `.forkfirst/forkfirst.sqlite` only when `FORKFIRST_ENABLE_SERVER_DB=true`, including local or self-hosted runs. The default app experience keeps research state in browser storage.
 - Older local installs may have `.open-repo/open-repo.sqlite`; ForkFirst migrates that data into `.forkfirst/forkfirst.sqlite` without deleting the legacy folder.
 - `.env.local`, `.forkfirst/`, `.open-repo/`, `.next/`, and `node_modules/` must **never be committed**.
 
@@ -23,6 +23,8 @@ ForkFirst is designed as a local-first builder tool that can also run as a publi
 ## Public Hosting Notes
 
 ForkFirst accepts custom OpenAI-compatible base URLs. Private and localhost base URLs are blocked by default because, on hosted deployments, `localhost` means the server network, not the user's computer.
+
+Private-host blocking is a guardrail, not a network firewall. It detects obvious localhost/private IP literals and common private IPv4 ranges, but it does not resolve DNS names to prove they cannot point at private infrastructure. Only enable untrusted custom base URLs for hosts you control and trust.
 
 For a public hosted version:
 

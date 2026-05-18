@@ -492,6 +492,16 @@ input, textarea, select { font: inherit; color: inherit; }
   display: block; height: 100%;
   background: var(--accent);
 }
+.hero-mock-result.handoff-ready {
+  grid-column: 1 / -1;
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--landing-line));
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--landing-panel));
+}
+.hero-mock-result.handoff-ready .repo-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
 
 /* ── Section: explainer / what it does ────────────────────────────────── */
 .section {
@@ -1275,6 +1285,43 @@ input, textarea, select { font: inherit; color: inherit; }
   color: var(--muted);
   font-size: 13px;
   text-align: center;
+}
+
+/* Service bridge */
+.service-section {
+  border-top: 1px solid var(--landing-line);
+}
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.service-card {
+  border: 1px solid var(--landing-line);
+  border-radius: 18px;
+  padding: 22px;
+  background: var(--landing-panel);
+  display: grid;
+  gap: 10px;
+}
+.service-card strong {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.service-card span {
+  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+.service-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* ── Final CTA strip ──────────────────────────────────────────────────── */
@@ -3124,6 +3171,10 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: -4px 0 0;
 }
 @media (max-width: 760px) {
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+
   .packs .prompt-packs-list {
     grid-template-columns: 1fr;
   }
