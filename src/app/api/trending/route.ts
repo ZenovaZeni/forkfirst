@@ -57,6 +57,254 @@ type GitHubSearchResult = {
 };
 
 const trendingRateLimit = new Map<string, { count: number; windowStart: number }>();
+const TRENDING_CACHE_MS = 12 * 60 * 60 * 1000;
+const trendingCache = new Map<string, { repos: TrendingRepo[]; generatedAt: string; expiresAt: number }>();
+
+const fallbackTrendingRepos: Record<z.infer<typeof RequestSchema>["categoryId"], TrendingRepo[]> = {
+  "ai-agents": [
+    {
+      fullName: "microsoft/autogen",
+      description: "A programming framework for agentic AI.",
+      stars: 48000,
+      language: "Python",
+      htmlUrl: "https://github.com/microsoft/autogen",
+      homepage: "https://microsoft.github.io/autogen/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["ai-agents", "llm", "multi-agent"]
+    },
+    {
+      fullName: "crewAIInc/crewAI",
+      description: "Framework for orchestrating role-playing autonomous AI agents.",
+      stars: 36000,
+      language: "Python",
+      htmlUrl: "https://github.com/crewAIInc/crewAI",
+      homepage: "https://www.crewai.com/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["ai-agents", "automation", "llm"]
+    },
+    {
+      fullName: "langchain-ai/langgraph",
+      description: "Build resilient language agents as graphs.",
+      stars: 17000,
+      language: "Python",
+      htmlUrl: "https://github.com/langchain-ai/langgraph",
+      homepage: "https://langchain-ai.github.io/langgraph/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["agents", "llm", "graphs"]
+    }
+  ],
+  "claude-skills": [
+    {
+      fullName: "VoltAgent/awesome-openclaw-skills",
+      description: "Curated examples and skills for Claude-style coding workflows.",
+      stars: 1200,
+      language: "Markdown",
+      htmlUrl: "https://github.com/VoltAgent/awesome-openclaw-skills",
+      homepage: null,
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["claude-code", "skills", "agents"]
+    },
+    {
+      fullName: "contains-studio/agents",
+      description: "A collection of agent prompts and workflow patterns.",
+      stars: 6500,
+      language: "Markdown",
+      htmlUrl: "https://github.com/contains-studio/agents",
+      homepage: null,
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["agents", "prompts", "claude"]
+    },
+    {
+      fullName: "hesreallyhim/awesome-claude-code",
+      description: "A curated list of Claude Code resources and workflows.",
+      stars: 3000,
+      language: "Markdown",
+      htmlUrl: "https://github.com/hesreallyhim/awesome-claude-code",
+      homepage: null,
+      license: "CC0-1.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["claude-code", "awesome-list", "tools"]
+    }
+  ],
+  "cursor-mcp": [
+    {
+      fullName: "modelcontextprotocol/servers",
+      description: "Reference implementations for the Model Context Protocol.",
+      stars: 60000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/modelcontextprotocol/servers",
+      homepage: "https://modelcontextprotocol.io/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["mcp", "mcp-server", "llm"]
+    },
+    {
+      fullName: "punkpeye/awesome-mcp-servers",
+      description: "A collection of MCP servers.",
+      stars: 65000,
+      language: "Markdown",
+      htmlUrl: "https://github.com/punkpeye/awesome-mcp-servers",
+      homepage: null,
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["mcp", "awesome-list", "servers"]
+    },
+    {
+      fullName: "upstash/context7",
+      description: "Up-to-date documentation context for AI code editors and agents.",
+      stars: 25000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/upstash/context7",
+      homepage: "https://context7.com/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["mcp", "documentation", "cursor"]
+    }
+  ],
+  "dev-tools": [
+    {
+      fullName: "shadcn-ui/ui",
+      description: "Beautifully designed components that you can copy and paste into your apps.",
+      stars: 90000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/shadcn-ui/ui",
+      homepage: "https://ui.shadcn.com/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["developer-tools", "react", "components"]
+    },
+    {
+      fullName: "supabase/supabase",
+      description: "The open source Firebase alternative.",
+      stars: 90000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/supabase/supabase",
+      homepage: "https://supabase.com/",
+      license: "Apache-2.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["developer-tools", "database", "backend"]
+    },
+    {
+      fullName: "microsoft/playwright",
+      description: "Framework for Web Testing and Automation.",
+      stars: 75000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/microsoft/playwright",
+      homepage: "https://playwright.dev/",
+      license: "Apache-2.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["developer-tools", "testing", "automation"]
+    }
+  ],
+  "saas-starters": [
+    {
+      fullName: "nextjs/saas-starter",
+      description: "A starter template for building SaaS applications with Next.js.",
+      stars: 12000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/nextjs/saas-starter",
+      homepage: "https://nextjs.org/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["saas", "nextjs", "starter"]
+    },
+    {
+      fullName: "boxyhq/saas-starter-kit",
+      description: "Enterprise SaaS starter kit with auth and common app patterns.",
+      stars: 5000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/boxyhq/saas-starter-kit",
+      homepage: "https://boxyhq.com/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["saas", "starter", "nextjs"]
+    },
+    {
+      fullName: "t3-oss/create-t3-app",
+      description: "The best way to start a full-stack, typesafe Next.js app.",
+      stars: 26000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/t3-oss/create-t3-app",
+      homepage: "https://create.t3.gg/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["starter", "nextjs", "typescript"]
+    }
+  ],
+  "indie-apps": [
+    {
+      fullName: "home-assistant/android",
+      description: "Home Assistant Companion for Android.",
+      stars: 3600,
+      language: "Kotlin",
+      htmlUrl: "https://github.com/home-assistant/android",
+      homepage: "https://www.home-assistant.io/",
+      license: "Apache-2.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["open-source-app", "android", "home-assistant"]
+    },
+    {
+      fullName: "home-assistant/iOS",
+      description: "Home Assistant for Apple platforms.",
+      stars: 2200,
+      language: "Swift",
+      htmlUrl: "https://github.com/home-assistant/iOS",
+      homepage: "https://www.home-assistant.io/",
+      license: "Apache-2.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["open-source-app", "ios", "home-assistant"]
+    },
+    {
+      fullName: "dominikmuellr/trudido",
+      description: "Simple tasks. Secure notes. Made in Europe.",
+      stars: 230,
+      language: "Dart",
+      htmlUrl: "https://github.com/dominikmuellr/trudido",
+      homepage: null,
+      license: "GPL-3.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["open-source-app", "tasks", "notes"]
+    }
+  ]
+};
+
+function trendingResponse(categoryId: z.infer<typeof RequestSchema>["categoryId"], repos: TrendingRepo[], meta: Record<string, unknown>) {
+  return NextResponse.json({
+    repos,
+    meta: {
+      source: "GitHub Search API",
+      sort: "stars",
+      windowDays: 30,
+      cachedSeconds: TRENDING_CACHE_MS / 1000,
+      generatedAt: new Date().toISOString(),
+      categoryId,
+      ...meta
+    }
+  });
+}
 
 export async function POST(request: Request) {
   const rateLimit = await checkRateLimitForRequest(request, trendingRateLimit, {
@@ -87,6 +335,15 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  const cacheKey = body.data.categoryId;
+  const cached = trendingCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return trendingResponse(cacheKey, cached.repos, {
+      source: "ForkFirst cache",
+      generatedAt: cached.generatedAt,
+      stale: false
+    });
+  }
 
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
@@ -102,7 +359,7 @@ export async function POST(request: Request) {
     const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=8`;
     const res = await fetch(url, {
       headers,
-      next: { revalidate: 21600 }
+      next: { revalidate: TRENDING_CACHE_MS / 1000 }
     });
 
     if (!res.ok) {
@@ -124,19 +381,36 @@ export async function POST(request: Request) {
     }
   } catch {
     console.error("[trending] fetch failed");
-    return NextResponse.json(
-      { error: "Could not reach GitHub. Try again later.", code: "TRENDING_FETCH_FAILED" },
-      { status: 502 }
-    );
+    if (cached) {
+      return trendingResponse(cacheKey, cached.repos, {
+        source: "ForkFirst stale cache",
+        generatedAt: cached.generatedAt,
+        stale: true
+      });
+    }
+    return trendingResponse(cacheKey, fallbackTrendingRepos[cacheKey], {
+      source: "ForkFirst fallback",
+      stale: true,
+      warning: "Could not reach GitHub, so ForkFirst is showing a curated starter set."
+    });
   }
 
   const successfulResults = results.filter((result) => result.ok);
   if (successfulResults.length === 0) {
     const firstStatus = results[0]?.status ?? 502;
-    return NextResponse.json(
-      { error: `GitHub returned ${firstStatus}. ${firstStatus === 403 ? "Rate limit hit - add a GitHub token." : "Try again later."}`, code: "TRENDING_FETCH_FAILED" },
-      { status: 502 }
-    );
+    if (cached) {
+      return trendingResponse(cacheKey, cached.repos, {
+        source: "ForkFirst stale cache",
+        generatedAt: cached.generatedAt,
+        stale: true,
+        warning: `GitHub returned ${firstStatus}.`
+      });
+    }
+    return trendingResponse(cacheKey, fallbackTrendingRepos[cacheKey], {
+      source: "ForkFirst fallback",
+      stale: true,
+      warning: `GitHub returned ${firstStatus}. Showing a curated starter set instead.`
+    });
   }
 
   const deduped = new Map<string, GitHubSearchItem>();
@@ -163,16 +437,13 @@ export async function POST(request: Request) {
       topics: Array.isArray(item.topics) ? item.topics.slice(0, 6) : []
     }));
 
-  return NextResponse.json({
+  trendingCache.set(cacheKey, {
     repos,
-    meta: {
-      source: "GitHub Search API",
-      queries,
-      successfulQueries: successfulResults.map((result) => result.query),
-      sort: "stars",
-      windowDays: 30,
-      cachedSeconds: 21600,
-      generatedAt: new Date().toISOString()
-    }
+    generatedAt: new Date().toISOString(),
+    expiresAt: Date.now() + TRENDING_CACHE_MS
+  });
+  return trendingResponse(cacheKey, repos, {
+    queries,
+    successfulQueries: successfulResults.map((result) => result.query)
   });
 }
