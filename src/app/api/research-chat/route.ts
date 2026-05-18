@@ -103,6 +103,8 @@ function formatBuilderReply(title: string, sections: Array<{ heading: string; it
   return [`## ${title}`, intro, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
 }
 
+const ADD_ON_INTENT_RE = /\b(anything else|what else|recommend|suggest|add on|add-on|add to|could i add|should i add|features?|differentiator|next feature)\b/;
+
 function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages: { role: "user" | "assistant"; content: string }[] = []): string {
   const saved = savedRepoContext(prompt);
   if (saved) {
@@ -189,14 +191,43 @@ function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages
     ], `Inspect ${best.fullName}, keep only the parts that accelerate the first milestone, then write the Builder Handoff around the user problem and the product gap.${docWeakness ? " At least one repo has weak docs, so verify setup before committing to it." : ""}`);
   }
 
-  if (/\b(anything else|what else|recommend|suggest|add on|add-on|add to|could i add|should i add|features?|differentiator|next feature)\b/.test(lower)) {
+  if (ADD_ON_INTENT_RE.test(lower)) {
     const best = repos[0];
     const kind = getRepoKindInsight(best);
+    const priorAddOnCount = priorUserMessages.filter((message) => ADD_ON_INTENT_RE.test(message.toLowerCase())).length;
     const repoHomepages = repos
       .filter((repo) => repo.homepage)
       .map((repo) => `${repo.fullName}: ${repo.homepage}`)
       .slice(0, 3);
     const isReferenceHeavy = repos.some((repo) => repo.category === "reference" || repo.category === "gap");
+    if (priorAddOnCount > 0) {
+      return formatBuilderReply("Yes - different angle this time.", [
+        {
+          heading: "Add a sharper decision moment",
+          items: [
+            "After the repo results, ask: do you want to clone this, study it, or keep searching?",
+            "Let the user mark what they want the AI builder to keep, replace, and ignore before generating the handoff.",
+            "Show a tiny confidence note that explains why ForkFirst trusts this repo enough to start from it."
+          ]
+        },
+        {
+          heading: "Add proof before commitment",
+          items: [
+            "Surface the repo's live project site when GitHub provides one.",
+            "Call out missing license, weak docs, or setup uncertainty in plain English.",
+            "Give a one-click question like: 'What would my builder do first with this repo?'"
+          ]
+        },
+        {
+          heading: "Keep it founder-friendly",
+          items: [
+            "Avoid more technical file names until the handoff step.",
+            "Use language like 'starting point', 'working foundation', and 'give this to your AI builder'.",
+            "Make the next action feel obvious, not like a dashboard decision."
+          ]
+        }
+      ], `For this report, I would pressure-test ${best.fullName}: does it save the hardest part of the build, or is it only inspiration?`);
+    }
     return formatBuilderReply("Yes. I would add around the gap, not around the repo.", [
       {
         heading: "Best additions",

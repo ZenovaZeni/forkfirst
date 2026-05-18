@@ -539,7 +539,9 @@ function formatChatFallback(title: string, sections: Array<{ heading: string; it
   return [`## ${title}`, intro, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
 }
 
-function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
+const ADD_ON_INTENT_RE = /\b(anything else|what else|recommend|suggest|add on|add-on|add to|could i add|should i add|features?|differentiator|next feature)\b/;
+
+function clientChatFallbackReply(message: string, result: IdeaCheckResult, messages: Array<{ role: "user" | "assistant"; content: string }> = []) {
   const repos = result.repos.slice(0, 3);
   if (repos.length === 0) {
     return formatChatFallback("I need a repo report first", [
@@ -602,7 +604,36 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
     })), `If one looks close, choose it as the foundation and then tell ForkFirst what you want to build from it.`);
   }
 
-  if (/\b(anything else|what else|recommend|suggest|add on|add-on|add to|could i add|should i add|features?|differentiator|next feature)\b/.test(lower)) {
+  if (ADD_ON_INTENT_RE.test(lower)) {
+    const priorAddOnCount = messages.filter((turn) => turn.role === "user" && ADD_ON_INTENT_RE.test(turn.content.toLowerCase())).length;
+    if (priorAddOnCount > 0) {
+      return formatChatFallback("Yes - different angle this time.", [
+        {
+          heading: "Add a sharper decision moment",
+          items: [
+            "After the repo results, ask whether the user wants to clone this, study it, or keep searching.",
+            "Let them mark what the AI builder should keep, replace, and ignore before generating the handoff.",
+            "Show a tiny confidence note explaining why this repo is strong enough to start from."
+          ]
+        },
+        {
+          heading: "Add proof before commitment",
+          items: [
+            "Surface any project website from GitHub metadata.",
+            "Call out missing license, weak docs, or setup uncertainty in plain English.",
+            "Offer a one-click question like: 'What would my builder do first with this repo?'"
+          ]
+        },
+        {
+          heading: "Keep it founder-friendly",
+          items: [
+            "Avoid technical file names until the handoff step.",
+            "Use words like starting point, working foundation, and give this to your AI builder.",
+            "Make the next action obvious instead of making the page feel like a dashboard."
+          ]
+        }
+      ], `For this report, I would pressure-test ${best.fullName}: does it save the hardest part of the build, or is it only inspiration?`);
+    }
     return formatChatFallback("Yes. Add around the gap, not around the repo.", [
       { heading: "Best additions", items: ["A better first-run flow than the repo has.", "Saved work/history so users can return to the same idea.", "A plain-English comparison that says what to keep, replace, or ignore.", "A one-click builder handoff so users do not have to figure out files manually."] },
       { heading: "Avoid for v1", items: ["Do not copy every feature from the starter repo.", "Do not add accounts, billing, teams, or dashboards until the core workflow works.", "Do not treat an awesome list, SDK, or scraper as the whole product unless it actually has an app flow."] },
@@ -4839,9 +4870,9 @@ export function ForkFirstRedesignApp() {
       } catch {
         data = {};
       }
-      assistantContent = data.reply ?? data.error ?? clientChatFallbackReply(message, result);
+      assistantContent = data.reply ?? data.error ?? clientChatFallbackReply(message, result, prior);
     } catch {
-      assistantContent = clientChatFallbackReply(message, result);
+      assistantContent = clientChatFallbackReply(message, result, prior);
     }
 
     const finalTurns = [...nextTurns, { role: "assistant" as const, content: assistantContent }];
