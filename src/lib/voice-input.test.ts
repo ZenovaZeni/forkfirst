@@ -29,8 +29,8 @@ describe("browser voice input", () => {
   });
 
   test("uses honest support and privacy copy", () => {
-    expect(browserVoiceInputCopy.unsupported).toContain("does not support browser voice input");
-    expect(browserVoiceInputCopy.privacy).toContain("browser or device speech service");
+    expect(browserVoiceInputCopy.unsupported).toContain("Voice input is not supported");
+    expect(browserVoiceInputCopy.privacy).toContain("Browser/device speech service");
     expect(browserVoiceInputCopy.privacy).toContain("ForkFirst does not store audio");
   });
 });

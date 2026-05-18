@@ -1860,7 +1860,7 @@ function Topbar({ title, theme, onToggleTheme, go, screen }: { title: string; th
   );
 }
 
-function useBrowserVoiceInput(value: string, onChange: (value: string) => void) {
+function useBrowserVoiceInput(value: string, onChange: (value: string) => void, onUnsupported?: () => void) {
   const valueRef = useRef(value);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const constructorRef = useRef<BrowserSpeechRecognitionConstructor | null>(null);
@@ -1894,6 +1894,7 @@ function useBrowserVoiceInput(value: string, onChange: (value: string) => void) 
     const SpeechRecognition = constructorRef.current;
     if (!SpeechRecognition) {
       setMessage(browserVoiceInputCopy.unsupported);
+      onUnsupported?.();
       return;
     }
 
@@ -1928,8 +1929,15 @@ function useBrowserVoiceInput(value: string, onChange: (value: string) => void) 
     recognitionRef.current = recognition;
     setListening(true);
     setMessage(browserVoiceInputCopy.listening);
-    recognition.start();
-  }, [listening, onChange]);
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setListening(false);
+      setMessage(browserVoiceInputCopy.unsupported);
+      onUnsupported?.();
+    }
+  }, [listening, onChange, onUnsupported]);
 
   return { supported, listening, message, toggle };
 }
@@ -1976,10 +1984,15 @@ function Composer({
   onChange: (value: string) => void;
   onSubmit: () => void;
 }) {
-  const voice = useBrowserVoiceInput(value, onChange);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const focusIdeaInput = useCallback(() => {
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+  const voice = useBrowserVoiceInput(value, onChange, focusIdeaInput);
   return (
     <div className="composer">
       <textarea
+        ref={inputRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onFocus={() => {
@@ -2010,7 +2023,7 @@ function Composer({
           </button>
         </div>
       </div>
-      <p className={`voice-status ${voice.listening ? "is-listening" : ""}`}>{voice.message}</p>
+      <p className={`voice-status ${voice.listening ? "is-listening" : ""}`} title={browserVoiceInputCopy.privacy}>{voice.message}</p>
     </div>
   );
 }
@@ -4048,17 +4061,22 @@ function ChatComposerBar({
   onSubmit: (value: string) => void;
 }) {
   const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   function submit() {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
     setValue("");
     onSubmit(trimmed);
   }
-  const voice = useBrowserVoiceInput(value, setValue);
+  const focusChatInput = useCallback(() => {
+    window.setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+  const voice = useBrowserVoiceInput(value, setValue, focusChatInput);
   return (
     <div className="chat-composer-bar">
       <div className="composer-inner">
         <textarea
+          ref={inputRef}
           value={value}
           onChange={(event) => setValue(event.target.value)}
           rows={1}
