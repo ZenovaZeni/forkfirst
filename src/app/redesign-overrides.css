@@ -1059,3 +1059,13 @@ body {
 .mobile-chat-empty {
   padding: 14px 12px;
 }
+
+[data-theme="dark"] .composer .composer-send,
+[data-theme="dark"] .chat-composer-bar .composer-send {
+  color: #fff;
+}
+
+[data-theme="dark"] .composer .composer-send svg,
+[data-theme="dark"] .chat-composer-bar .composer-send svg {
+  stroke: currentColor;
+}
