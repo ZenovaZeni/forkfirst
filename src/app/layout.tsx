@@ -59,11 +59,52 @@ export const viewport: Viewport = {
   themeColor: "#F6F4EF"
 };
 
+const themeBootScript = `
+(function () {
+  try {
+    var allowedAccents = { cobalt: true, ember: true, forest: true, violet: true };
+    function readJsonString(key) {
+      var value = localStorage.getItem(key);
+      if (value === null) return null;
+      try {
+        var parsed = JSON.parse(value);
+        return typeof parsed === "string" ? parsed : null;
+      } catch (_) {
+        return value;
+      }
+    }
+    var accent = readJsonString("forkfirst:accent") || readJsonString("open-repo:accent") || "cobalt";
+    if (!allowedAccents[accent]) accent = "cobalt";
+    var rawTheme = localStorage.getItem("forkfirst:theme") || localStorage.getItem("open-repo:theme") || "paper";
+    var theme = rawTheme === "ink" || rawTheme === "dark" ? "dark" : "light";
+    var root = document.documentElement;
+    root.setAttribute("data-accent", accent);
+    root.setAttribute("data-theme", theme);
+    root.classList.toggle("theme-ink", theme === "dark");
+    root.classList.toggle("theme-paper", theme !== "dark");
+    function apply() {
+      document.querySelectorAll(".root, .app-shell").forEach(function (node) {
+        node.setAttribute("data-accent", accent);
+        node.setAttribute("data-theme", theme);
+        if (node.classList.contains("app-shell")) {
+          node.classList.toggle("theme-ink", theme === "dark");
+          node.classList.toggle("theme-paper", theme !== "dark");
+        }
+      });
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply, { once: true });
+    else apply();
+  } catch (_) {}
+})();
+`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         {children}
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <Analytics enableVercel={process.env.VERCEL === "1"} />
         <PWAInstallPrompt />
       </body>

@@ -104,6 +104,27 @@ function themeToStorage(value: Theme) {
   return value === "dark" ? "ink" : "paper";
 }
 
+function initialTheme() {
+  if (typeof window === "undefined") return "light";
+  return themeFromStorage(window.localStorage.getItem(THEME_STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY));
+}
+
+function initialAccent(): RedesignAccent {
+  if (typeof window === "undefined") return "cobalt";
+  const stored =
+    readJsonValue<string | null>(window.localStorage, REDESIGN_STORAGE_KEYS.accent, null) ??
+    readJsonValue<string | null>(window.localStorage, LEGACY_REDESIGN_STORAGE_KEYS.accent, null);
+  return ACCENT_OPTIONS.some((item) => item.id === stored) ? stored as RedesignAccent : "cobalt";
+}
+
+function applyDocumentVisualPrefs(theme: Theme, accent: RedesignAccent) {
+  if (typeof document === "undefined") return;
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.setAttribute("data-accent", accent);
+  document.documentElement.classList.toggle("theme-ink", theme === "dark");
+  document.documentElement.classList.toggle("theme-paper", theme !== "dark");
+}
+
 const ACCENT_OPTIONS: Array<{ id: RedesignAccent; label: string; color: string }> = [
   { id: "cobalt", label: "Cobalt", color: "#2647F0" },
   { id: "ember", label: "Ember", color: "#D8412F" },
@@ -4479,8 +4500,8 @@ function ChatComposerBar({
 
 export function ForkFirstRedesignApp() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [theme, setTheme] = useState<Theme>("light");
-  const [accent, setAccent] = useState<RedesignAccent>("cobalt");
+  const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [accent, setAccent] = useState<RedesignAccent>(initialAccent);
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [result, setResult] = useState<IdeaCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -4514,6 +4535,10 @@ export function ForkFirstRedesignApp() {
   const [chatSending, setChatSending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const didPersistSessionRef = useRef(false);
+
+  useEffect(() => {
+    applyDocumentVisualPrefs(theme, accent);
+  }, [accent, theme]);
 
   useEffect(() => {
     const storage = readFeatureStorage(window.localStorage);
