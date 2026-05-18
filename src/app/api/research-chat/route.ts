@@ -95,12 +95,12 @@ function bulletList(items: string[]) {
   return items.map((item) => item.trim()).filter(Boolean).map((item) => `- ${item}`).join("\n");
 }
 
-function formatBuilderReply(title: string, sections: Array<{ heading: string; items: string[] }>, next?: string) {
+function formatBuilderReply(title: string, sections: Array<{ heading: string; items: string[] }>, next?: string, intro?: string) {
   const body = sections
     .filter((section) => section.items.some((item) => item.trim().length > 0))
     .map((section) => `### ${section.heading}\n${bulletList(section.items)}`)
     .join("\n\n");
-  return [`## ${title}`, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
+  return [`## ${title}`, intro, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
 }
 
 function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages: { role: "user" | "assistant"; content: string }[] = []): string {
@@ -163,7 +163,7 @@ function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages
             "If you want a normal back-and-forth, ask the question naturally. I will keep the repo report in memory without repeating it back every time."
           ]
       }
-    ], "If you want my most practical next step: inspect the best repo, decide what it saves you, then create the handoff so your AI builder has a concrete foundation and instructions.");
+    ], "If you want my most practical next step: inspect the best repo, decide what it saves you, then create the handoff so your AI builder has a concrete foundation and instructions.", "Yeah. I would treat this like a normal product conversation first, then use the repo report as the evidence underneath it.");
   }
 
   if (lower.includes("opportunity gap")) {
@@ -228,7 +228,7 @@ function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages
         heading: "Live sites found",
         items: repoHomepages.length ? repoHomepages : ["No project website link is in the current top repo metadata, so inspect GitHub or search for a demo before committing."]
       }
-    ], "Pick one user outcome for v1, then make the handoff tell your AI builder exactly which repo parts support that outcome.");
+    ], "Pick one user outcome for v1, then make the handoff tell your AI builder exactly which repo parts support that outcome.", "I would not rush into adding more features just because a repo makes them possible. The smarter move is to add the pieces that make your version clearer than the raw project.");
   }
 
   if (lower.includes("why these three") || lower.includes("why these")) {

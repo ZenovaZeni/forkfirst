@@ -527,7 +527,7 @@ function FormattedChatMessage({ content }: { content: string }) {
   );
 }
 
-function formatChatFallback(title: string, sections: Array<{ heading: string; items: string[] }>, next?: string) {
+function formatChatFallback(title: string, sections: Array<{ heading: string; items: string[] }>, next?: string, intro?: string) {
   const body = sections
     .filter((section) => section.items.some((item) => item.trim().length > 0))
     .map((section) => {
@@ -535,7 +535,7 @@ function formatChatFallback(title: string, sections: Array<{ heading: string; it
       return `### ${section.heading}\n${items}`;
     })
     .join("\n\n");
-  return [`## ${title}`, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
+  return [`## ${title}`, intro, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
 }
 
 function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
@@ -586,7 +586,7 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
           ]
       },
       { heading: "Project sites found", items: projectSites.length ? projectSites.map((site) => `${site.name}: ${site.url}`) : ["No project website links are in the current top repo metadata."] }
-    ], "If you want my most practical next step: inspect the best repo, decide what it saves you, then create the AI-builder handoff.");
+    ], "If you want my most practical next step: inspect the best repo, decide what it saves you, then create the AI-builder handoff.", "Yeah. I would treat this like a normal product conversation first, then use the repo report as the evidence underneath it.");
   }
 
   if (lower.includes("compare") || lower.includes("why these") || lower.includes("which")) {
@@ -606,7 +606,7 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
       { heading: "Best additions", items: ["A better first-run flow than the repo has.", "Saved work/history so users can return to the same idea.", "A plain-English comparison that says what to keep, replace, or ignore.", "A one-click builder handoff so users do not have to figure out files manually."] },
       { heading: "Avoid for v1", items: ["Do not copy every feature from the starter repo.", "Do not add accounts, billing, teams, or dashboards until the core workflow works.", "Do not treat an awesome list, SDK, or scraper as the whole product unless it actually has an app flow."] },
       { heading: "Project sites found", items: projectSites.length ? projectSites.map((site) => `${site.name}: ${site.url}`) : ["No project website links are in the current top repo metadata."] }
-    ], `Use ${best.fullName} for leverage, then make the v1 outcome clearer than the raw repo.`);
+    ], `Use ${best.fullName} for leverage, then make the v1 outcome clearer than the raw repo.`, "I would not rush into adding more features just because a repo makes them possible. The smarter move is to add the pieces that make your version clearer than the raw project.");
   }
 
   if (lower.includes("build") || lower.includes("mvp") || lower.includes("handoff")) {
@@ -1759,7 +1759,6 @@ function SavingsRing({ savingsLog }: { savingsLog: SavingsLog }) {
 function MobileNav({ active, go }: { active: Screen; go: (screen: Screen) => void }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const primary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
-    { screen: "app", label: "New", icon: <Search size={15} /> },
     { screen: "trending", label: "Trends", icon: <Star size={15} /> },
     { screen: "handoff", label: "Handoff", icon: <Download size={15} /> },
     { screen: "library", label: "Library", icon: <Bookmark size={15} /> }
@@ -1786,7 +1785,27 @@ function MobileNav({ active, go }: { active: Screen; go: (screen: Screen) => voi
         </div>
       ) : null}
       <nav className="mobile-nav" aria-label="Mobile app navigation">
-        {primary.map((item) => (
+        {primary.slice(0, 2).map((item) => (
+          <button
+            key={item.screen}
+            type="button"
+            className={active === item.screen ? "active" : ""}
+            onClick={() => navigate(item.screen)}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          className={`mobile-new-fab ${active === "app" ? "active" : ""}`}
+          onClick={() => navigate("app")}
+          aria-label="Start a new idea chat"
+        >
+          <span className="fab-icon"><Plus size={22} /></span>
+          <span>New</span>
+        </button>
+        {primary.slice(2).map((item) => (
           <button
             key={item.screen}
             type="button"
