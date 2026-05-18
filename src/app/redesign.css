@@ -4480,9 +4480,16 @@ input, textarea, select { font: inherit; color: inherit; }
   width: 38px; height: 38px;
   border-radius: 50%;
   background: var(--accent); color: white;
-  display: grid; place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 0;
   flex-shrink: 0;
   transition: transform 120ms ease;
+}
+.chat-composer-bar .composer-send svg {
+  display: block;
 }
 [data-theme="dark"] .chat-composer-bar .composer-send { color: var(--paper); }
 .chat-composer-bar .composer-send:hover { transform: scale(1.05); }
