@@ -341,6 +341,19 @@ function qualityScore(items: Array<{ done: boolean }>) {
   return Math.round((items.filter((item) => item.done).length / Math.max(1, items.length)) * 100);
 }
 
+function buildPackTargetLabel(pack: SavedBuildPack) {
+  return BUILD_TARGETS.find((item) => item.id === pack.target)?.label ?? pack.target;
+}
+
+function buildPackDocCount(pack: SavedBuildPack) {
+  const docs = createHandoffDocuments(pack.markdown);
+  return HANDOFF_DOC_TABS.filter((file) => docs[file]?.trim()).length;
+}
+
+function buildPackUpdatedLabel(pack: SavedBuildPack) {
+  return relativeChatTime(pack.updatedAt || pack.createdAt);
+}
+
 function launchSteps(target: BuildTarget, starterRepo: string) {
   const repo = starterRepo || "the selected starter repo";
   if (target === "claude-code") {
@@ -3398,38 +3411,22 @@ function HandoffView({
         <div>
           <h2>
             Builder Handoff
-            <small>{starterName} to {packTitle}. Repo, prompt, and build files your AI builder can follow.</small>
+            <small>One packet for {BUILD_TARGETS.find((item) => item.id === target)?.label ?? "your AI builder"}. Drop it in and let it read from the top.</small>
           </h2>
+          <p className="handoff-subline">{starterName} to {packTitle}. Repo, prompt, and build files your AI builder can follow.</p>
         </div>
         <div className="handoff-actions">
           <div className="handoff-actions-main">
-            <button className="btn ghost" type="button" disabled={!canExport} onClick={() => onSaveBuildPack({ ...pack, status: "draft" })}>
-              <Bookmark size={14} /> Save
-            </button>
-            <button className="btn ghost" type="button" disabled={!canExport} onClick={() => saveWithVersion("Manual save", "draft")}>
-              <Bookmark size={14} /> Save version
-            </button>
             <button className="btn ghost" type="button" onClick={() => onCopy(markdown)}>
               <Copy size={14} /> Copy
             </button>
-            {result ? (
-              <button className="btn ghost" type="button" onClick={() => onDownload("forkfirst-idea-report.md", buildExportMarkdown(result, savedRepos, savedRepoBoards))}>
-                <Download size={14} /> Report
-              </button>
-            ) : null}
             <button className="btn accent" type="button" disabled={!canExport} onClick={() => {
-              saveWithVersion("Exported .md", "exported");
-              onDownload("forkfirst-builder-handoff.md", markdown);
+              saveWithVersion("Exported .zip", "exported");
+              onDownloadZip("forkfirst-build-pack.zip", docs, markdown);
             }}>
-              <Download size={14} /> Download prompt
+              <Download size={14} /> Download .zip
             </button>
           </div>
-          <button className="btn accent" type="button" disabled={!canExport} onClick={() => {
-            saveWithVersion("Exported .zip", "exported");
-            onDownloadZip("forkfirst-build-pack.zip", docs, markdown);
-          }}>
-            <Download size={14} /> Download handoff zip
-          </button>
         </div>
       </div>
       <div className="handoff-grid">
@@ -3456,7 +3453,7 @@ function HandoffView({
         <div className="handoff-side">
           <div className="card">
             <h3>Send to</h3>
-            <p>Pick your builder for exact next steps.</p>
+            <p>Pick your builder. ForkFirst tunes the handoff for how that tool likes to be talked to.</p>
             <div className="target-row">
               {BUILD_TARGETS.map((item) => (
                 <button
@@ -3474,29 +3471,6 @@ function HandoffView({
                 </button>
               ))}
             </div>
-          </div>
-          <div className="card quality-card">
-            <div className="quality-top">
-              <h3>Handoff readiness</h3>
-              <strong>{score}%</strong>
-            </div>
-            <div className="quality-meter" aria-label={`Handoff readiness ${score}%`}>
-              <span style={{ width: `${score}%` }} />
-            </div>
-            <ul>
-              {checks.map((item) => (
-                <li key={item.label} className={item.done ? "done" : ""}>
-                  {item.done ? <Check size={13} /> : <span className="dot" />}
-                  {item.label}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="card launch-card">
-            <h3>Launch in {BUILD_TARGETS.find((item) => item.id === target)?.label}</h3>
-            <ol>
-              {launchSteps(target, starterName).map((step) => <li key={step}>{step}</li>)}
-            </ol>
           </div>
           <div className="card">
             <h3>What&apos;s in the folder</h3>
@@ -3526,10 +3500,56 @@ function HandoffView({
               ))}
             </div>
           </div>
+          <div className="card handoff-draft-card">
+            <h3>Local draft</h3>
+            <p>Autosaved in this browser. Use these when you want a checkpoint or a single Markdown file instead of the zip.</p>
+            <div className="handoff-mini-actions">
+              <button className="btn ghost" type="button" disabled={!canExport} onClick={() => onSaveBuildPack({ ...pack, status: "draft" })}>
+                <Bookmark size={14} /> Save
+              </button>
+              <button className="btn ghost" type="button" disabled={!canExport} onClick={() => saveWithVersion("Manual save", "draft")}>
+                <Bookmark size={14} /> Version
+              </button>
+              {result ? (
+                <button className="btn ghost" type="button" onClick={() => onDownload("forkfirst-idea-report.md", buildExportMarkdown(result, savedRepos, savedRepoBoards))}>
+                  <Download size={14} /> Report
+                </button>
+              ) : null}
+              <button className="btn ghost" type="button" disabled={!canExport} onClick={() => {
+                saveWithVersion("Exported .md", "exported");
+                onDownload("forkfirst-builder-handoff.md", markdown);
+              }}>
+                <Download size={14} /> .md
+              </button>
+            </div>
+          </div>
           <div className="card">
             <h3>Token math</h3>
             <p>This edited packet is roughly <strong style={{ color: "var(--ink)" }}>{formatTokensShort(handoffTokens)} tokens</strong>, estimated from Markdown text length.</p>
             <p style={{ margin: 0, color: "var(--accent)", fontWeight: 600 }}>Copy, save, and download use the current edited text.</p>
+          </div>
+          <div className="card quality-card">
+            <div className="quality-top">
+              <h3>Handoff readiness</h3>
+              <strong>{score}%</strong>
+            </div>
+            <div className="quality-meter" aria-label={`Handoff readiness ${score}%`}>
+              <span style={{ width: `${score}%` }} />
+            </div>
+            <ul>
+              {checks.map((item) => (
+                <li key={item.label} className={item.done ? "done" : ""}>
+                  {item.done ? <Check size={13} /> : <span className="dot" />}
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="card launch-card">
+            <h3>Launch in {BUILD_TARGETS.find((item) => item.id === target)?.label}</h3>
+            <ol>
+              {launchSteps(target, starterName).map((step) => <li key={step}>{step}</li>)}
+            </ol>
           </div>
           <div className="card version-card">
             <h3>Version history</h3>
@@ -3546,6 +3566,49 @@ function HandoffView({
         </div>
       </div>
     </section>
+  );
+}
+
+function SavedBuildPackCard({
+  pack,
+  openLabel = "Open",
+  onOpenBuildPack,
+  onDeleteBuildPack,
+  onDownloadBuildPack
+}: {
+  pack: SavedBuildPack;
+  openLabel?: string;
+  onOpenBuildPack: (pack: SavedBuildPack) => void;
+  onDeleteBuildPack: (packId: string) => void;
+  onDownloadBuildPack: (pack: SavedBuildPack) => void;
+}) {
+  const fileCount = buildPackDocCount(pack);
+  return (
+    <article className="build-pack-card saved-handoff-card">
+      <div className="top">
+        <div>
+          <strong>{pack.title}</strong>
+          <span>Foundation: {pack.starterRepo || "No starter selected"}</span>
+        </div>
+        <span className={`status ${pack.status}`}>{pack.status}</span>
+      </div>
+      <p>{pack.idea || "Saved builder handoff draft."}</p>
+      <div className="pack-next">
+        <span>Next</span>
+        <strong>Open to review, copy, or download the zip for your AI builder.</strong>
+      </div>
+      <div className="pack-meta">
+        <span>{pack.qualityScore}% ready</span>
+        <span>{fileCount} files</span>
+        <span>{buildPackTargetLabel(pack)}</span>
+        <span>Updated {buildPackUpdatedLabel(pack) || "recently"}</span>
+      </div>
+      <div className="pack-actions">
+        <button className="btn accent" type="button" onClick={() => onOpenBuildPack(pack)}>{openLabel}</button>
+        <button className="btn ghost" type="button" onClick={() => onDownloadBuildPack(pack)}><Download size={13} /> .md</button>
+        <button className="btn ghost danger" type="button" onClick={() => onDeleteBuildPack(pack.id)}>Delete</button>
+      </div>
+    </article>
   );
 }
 
@@ -3606,26 +3669,14 @@ function HandoffSavedPacksScreen({
       </div>
       <div className="build-pack-grid handoff-pack-grid">
         {filteredPacks.length ? filteredPacks.map((pack) => (
-          <article key={pack.id} className="build-pack-card">
-            <div className="top">
-              <div>
-                <strong>{pack.title}</strong>
-                <span>{pack.starterRepo || "No starter selected"}</span>
-              </div>
-              <span className={`status ${pack.status}`}>{pack.status}</span>
-            </div>
-            <p>{pack.idea || "Saved builder handoff draft."}</p>
-            <div className="pack-meta">
-              <span>{pack.qualityScore}% ready</span>
-              <span>~{formatTokensShort(pack.tokenEstimate)} tokens</span>
-              <span>{BUILD_TARGETS.find((item) => item.id === pack.target)?.label ?? pack.target}</span>
-            </div>
-            <div className="pack-actions">
-              <button className="btn accent" type="button" onClick={() => onOpenBuildPack(pack)}>Open package</button>
-              <button className="btn ghost" type="button" onClick={() => onDownloadBuildPack(pack)}><Download size={13} /> .md</button>
-              <button className="btn ghost danger" type="button" onClick={() => onDeleteBuildPack(pack.id)}>Delete</button>
-            </div>
-          </article>
+          <SavedBuildPackCard
+            key={pack.id}
+            pack={pack}
+            openLabel="Open package"
+            onOpenBuildPack={onOpenBuildPack}
+            onDeleteBuildPack={onDeleteBuildPack}
+            onDownloadBuildPack={onDownloadBuildPack}
+          />
         )) : (
           <article className="build-pack-card empty handoff-empty-pack">
             <strong>{savedBuildPacks.length ? "No matching Build Packs" : "No saved Build Packs yet"}</strong>
@@ -3735,28 +3786,15 @@ function LibraryScreen({
             </div>
             <span>{query ? `${filteredBuildPacks.length} of ${savedBuildPacks.length}` : `${savedBuildPacks.length} saved`}</span>
           </div>
-          <div className="build-pack-grid">
+          <div className="build-pack-grid handoff-pack-grid">
             {filteredBuildPacks.length ? filteredBuildPacks.map((pack) => (
-              <article key={pack.id} className="build-pack-card">
-                <div className="top">
-                  <div>
-                    <strong>{pack.title}</strong>
-                    <span>{pack.starterRepo}</span>
-                  </div>
-                  <span className={`status ${pack.status}`}>{pack.status}</span>
-                </div>
-                <p>{pack.idea || "Saved builder handoff draft."}</p>
-                <div className="pack-meta">
-                  <span>{pack.qualityScore}% ready</span>
-                  <span>~{formatTokensShort(pack.tokenEstimate)} tokens</span>
-                  <span>{BUILD_TARGETS.find((item) => item.id === pack.target)?.label ?? pack.target}</span>
-                </div>
-                <div className="pack-actions">
-                  <button className="btn accent" type="button" onClick={() => onOpenBuildPack(pack)}>Open</button>
-                  <button className="btn ghost" type="button" onClick={() => onDownloadBuildPack(pack)}><Download size={13} /> .md</button>
-                  <button className="btn ghost danger" type="button" onClick={() => onDeleteBuildPack(pack.id)}>Delete</button>
-                </div>
-              </article>
+              <SavedBuildPackCard
+                key={pack.id}
+                pack={pack}
+                onOpenBuildPack={onOpenBuildPack}
+                onDeleteBuildPack={onDeleteBuildPack}
+                onDownloadBuildPack={onDownloadBuildPack}
+              />
             )) : (
               <article className="build-pack-card empty">
                 <strong>{savedBuildPacks.length ? "No matching handoffs" : "No saved handoffs yet"}</strong>

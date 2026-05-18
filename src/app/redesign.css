@@ -2165,6 +2165,13 @@ input, textarea, select { font: inherit; color: inherit; }
   letter-spacing: -0.01em;
   margin-top: 4px;
 }
+.handoff-subline {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
 .handoff-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -2318,6 +2325,14 @@ input, textarea, select { font: inherit; color: inherit; }
   background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
   color: var(--accent-ink);
+}
+.handoff-mini-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.handoff-mini-actions .btn {
+  min-height: 38px;
 }
 .version-list {
   display: grid;
@@ -2509,6 +2524,10 @@ input, textarea, select { font: inherit; color: inherit; }
   display: grid;
   gap: 12px;
 }
+.saved-handoff-card {
+  grid-template-rows: auto minmax(56px, auto) auto auto auto;
+  align-content: start;
+}
 .build-pack-card.empty {
   grid-column: 1 / -1;
   border-style: dashed;
@@ -2568,6 +2587,30 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 5px 8px;
   color: var(--ink-2);
   font-size: 11.5px;
+}
+.pack-next {
+  display: grid;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--paper));
+  padding: 10px 12px;
+}
+.pack-next span {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pack-next strong {
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
 }
 .btn.danger {
   color: var(--signal-bad);
