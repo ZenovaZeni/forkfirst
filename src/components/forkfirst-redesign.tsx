@@ -1255,7 +1255,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           {BUILDER_LOGOS.map((builder) => (
             <div key={builder.name} className="builder-logo-card">
               <span className="builder-logo-mark" aria-hidden="true">
-                <Image className="builder-logo-img" src={builder.logo} alt="" width={112} height={34} />
+                <Image className="builder-logo-img" src={builder.logo} alt="" width={112} height={34} style={{ width: "auto", height: "auto" }} />
               </span>
               <strong>{builder.name}</strong>
             </div>
