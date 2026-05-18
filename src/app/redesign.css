@@ -4735,7 +4735,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .packs .prompt-packs-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -4942,6 +4942,18 @@ input, textarea, select { font: inherit; color: inherit; }
 .packs .pack-add-trigger:hover {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+}
+
+@media (max-width: 1120px) {
+  .packs .prompt-packs-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .packs .prompt-packs-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .pack-list { display: grid; gap: 10px; }
