@@ -432,6 +432,139 @@ function messageId(prefix: string) {
   return `${prefix}:${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}:${Math.random().toString(36).slice(2)}`}`;
 }
 
+function renderChatInline(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={`${part}-${index}`}>{part.slice(1, -1)}</code>;
+    }
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
+}
+
+function cleanChatLine(line: string) {
+  return line.replace(/^#{1,4}\s+/, "").trim();
+}
+
+function FormattedChatMessage({ content }: { content: string }) {
+  const blocks = content
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (blocks.length === 0) return null;
+
+  return (
+    <div className="chat-answer">
+      {blocks.map((block, blockIndex) => {
+        const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+        const first = lines[0] ?? "";
+        const headingMatch = first.match(/^#{2,4}\s+(.+)$/);
+        const contentLines = headingMatch ? lines.slice(1) : lines;
+        const bulletLines = contentLines.filter((line) => /^[-*]\s+/.test(line));
+        const numberedLines = contentLines.filter((line) => /^\d+[.)]\s+/.test(line));
+
+        if (headingMatch) {
+          return (
+            <section className="chat-answer-section" key={`${blockIndex}-${first}`}>
+              <h4>{cleanChatLine(first)}</h4>
+              {bulletLines.length === contentLines.length && bulletLines.length > 0 ? (
+                <ul>
+                  {bulletLines.map((line, index) => <li key={`${line}-${index}`}>{renderChatInline(line.replace(/^[-*]\s+/, ""))}</li>)}
+                </ul>
+              ) : numberedLines.length === contentLines.length && numberedLines.length > 0 ? (
+                <ol>
+                  {numberedLines.map((line, index) => <li key={`${line}-${index}`}>{renderChatInline(line.replace(/^\d+[.)]\s+/, ""))}</li>)}
+                </ol>
+              ) : contentLines.length ? (
+                contentLines.map((line, index) => <p key={`${line}-${index}`}>{renderChatInline(cleanChatLine(line))}</p>)
+              ) : null}
+            </section>
+          );
+        }
+
+        if (bulletLines.length === lines.length && bulletLines.length > 0) {
+          return (
+            <ul key={`${blockIndex}-bullets`}>
+              {bulletLines.map((line, index) => <li key={`${line}-${index}`}>{renderChatInline(line.replace(/^[-*]\s+/, ""))}</li>)}
+            </ul>
+          );
+        }
+
+        if (numberedLines.length === lines.length && numberedLines.length > 0) {
+          return (
+            <ol key={`${blockIndex}-numbered`}>
+              {numberedLines.map((line, index) => <li key={`${line}-${index}`}>{renderChatInline(line.replace(/^\d+[.)]\s+/, ""))}</li>)}
+            </ol>
+          );
+        }
+
+        return <p key={`${blockIndex}-${first}`}>{renderChatInline(lines.map(cleanChatLine).join(" "))}</p>;
+      })}
+    </div>
+  );
+}
+
+function formatChatFallback(title: string, sections: Array<{ heading: string; items: string[] }>, next?: string) {
+  const body = sections
+    .filter((section) => section.items.some((item) => item.trim().length > 0))
+    .map((section) => {
+      const items = section.items.map((item) => item.trim()).filter(Boolean).map((item) => `- ${item}`).join("\n");
+      return `### ${section.heading}\n${items}`;
+    })
+    .join("\n\n");
+  return [`## ${title}`, body, next ? `### Best next move\n- ${next}` : null].filter(Boolean).join("\n\n");
+}
+
+function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
+  const repos = result.repos.slice(0, 3);
+  if (repos.length === 0) {
+    return formatChatFallback("I need a repo report first", [
+      { heading: "What I can do after lookup", items: ["Compare repo options.", "Pick a starter foundation.", "Outline a repo-backed MVP.", "Write the Builder Handoff."] }
+    ], "Run a GitHub lookup, then keep chatting here.");
+  }
+
+  const lower = message.toLowerCase();
+  const repoNames = repos.map((repo) => repo.fullName).join(", ");
+  const best = repos[0];
+
+  if (lower.includes("opportunity gap")) {
+    return formatChatFallback("The real opportunity gap", [
+      { heading: "What the repos prove", items: [`There is real prior work here: ${repoNames}. That means you should build from evidence, not a blank page.`] },
+      { heading: "Where the gap usually is", items: ["The starter code can save time, but the product still needs a sharper user, workflow, onboarding, brand, and first milestone."] },
+      { heading: "What to build", items: ["A small version for one clear user.", "One must-have workflow.", "A branded experience around the repo foundation.", "A Build Pack that tells the AI builder exactly what to clone, keep, replace, and build first."] }
+    ], `Inspect ${best.fullName}, then use it as the foundation only if setup, license, and architecture make sense.`);
+  }
+
+  if (lower.includes("compare") || lower.includes("why these") || lower.includes("which")) {
+    return formatChatFallback("Here is the plain-English repo comparison", repos.map((repo, index) => ({
+      heading: `${index + 1}. ${repo.fullName}`,
+      items: [
+        `What it is: ${repo.summary || repo.description || "A GitHub lead from the current search."}`,
+        `Why it showed up: ${repo.score.reasons.slice(0, 2).join("; ") || "It matched the idea and repo signals."}`,
+        `Fit: ${repo.score.total}%`,
+        `Watch out: Confirm setup, license, docs, and recent issues before building on it.`
+      ]
+    })), `If one looks close, choose it as the foundation and then tell ForkFirst what you want to build from it.`);
+  }
+
+  if (lower.includes("build") || lower.includes("mvp") || lower.includes("handoff")) {
+    return formatChatFallback("How I would turn this into a first build", [
+      { heading: "Start with", items: [`Use ${best.fullName} as the main foundation candidate, not as the whole finished product.`] },
+      { heading: "Keep small", items: ["One target user.", "One core workflow.", "One saved output or next action.", "A clear brand direction.", "A short first build phase."] },
+      { heading: "Tell the AI builder", items: ["Clone/open the selected repo.", "Inspect README, setup, license, and app entry points.", "Create the Build Pack files in the repo root.", "Build Phase 1 only before expanding scope."] }
+    ], "Start the Builder Handoff and answer the brand/product questions so the packet becomes specific.");
+  }
+
+  return formatChatFallback("I am using the current report", [
+    { heading: "Repo leads in memory", items: repos.map((repo, index) => `${index + 1}. ${repo.fullName} - ${repo.score.total}% fit`) },
+    { heading: "Best lead right now", items: [`${best.fullName}: ${best.summary || best.description || "The strongest current repo lead."}`] }
+  ], "Ask me to compare them, explain the opportunity gap, find more like one of them, or write the Builder Handoff.");
+}
+
 type TrendingApiState =
   | { status: "loading"; repos: TrendingRepo[] }
   | { status: "ok"; repos: TrendingRepo[] }
@@ -1993,6 +2126,7 @@ function ChatResults({
   brand,
   savedRepos,
   followUps,
+  sending,
   onOpenRepo,
   onSaveRepo,
   onSelectStarter,
@@ -2011,6 +2145,7 @@ function ChatResults({
   brand: BrandAnswers | null;
   savedRepos: ClassifiedRepo[];
   followUps: ChatTurn[];
+  sending: boolean;
   onOpenRepo: (repo: ClassifiedRepo) => void;
   onSaveRepo: (repo: ClassifiedRepo) => void;
   onSelectStarter: (repo: ClassifiedRepo) => void;
@@ -2164,11 +2299,25 @@ function ChatResults({
                 <strong>ForkFirst</strong>
                 <time>- now</time>
               </div>
-              <p className="say">{turn.content}</p>
+              <FormattedChatMessage content={turn.content} />
             </>
           )}
         </div>
       ))}
+      {sending ? (
+        <div className="t t-assist">
+          <div className="who">
+            <Mark />
+            <strong>ForkFirst</strong>
+            <time>- thinking</time>
+          </div>
+          <div className="chat-thinking" aria-live="polite">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -4225,6 +4374,7 @@ export function ForkFirstRedesignApp() {
     const nextTurns = [...prior, { role: "user" as const, content: message }];
     setFollowUps(nextTurns);
     setChatSending(true);
+    let assistantContent = "";
     try {
       const response = await fetch("/api/research-chat", {
         method: "POST",
@@ -4236,8 +4386,22 @@ export function ForkFirstRedesignApp() {
           keys
         }))
       });
-      const data = (await response.json()) as { reply?: string; error?: string };
-      const assistantContent = data.reply ?? data.error ?? "I could not answer that follow-up yet.";
+      const raw = await response.text();
+      let data: { reply?: string; error?: string } = {};
+      try {
+        data = raw ? JSON.parse(raw) as { reply?: string; error?: string } : {};
+      } catch {
+        data = {};
+      }
+      assistantContent = data.reply ?? data.error ?? clientChatFallbackReply(message, result);
+    } catch {
+      assistantContent = clientChatFallbackReply(message, result);
+    }
+
+    const finalTurns = [...nextTurns, { role: "assistant" as const, content: assistantContent }];
+    setFollowUps(finalTurns);
+
+    try {
       recordUsage(createUsageEntry({
         provider: keys.aiApiKey ? keys.aiProvider : "custom",
         model: keys.aiApiKey ? keys.aiModel : "ForkFirst demo chat",
@@ -4245,8 +4409,11 @@ export function ForkFirstRedesignApp() {
         inputText: `${message}\n${JSON.stringify({ prompt: result.prompt, repos: result.repos.slice(0, 5).map((repo) => repo.fullName), prior })}`,
         outputText: assistantContent
       }));
-      const finalTurns = [...nextTurns, { role: "assistant" as const, content: assistantContent }];
-      setFollowUps(finalTurns);
+    } catch {
+      // Usage estimates are helpful, but they should never block a chat answer.
+    }
+
+    try {
       const now = new Date().toISOString();
       const existing = chats.find((chat) => chat.id === activeChatId);
       const chat: ResearchChat = {
@@ -4276,8 +4443,7 @@ export function ForkFirstRedesignApp() {
       setActiveChatId(chat.id);
       upsertChat(chat);
     } catch {
-      const finalTurns = [...nextTurns, { role: "assistant" as const, content: "I could not reach the chat endpoint, but your report is still available." }];
-      setFollowUps(finalTurns);
+      // Local chat history can fail in private/quota-limited browsers; keep the visible answer intact.
     } finally {
       setChatSending(false);
     }
@@ -4343,6 +4509,7 @@ export function ForkFirstRedesignApp() {
                   brand={brand}
                   savedRepos={savedRepos}
                   followUps={followUps}
+                  sending={chatSending}
                   onOpenRepo={setDrawerRepo}
                   onSaveRepo={saveRepo}
                   onSelectStarter={setSelectedStarterRepo}
