@@ -2207,7 +2207,10 @@ function ChatResults({
             {isWeakSearch ? (
               recovery.explanation
             ) : closeMatchCount > 0 ? (
-              <>You&apos;re in luck - <em>{closeMatchCount} close match{closeMatchCount === 1 ? "" : "es"}</em> already exist on GitHub.</>
+              <>
+                You&apos;re in luck - <em>{closeMatchCount} close match{closeMatchCount === 1 ? "" : "es"}</em>{" "}
+                {closeMatchCount === 1 ? "already exists" : "already exist"} on GitHub.
+              </>
             ) : (
               "No obvious fork target yet. We can widen the search or inspect a repo you already know."
             )}
