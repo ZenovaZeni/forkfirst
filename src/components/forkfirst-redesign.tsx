@@ -458,6 +458,36 @@ function titleFromPrompt(value: string) {
   return cleaned.length > 42 ? `${cleaned.slice(0, 39)}...` : cleaned;
 }
 
+function displayChatTitle(value: string) {
+  const acronymMap: Record<string, string> = {
+    ai: "AI",
+    api: "API",
+    byok: "BYOK",
+    github: "GitHub",
+    llm: "LLM",
+    mcp: "MCP",
+    pwa: "PWA",
+    repo: "Repo",
+    repos: "Repos",
+    ui: "UI",
+    ux: "UX",
+    url: "URL"
+  };
+  return value
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((word) => {
+      const parts = word.match(/^([^A-Za-z0-9]*)([A-Za-z0-9][A-Za-z0-9'-]*)([^A-Za-z0-9]*)$/);
+      if (!parts) return word;
+      const [, prefix, core, suffix] = parts;
+      const lower = core.toLowerCase();
+      const formatted = acronymMap[lower] ?? `${core.charAt(0).toUpperCase()}${core.slice(1).toLowerCase()}`;
+      return `${prefix}${formatted}${suffix}`;
+    })
+    .join(" ");
+}
+
 function relativeChatTime(value: string) {
   const time = new Date(value).getTime();
   if (!Number.isFinite(time)) return "";
@@ -1663,8 +1693,8 @@ function Sidebar({
       <div className="rail-label">Recent</div>
       {visibleChats.length ? visibleChats.map((item) => (
         <div key={item.id} className={`rail-item recent-chat-row ${activeChatId === item.id && firstRecentIsActive ? "active" : ""}`}>
-          <button className="recent-open" type="button" onClick={() => onOpenChat(item)} title={item.title}>
-            <span className="ttl">{item.title}</span>
+          <button className="recent-open" type="button" onClick={() => onOpenChat(item)} title={displayChatTitle(item.title)}>
+            <span className="ttl">{displayChatTitle(item.title)}</span>
             <span className="when">{relativeChatTime(item.updatedAt)}</span>
           </button>
           <div className="recent-menu-wrap">
@@ -1934,7 +1964,7 @@ function RecentChatsDrawer({
               className={activeChatId === chat.id ? "active" : ""}
               onClick={() => onOpenChat(chat)}
             >
-              <span>{chat.title}</span>
+              <span>{displayChatTitle(chat.title)}</span>
               <small>{relativeChatTime(chat.updatedAt)}</small>
             </button>
           )) : (
