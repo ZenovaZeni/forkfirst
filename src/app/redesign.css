@@ -4726,7 +4726,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .trend-card .meta strong { color: var(--ink); font-weight: 600; }
 .trend-card .actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto 36px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   margin-top: 4px;
   align-items: center;
@@ -4735,11 +4735,11 @@ input, textarea, select { font: inherit; color: inherit; }
   min-width: 0;
   justify-content: center;
   white-space: nowrap;
-  font-size: 12.5px;
-  padding: 8px 11px;
+  font-size: 12px;
+  padding: 8px 9px;
 }
 .trend-card .actions .btn.accent {
-  padding-inline: 14px;
+  padding-inline: 9px;
 }
 .btn.is-saved {
   border-color: color-mix(in srgb, var(--accent) 34%, var(--line));

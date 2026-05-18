@@ -734,7 +734,7 @@ function RepoSiteLink({ url, className = "btn ghost" }: { url: string | null | u
   if (!safeUrl) return null;
   return (
     <a className={className} href={safeUrl} target="_blank" rel="noreferrer">
-      <ExternalLink size={13} /> Open project site
+      <ExternalLink size={13} /> Site
     </a>
   );
 }
@@ -4238,13 +4238,13 @@ function LiveTrendingScreen({
                 </div>
               ) : null}
               <div className="actions">
-                <button className="btn accent" type="button" onClick={() => onSelectFoundation(foundationFromTrendingRepo(repo))}>Use as foundation</button>
+                <button className="btn accent" type="button" onClick={() => onSelectFoundation(foundationFromTrendingRepo(repo))}>Use</button>
                 <button className="btn ghost" type="button" onClick={() => setDetailsRepo(repo)}>Details</button>
                 <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSaveRepo(asSavedRepo)}>
                   <Bookmark size={12} /> {saved ? "Saved" : "Save"}
                 </button>
                 <RepoSiteLink url={repo.homepage} />
-                <a className="btn ghost icon-only" href={repo.htmlUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}><ExternalLink size={12} /></a>
+                <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}><ExternalLink size={12} /> GitHub</a>
               </div>
             </article>
             );
