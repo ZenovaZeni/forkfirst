@@ -778,8 +778,8 @@ body {
 
   .mobile-nav .mobile-new-fab {
     position: relative;
-    align-self: start;
-    margin-top: -24px;
+    align-self: end;
+    margin-top: 0;
     gap: 4px;
     color: var(--accent);
     font-size: 11px;
@@ -791,19 +791,18 @@ body {
   }
 
   .mobile-nav .mobile-new-fab .fab-icon {
-    width: 56px;
-    height: 56px;
+    width: 38px;
+    height: 38px;
     display: grid;
     place-items: center;
     border-radius: 999px;
     background: var(--accent);
     color: white;
-    border: 5px solid var(--paper);
-    box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--accent) 85%, black);
+    border: 0;
+    box-shadow: 0 10px 22px -16px color-mix(in srgb, var(--accent) 85%, black);
   }
 
   [data-theme="dark"] .mobile-nav .mobile-new-fab .fab-icon {
     color: var(--paper);
-    border-color: var(--paper);
   }
 }
