@@ -1392,7 +1392,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
         <button className="left brand-home" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
           <Logo />
           <Wordmark />
-          <span style={{ color: "var(--muted)", marginLeft: 12 }}>(c) 2026 / MIT</span>
+          <span className="footer-meta">(c) 2026 / MIT</span>
         </button>
         <div className="right">
           <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>

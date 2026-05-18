@@ -1367,11 +1367,25 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 40px clamp(20px, 4vw, 56px);
   display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
   border-top: 1px solid var(--landing-line);
-  font-size: 13px; color: var(--muted);
+  font-size: 13px; color: color-mix(in srgb, var(--landing-ink) 72%, var(--muted));
   max-width: 1240px; margin: 0 auto;
 }
 .footer .left { display: flex; align-items: center; gap: 10px; }
 .footer .right { display: flex; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
+.footer .brand-name {
+  background: transparent;
+  color: var(--landing-ink);
+}
+.footer .footer-meta,
+.footer a {
+  color: color-mix(in srgb, var(--landing-ink) 68%, var(--muted));
+}
+.footer .footer-meta {
+  margin-left: 12px;
+}
+.footer a:hover {
+  color: var(--landing-ink);
+}
 
 /* ── APP SHELL ────────────────────────────────────────────────────────── */
 .app-shell {
