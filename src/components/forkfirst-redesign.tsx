@@ -327,7 +327,7 @@ function launchSteps(target: BuildTarget, starterRepo: string) {
   if (target === "claude-code") {
     return [
       "Copy or download this handoff and give it to Claude Code as the starting message/file.",
-      `The handoff tells Claude to clone or open ${repo}, split the sections into the right Markdown files, and inspect the repo first.`,
+      `The handoff tells Claude to clone or open ${repo}, place the handoff files in the project, and inspect the repo first.`,
       "Your only job is to provide the handoff. Claude handles the repo setup, file placement, first build plan, and verification notes.",
       "If you paste instead of upload, paste the whole handoff and say: follow this exactly, then build Phase 1."
     ];
@@ -335,7 +335,7 @@ function launchSteps(target: BuildTarget, starterRepo: string) {
   if (target === "codex") {
     return [
       "Copy or download this handoff and give it to Codex as the first instruction.",
-      `The handoff tells Codex to use ${repo} as the foundation, create the Markdown files it needs, and work from the repo evidence.`,
+      `The handoff tells Codex to use ${repo} as the foundation, create the project notes it needs, and work from the repo evidence.`,
       "Codex should handle cloning/opening, file organization, implementation phases, and verification.",
       "If you paste it into a fresh Codex task, say: use this handoff as the source of truth and start with Phase 0."
     ];
@@ -351,7 +351,7 @@ function launchSteps(target: BuildTarget, starterRepo: string) {
   if (target === "replit") {
     return [
       "Copy or download this handoff and give it to Replit after importing or cloning the starter repo.",
-      `The handoff tells Replit to use ${repo} as the foundation and place the generated Markdown files in the repo root.`,
+      `The handoff tells Replit to use ${repo} as the foundation and place the generated handoff files in the repo root.`,
       "Replit should inspect setup and run commands before editing, then build only the first milestone.",
       "Tell it: follow this packet exactly and keep the project runnable after each change."
     ];
@@ -368,14 +368,14 @@ function launchSteps(target: BuildTarget, starterRepo: string) {
     return [
       "Paste this handoff into v0 when you want the first branded interface or screen flow.",
       `The handoff tells v0 what ${repo} contributes, what product direction to follow, and what scope to avoid.`,
-      "v0 should use the PRD, brand notes, and build plan instead of inventing a fresh generic UI.",
+      "v0 should use the product brief, brand notes, and build plan instead of inventing a fresh generic UI.",
       "Ask it to produce only the Phase 1 screens/components from the packet."
     ];
   }
   if (target === "gemini-cli") {
     return [
       "Copy or download this handoff and provide it to Gemini CLI as the first instruction/file.",
-      `The handoff tells Gemini CLI to clone or open ${repo}, split the packet into repo-root Markdown files, and inspect before editing.`,
+      `The handoff tells Gemini CLI to clone or open ${repo}, place the handoff files in the repo root, and inspect before editing.`,
       "Gemini CLI should handle file placement, first milestone planning, and verification notes.",
       "Tell it: use this handoff as source of truth and implement Phase 1 only."
     ];
@@ -384,14 +384,14 @@ function launchSteps(target: BuildTarget, starterRepo: string) {
     return [
       "Copy or download this handoff and open it with Antigravity in the starter repo workspace.",
       `The handoff tells Antigravity to use ${repo} as the working foundation before planning or editing.`,
-      "Antigravity should add the Markdown files, inspect the repo, and keep scope limited to the first build phase.",
+      "Antigravity should add the handoff files, inspect the repo, and keep scope limited to the first build phase.",
       "Tell it: follow this packet top to bottom and ask only if the repo inspection reveals a blocker."
     ];
   }
   return [
     "Copy, download, or upload this handoff to your AI builder.",
-    `The handoff tells the builder to use ${repo}, organize the Markdown files, inspect the foundation, and build Phase 1.`,
-    "You should not need to manually split files unless your builder cannot read a single Markdown packet.",
+    `The handoff tells the builder to use ${repo}, organize the project notes, inspect the foundation, and build Phase 1.`,
+    "You should not need to manually split files unless your builder cannot read the packet as-is.",
     "Tell the builder: follow this handoff as the source of truth and ask only when something is blocked."
   ];
 }
@@ -523,7 +523,7 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
   const repos = result.repos.slice(0, 3);
   if (repos.length === 0) {
     return formatChatFallback("I need a repo report first", [
-      { heading: "What I can do after lookup", items: ["Compare repo options.", "Pick a starter foundation.", "Outline a repo-backed MVP.", "Write the Builder Handoff."] }
+      { heading: "What I can do after lookup", items: ["Compare repo options.", "Pick a starter foundation.", "Outline a repo-backed MVP.", "Create the AI-builder handoff."] }
     ], "Run a GitHub lookup, then keep chatting here.");
   }
 
@@ -556,13 +556,13 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
       { heading: "Start with", items: [`Use ${best.fullName} as the main foundation candidate, not as the whole finished product.`] },
       { heading: "Keep small", items: ["One target user.", "One core workflow.", "One saved output or next action.", "A clear brand direction.", "A short first build phase."] },
       { heading: "Tell the AI builder", items: ["Clone/open the selected repo.", "Inspect README, setup, license, and app entry points.", "Create the Build Pack files in the repo root.", "Build Phase 1 only before expanding scope."] }
-    ], "Start the Builder Handoff and answer the brand/product questions so the packet becomes specific.");
+    ], "Create the AI-builder handoff and answer a few product details so the packet becomes specific.");
   }
 
   return formatChatFallback("I am using the current report", [
     { heading: "Repo leads in memory", items: repos.map((repo, index) => `${index + 1}. ${repo.fullName} - ${repo.score.total}% fit`) },
     { heading: "Best lead right now", items: [`${best.fullName}: ${best.summary || best.description || "The strongest current repo lead."}`] }
-  ], "Ask me to compare them, explain the opportunity gap, find more like one of them, or write the Builder Handoff.");
+  ], "Ask me to compare them, explain the opportunity gap, find more like one of them, or create the AI-builder handoff.");
 }
 
 type TrendingApiState =
@@ -1102,7 +1102,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
       filename: "CLAUDE.md",
       lines: [
         { text: "Open the cloned repo and inspect README/package files first" },
-        { text: "Turn the handoff into repo-root Markdown files if needed" },
+        { text: "Place the handoff files in the repo root if needed" },
         { text: "Keep scope tight: no auth, no billing, no extra frameworks in v1" },
         { text: "Report changed files, checks run, and remaining risks", tone: "accent" }
       ]
@@ -2152,6 +2152,7 @@ function ChatResults({
   onSelectStarter,
   onCopyHandoff,
   onDownloadHandoff,
+  onDownloadHandoffZip,
   onFollowUp,
   onStartBranding,
   onGenerate,
@@ -2171,6 +2172,7 @@ function ChatResults({
   onSelectStarter: (repo: ClassifiedRepo) => void;
   onCopyHandoff: () => void;
   onDownloadHandoff: () => void;
+  onDownloadHandoffZip: () => void;
   onFollowUp: (message: string) => void;
   onStartBranding: () => void;
   onGenerate: (brand: BrandAnswers) => void;
@@ -2292,11 +2294,11 @@ function ChatResults({
             <div className="next-step-card">
               <div>
                 <div className="nlbl">Next step</div>
-                <h4>Turn this foundation into a builder handoff?</h4>
-                <p>I&apos;ll ask a few product questions, then create the Markdown files your AI builder needs: starter repo, PRD, build plan, repo notes, and agent rules.</p>
+                <h4>This is the repo your AI should start from.</h4>
+                <p>Next, ForkFirst turns it into a simple handoff: what to clone, what to keep, what to replace, and what to build first.</p>
               </div>
               <button className="btn accent" type="button" onClick={onStartBranding}>
-                Start <ArrowRight size={14} />
+                Create handoff <ArrowRight size={14} />
               </button>
             </div>
             <div className="suggest-row">
@@ -2310,7 +2312,16 @@ function ChatResults({
       </div>
       {phase === "branding" ? <BrandingInterview onComplete={onGenerate} /> : null}
       {phase === "generating" ? <Generating brand={brand} result={result} onReady={onReady} /> : null}
-      {phase === "ready" ? <ReadyCard brand={brand} docs={readyDocs} onHandoff={() => go("handoff")} onCopy={onCopyHandoff} onDownload={onDownloadHandoff} /> : null}
+      {phase === "ready" ? (
+        <ReadyCard
+          brand={brand}
+          docs={readyDocs}
+          onHandoff={() => go("handoff")}
+          onCopy={onCopyHandoff}
+          onDownload={onDownloadHandoff}
+          onDownloadZip={onDownloadHandoffZip}
+        />
+      ) : null}
       {followUps.map((turn, index) => (
         <div key={`${turn.role}-${index}-${turn.content.slice(0, 12)}`} className={`t ${turn.role === "user" ? "t-user" : "t-assist"}`}>
           {turn.role === "user" ? (
@@ -2346,14 +2357,7 @@ function ChatResults({
 }
 
 function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) => void }) {
-  const lastBrand: BrandAnswers = {
-    name: "JobShelf",
-    audience: "solo founders applying to 20+ jobs",
-    vibe: "calm",
-    color: "#2647F0",
-    notList: ["User accounts", "Email digests"]
-  };
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [brand, setBrand] = useState<BrandAnswers>({
     name: "",
     audience: "",
@@ -2374,7 +2378,7 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
   return (
     <>
       <div className="t t-user">
-        <div className="bubble">Yes - let&apos;s build the handoff.</div>
+        <div className="bubble">Yes - create the AI-builder handoff.</div>
       </div>
       <div className="t t-assist">
         <div className="who">
@@ -2383,33 +2387,8 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
           <time>- now</time>
         </div>
         <p className="say">
-          Nice. <strong>Five quick questions</strong> - they&apos;ll help me write a handoff that&apos;s actually yours, not a generic clone of <code>{brand.name || "the starter repo"}</code>.
+          Great. I&apos;ll turn the selected repo into the handoff your AI builder needs. A few product details help it customize the foundation instead of cloning it blindly.
         </p>
-        {step === 0 ? (
-          <div className="brand-recall">
-            <h4>Welcome back. Want to reuse your brand?</h4>
-            <div className="br-grid">
-              <div className="br-cell">
-                <span className="k">Last time</span>
-                <span className="v">{lastBrand.name}</span>
-              </div>
-              <div className="br-cell">
-                <span className="k">Vibe</span>
-                <span className="v">{lastBrand.vibe}</span>
-              </div>
-              <div className="br-cell">
-                <span className="k">Color</span>
-                <span className="v"><span className="swatch-mini" style={{ background: lastBrand.color }} />{lastBrand.color}</span>
-              </div>
-            </div>
-            <div className="br-actions">
-              <button className="btn accent" type="button" onClick={() => onComplete(lastBrand)}>
-                Use last time&apos;s brand <ArrowRight size={14} />
-              </button>
-              <button className="btn ghost" type="button" onClick={() => setStep(1)}>Start fresh</button>
-            </div>
-          </div>
-        ) : (
         <div className="brand-question">
           <span className="bq-step">Step {step} of 5</span>
           {step === 1 ? (
@@ -2427,8 +2406,8 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
           ) : null}
           {step === 3 ? (
             <>
-              <h4>Pick a vibe.</h4>
-              <p className="help">We&apos;ll translate this into typography, spacing and copy tone in the handoff.</p>
+              <h4>What should it feel like?</h4>
+              <p className="help">This gives your builder tone, spacing, and copy direction.</p>
               <div className="vibe-row">
                 {[
                   { id: "calm", name: "Calm + considered", sub: "Apple-like restraint" },
@@ -2446,7 +2425,7 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
           {step === 4 ? (
             <>
               <h4>Pick a signature color.</h4>
-              <p className="help">One color does the heavy lifting. We&apos;ll derive the rest of the palette for you.</p>
+              <p className="help">Optional, but it gives the builder one visual anchor.</p>
               <div className="color-row">
                 {["#2647F0", "#0F8060", "#D8412F", "#5B3DD8", "#0A0B0E", "#F7C800", "#E83E8C", "#0EA5E9"].map((color) => (
                   <button
@@ -2491,11 +2470,10 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
           <div className="bq-foot">
             {step === 2 || step === 5 ? <span className="skip" onClick={skip}>Skip this -&gt;</span> : <span />}
             <button className="btn accent" type="button" onClick={() => (step < 5 ? setStep(step + 1) : done())}>
-              {step < 5 ? "Next" : "All done"} <ArrowRight size={14} />
+              {step < 5 ? "Next" : "Create handoff"} <ArrowRight size={14} />
             </button>
           </div>
         </div>
-        )}
       </div>
     </>
   );
@@ -2562,12 +2540,12 @@ function Generating({ brand, result, onReady }: { brand: BrandAnswers | null; re
           <strong>ForkFirst</strong>
           <time>- now</time>
         </div>
-        <p className="say">Got it. Writing your handoff now. Watch.</p>
+        <p className="say">Got it. Turning the foundation into your AI-builder handoff.</p>
         <div className="generating-card">
-          <div className="gc-eyebrow">Generating Builder Handoff</div>
+          <div className="gc-eyebrow">Creating the AI handoff</div>
           <h4>{brand?.name || "Your app"} / {result.repos[0]?.fullName ?? "starter repo"}</h4>
           <div className="gc-steps">
-            {["Pulling repo notes", "Writing PRD", "Writing build plan", "Tuning for your builder", "Sealing the handoff"].map((label, index) => (
+            {["Naming the starting repo", "Writing the product brief", "Writing the first build plan", "Adding builder instructions", "Packaging the handoff"].map((label, index) => (
               <div key={label} className={`gcs ${index < step ? "done" : ""}`}>
                 <span className="gci" />
                 <span>{label}</span>
@@ -2586,13 +2564,15 @@ function ReadyCard({
   docs,
   onHandoff,
   onCopy,
-  onDownload
+  onDownload,
+  onDownloadZip
 }: {
   brand: BrandAnswers | null;
   docs: HandoffDocuments;
   onHandoff: () => void;
   onCopy: () => void;
   onDownload: () => void;
+  onDownloadZip: () => void;
 }) {
   const [previewFile, setPreviewFile] = useState<HandoffDocTab | null>(null);
   const previewText = previewFile ? docs[previewFile] : "";
@@ -2603,17 +2583,22 @@ function ReadyCard({
         <strong>ForkFirst</strong>
         <time>- now</time>
       </div>
-      <p className="say">Done. Your Builder Handoff is ready. Put it in the starter repo root and let your AI builder read top to bottom.</p>
+      <p className="say">Done. Download the zip, give it to your AI builder, and tell it to follow the handoff.</p>
       <div className="ready-card">
         <div className="ready-head">
           <span className="ready-ico">
             <Check size={18} />
           </span>
-          <h4>{brand?.name || "JobShelf"} / Builder Handoff</h4>
+          <h4>{brand?.name || "Your app"} / AI-builder handoff</h4>
         </div>
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 13.5, lineHeight: 1.5 }}>
-          Tuned for your AI builder. Open any file to inspect exactly what got created, then preview the editable packet.
+          This package tells your builder which repo to start from, what to keep, what to change, and what to build first.
         </p>
+        <div className="handoff-next-steps" aria-label="Next steps for using this handoff">
+          <span><strong>1</strong> Download the zip</span>
+          <span><strong>2</strong> Give it to your AI builder</span>
+          <span><strong>3</strong> Say: follow this handoff and build Phase 1</span>
+        </div>
         <div className="ready-files">
           {READY_FILE_DEFS.map(({ kind, file }) => (
             <button key={file} className="rf" type="button" onClick={() => setPreviewFile(file)}>
@@ -2624,14 +2609,17 @@ function ReadyCard({
           ))}
         </div>
         <div className="ready-actions">
-          <button className="btn accent" type="button" onClick={onHandoff}>
-            Preview <ArrowRight size={14} />
+          <button className="btn accent" type="button" onClick={onDownloadZip}>
+            <Download size={14} /> Download zip
+          </button>
+          <button className="btn ghost" type="button" onClick={onCopy}>
+            <Copy size={14} /> Copy prompt
+          </button>
+          <button className="btn ghost" type="button" onClick={onHandoff}>
+            Preview/edit <ArrowRight size={14} />
           </button>
           <button className="btn ghost" type="button" onClick={onDownload}>
             <Download size={14} /> Download .md
-          </button>
-          <button className="btn ghost" type="button" onClick={onCopy}>
-            <Copy size={14} /> Copy as prompt
           </button>
         </div>
         <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16, marginTop: 8 }}>
@@ -2896,7 +2884,7 @@ function HandoffView({
         <div>
           <h2>
             Builder Handoff
-            <small>{starterName} to {packTitle}. Editable Markdown for your AI builder.</small>
+            <small>{starterName} to {packTitle}. Repo, prompt, and build files your AI builder can follow.</small>
           </h2>
         </div>
         <div className="handoff-actions">
@@ -2919,14 +2907,14 @@ function HandoffView({
               saveWithVersion("Exported .md", "exported");
               onDownload("forkfirst-builder-handoff.md", markdown);
             }}>
-              <Download size={14} /> Download .md
+              <Download size={14} /> Download prompt
             </button>
           </div>
           <button className="btn accent" type="button" disabled={!canExport} onClick={() => {
             saveWithVersion("Exported .zip", "exported");
             onDownloadZip("forkfirst-build-pack.zip", docs, markdown);
           }}>
-            <Download size={14} /> Download .zip
+            <Download size={14} /> Download handoff zip
           </button>
         </div>
       </div>
@@ -2940,7 +2928,7 @@ function HandoffView({
           <div className="doc-meta">
             <span>{tab}</span>
             <span>{formatByteSize(activeDoc)}</span>
-            <span>Editable Markdown - copy and download use your changes.</span>
+            <span>Editable handoff file - copy and download use your changes.</span>
           </div>
           <div className="doc-body">
             <textarea
@@ -2954,7 +2942,7 @@ function HandoffView({
         <div className="handoff-side">
           <div className="card">
             <h3>Send to</h3>
-            <p>Pick your builder. We&apos;ll tune the handoff for how it likes to be talked to.</p>
+            <p>Pick your builder for exact next steps.</p>
             <div className="target-row">
               {BUILD_TARGETS.map((item) => (
                 <button key={item.id} className={`target ${target === item.id ? "is-active" : ""}`} type="button" onClick={() => setTarget(item.id)}>
@@ -2990,7 +2978,7 @@ function HandoffView({
           </div>
           <div className="card">
             <h3>What&apos;s in the folder</h3>
-            <p>Six editable Markdown files. Put them in the cloned starter repo root so your AI builder reads the foundation, product, brand, plan, and rules together.</p>
+            <p>Six handoff files. Put them in the cloned starter repo root so your AI builder reads the foundation, product, brand, plan, and rules together.</p>
             <div className="file-list">
               {[
                 ["STR", "STARTER_REPO.md", formatByteSize(docs["STARTER_REPO.md"]), "accent"],
@@ -4536,6 +4524,7 @@ export function ForkFirstRedesignApp() {
                   onSelectStarter={setSelectedStarterRepo}
                   onCopyHandoff={() => copyText(makeHandoffMarkdown())}
                   onDownloadHandoff={() => downloadHandoff("forkfirst-builder-handoff.md", makeHandoffMarkdown())}
+                  onDownloadHandoffZip={() => downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(makeHandoffMarkdown()), makeHandoffMarkdown())}
                   onFollowUp={sendFollowUp}
                   readyDocs={createHandoffDocuments(makeHandoffMarkdown())}
                   onStartBranding={() => {
