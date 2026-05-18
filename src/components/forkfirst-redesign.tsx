@@ -3500,6 +3500,11 @@ function HandoffView({
               ))}
             </div>
           </div>
+          <div className="card">
+            <h3>Token math</h3>
+            <p>This edited packet is roughly <strong style={{ color: "var(--ink)" }}>{formatTokensShort(handoffTokens)} tokens</strong>, estimated from Markdown text length.</p>
+            <p style={{ margin: 0, color: "var(--accent)", fontWeight: 600 }}>Copy, save, and download use the current edited text.</p>
+          </div>
           <div className="card handoff-draft-card">
             <h3>Local draft</h3>
             <p>Autosaved in this browser. Use these when you want a checkpoint or a single Markdown file instead of the zip.</p>
@@ -3522,11 +3527,6 @@ function HandoffView({
                 <Download size={14} /> .md
               </button>
             </div>
-          </div>
-          <div className="card">
-            <h3>Token math</h3>
-            <p>This edited packet is roughly <strong style={{ color: "var(--ink)" }}>{formatTokensShort(handoffTokens)} tokens</strong>, estimated from Markdown text length.</p>
-            <p style={{ margin: 0, color: "var(--accent)", fontWeight: 600 }}>Copy, save, and download use the current edited text.</p>
           </div>
           <div className="card quality-card">
             <div className="quality-top">
