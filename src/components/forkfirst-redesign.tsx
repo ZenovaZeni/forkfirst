@@ -561,6 +561,34 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
     ], `Inspect ${best.fullName}, then use it as the foundation only if setup, license, and architecture make sense.`);
   }
 
+  if (/\b(advice|feedback|critique|review this|what do you think|does this sound|is this good|look what|what i wrote|what it said|what they said|how should i respond|how would you respond)\b/.test(lower)) {
+    const exactTextHint = /\b(look what|what i wrote|what it said|what they said|review this|critique)\b/.test(lower);
+    return formatChatFallback("Yes - here is my read", [
+      {
+        heading: "My advice",
+        items: [
+          "Use the repo as leverage, not as the whole answer. The point is to save build time and give the AI builder a real foundation.",
+          `${best.fullName} is the strongest current lead, but inspect setup, license, docs, and recent activity before building on it.`,
+          "The best version of this flow should help you decide what to keep, replace, and ignore."
+        ]
+      },
+      {
+        heading: exactTextHint ? "About the wording you mentioned" : "How I would think about it",
+        items: exactTextHint
+          ? [
+            "Paste the exact text you want me to react to and I will critique the tone, clarity, and next move directly.",
+            "If it came from another AI or a user, keep the parts that sharpen the first build and ignore anything that adds vague scope."
+          ]
+          : [
+            "Ask whether the repo solves the hard part or only gives inspiration.",
+            "Decide the one user outcome the first prototype has to prove.",
+            "Then make the handoff tell your AI builder exactly what to clone, keep, replace, and build first."
+          ]
+      },
+      { heading: "Project sites found", items: projectSites.length ? projectSites.map((site) => `${site.name}: ${site.url}`) : ["No project website links are in the current top repo metadata."] }
+    ], "If you want my most practical next step: inspect the best repo, decide what it saves you, then create the AI-builder handoff.");
+  }
+
   if (lower.includes("compare") || lower.includes("why these") || lower.includes("which")) {
     return formatChatFallback("Here is the plain-English repo comparison", repos.map((repo, index) => ({
       heading: `${index + 1}. ${repo.fullName}`,
@@ -589,10 +617,17 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult) {
     ], "Create the AI-builder handoff and answer a few product details so the packet becomes specific.");
   }
 
-  return formatChatFallback("I am using the current report", [
-    { heading: "Repo leads in memory", items: repos.map((repo, index) => `${index + 1}. ${repo.fullName} - ${repo.score.total}% fit`) },
-    { heading: "Best lead right now", items: [`${best.fullName}: ${best.summary || best.description || "The strongest current repo lead."}`] }
-  ], "Ask me to compare them, explain the opportunity gap, find more like one of them, or create the AI-builder handoff.");
+  return formatChatFallback("Short answer", [
+    {
+      heading: "My take",
+      items: [
+        "I can help with that, and I will keep the current repo report in the background instead of repeating it every time.",
+        `${best.fullName} is the strongest current lead, but treat it as evidence to inspect, not a final decision.`
+      ]
+    },
+    { heading: "Current repo context", items: repos.map((repo, index) => `${index + 1}. ${repo.fullName} - ${repo.score.total}% fit`) },
+    { heading: "What I can help with next", items: ["Critique exact wording.", "Compare the repos.", "Find more options.", "Suggest features.", "Create the AI-builder handoff."] }
+  ], "Send the exact thing you want feedback on, or tell me which repo you are leaning toward.");
 }
 
 type TrendingApiState =
@@ -4023,7 +4058,7 @@ function ChatComposerBar({
           supported={voice.supported}
           onToggle={voice.toggle}
         />
-        <button className="composer-send" type="button" onClick={submit} disabled={!value.trim() || disabled} title="Send">
+        <button className="composer-send" type="button" onClick={submit} disabled={!value.trim() || disabled} title="Send message" aria-label="Send message">
           <Send size={16} />
         </button>
       </div>

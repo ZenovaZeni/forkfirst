@@ -130,6 +130,42 @@ function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages
 
   const lower = prompt.toLowerCase();
 
+  if (/\b(advice|feedback|critique|review this|what do you think|does this sound|is this good|look what|what i wrote|what it said|what they said|how should i respond|how would you respond)\b/.test(lower)) {
+    const best = repos[0];
+    const kind = getRepoKindInsight(best);
+    const exactTextHint = /\b(look what|what i wrote|what it said|what they said|review this|critique)\b/.test(lower);
+    return formatBuilderReply("Yes - here is my read", [
+      {
+        heading: "My advice",
+        items: [
+          "Use the repo as leverage, not as the whole answer. The win is getting to a working prototype with clearer direction and fewer wasted build cycles.",
+          `Right now, ${best.fullName} is the strongest lead in this report, but I would still verify setup, license, docs, and recent activity before building on it.`,
+          `${kind.label}: ${kind.plainEnglish}`
+        ]
+      },
+      {
+        heading: "How I would think about it",
+        items: [
+          "Ask: does this repo already solve the hard technical part, or is it only inspiration?",
+          "Ask: what should your AI builder keep, replace, and ignore?",
+          "Ask: what one user outcome should the first prototype prove?"
+        ]
+      },
+      {
+        heading: exactTextHint ? "About the wording you mentioned" : "How to make the next message useful",
+        items: exactTextHint
+          ? [
+            "Paste the exact text you want me to react to and I will critique the tone, clarity, and next move directly.",
+            "If it is feedback from another AI or a user, I would separate signal from noise: keep the parts that sharpen the first build, ignore anything that adds vague scope."
+          ]
+          : [
+            "Tell me whether you want product advice, repo advice, or wording feedback.",
+            "If you want a normal back-and-forth, ask the question naturally. I will keep the repo report in memory without repeating it back every time."
+          ]
+      }
+    ], "If you want my most practical next step: inspect the best repo, decide what it saves you, then create the handoff so your AI builder has a concrete foundation and instructions.");
+  }
+
   if (lower.includes("opportunity gap")) {
     const best = repos[0];
     const repoNames = repos.map((repo) => repo.fullName).join(", ");
@@ -273,10 +309,26 @@ function fallbackReply(prompt: string, result?: IdeaCheckResult | null, messages
 
   const best = repos[0];
   const kind = getRepoKindInsight(best);
-  return formatBuilderReply("I am using the current report", [
-    { heading: "Main leads in memory", items: repos.map((repo, index) => `${index + 1}. ${repo.fullName}`) },
-    { heading: "Best lead right now", items: [`${best.fullName} is a ${kind.label.toLowerCase()}: ${kind.plainEnglish}`] }
-  ], kind.reuseAdvice);
+  return formatBuilderReply("Short answer", [
+    {
+      heading: "My take",
+      items: [
+        `I can help with that. I am grounding the answer in your current idea${result?.prompt ? `: "${result.prompt}"` : ""}.`,
+        `${best.fullName} is the strongest current lead, but treat it as evidence to inspect, not a final decision.`
+      ]
+    },
+    {
+      heading: "Current repo context",
+      items: repos.map((repo, index) => `${index + 1}. ${repo.fullName}`)
+    },
+    {
+      heading: "What I would do next",
+      items: [
+        kind.reuseAdvice,
+        "Ask me to critique exact wording, compare the repos, find more options, suggest features, or turn the chosen repo into the AI-builder handoff."
+      ]
+    }
+  ], "Send the exact thing you want feedback on, or tell me which repo you are leaning toward.");
 }
 
 function looksLikeRawResearchDump(text: string): boolean {
