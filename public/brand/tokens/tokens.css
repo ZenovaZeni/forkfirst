@@ -1,0 +1,108 @@
+/* ────────────────────────────────────────────────────────────────────
+ * Fork First — design tokens
+ *
+ * Drop this file into any project and refer to the CSS variables. All
+ * tokens live under :root; the [data-theme="dark"] block overrides
+ * the contextual semantic tokens (ink/paper/accent/etc) for dark mode.
+ * Brand-fixed tokens (the cobalt scale, brand-ink, brand-paper) stay
+ * the same across themes — they identify Fork First.
+ * ──────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Brand colours (do not theme — these are the brand identity) ── */
+  --ff-brand-ink:        #0A0B0E;
+  --ff-brand-paper:      #F6F4EF;
+  --ff-cobalt:           #2647F0;  /* primary accent — light contexts */
+  --ff-cobalt-bright:    #5577FF;  /* primary accent — dark contexts */
+  --ff-cobalt-ink:       #0B1F8F;  /* deep cobalt — text on light, hover states */
+  --ff-cobalt-soft:      rgba(38, 71, 240, 0.10);  /* tinted backgrounds */
+
+  /* ── Semantic surface tokens (light mode default) ──────────────── */
+  --ff-ink:              #0A0B0E;   /* primary text, primary surface fg */
+  --ff-ink-2:            #2A2A30;   /* secondary text */
+  --ff-muted:            #6B6557;   /* tertiary text, captions */
+  --ff-paper:            #F6F4EF;   /* primary surface */
+  --ff-paper-2:          #EFEBE1;   /* recessed surface */
+  --ff-paper-3:          #E6E1D4;   /* deeper recess, code blocks */
+  --ff-line:             #D6CFBA;   /* hairlines */
+  --ff-line-2:           #C6BFA9;   /* stronger hairlines */
+  --ff-accent:           var(--ff-cobalt);
+  --ff-accent-soft:      var(--ff-cobalt-soft);
+  --ff-accent-ink:       var(--ff-cobalt-ink);
+
+  /* ── Signals ───────────────────────────────────────────────────── */
+  --ff-signal-fork:      #19A26A;
+  --ff-signal-ref:       #B8860B;
+  --ff-signal-warn:      #C46A1A;
+  --ff-signal-danger:    #C42B1A;
+
+  /* ── Typography ────────────────────────────────────────────────── */
+  --ff-font-display:     "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --ff-font-ui:          "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --ff-font-mono:        "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale — fluid where it matters */
+  --ff-size-display:     clamp(56px, 9vw, 140px);
+  --ff-size-h1:          clamp(40px, 6vw, 72px);
+  --ff-size-h2:          clamp(28px, 4vw, 44px);
+  --ff-size-h3:          22px;
+  --ff-size-body:        16px;
+  --ff-size-small:       13.5px;
+  --ff-size-caption:     12px;
+  --ff-size-eyebrow:     11.5px;
+
+  /* Weights (Geist) */
+  --ff-weight-regular:   400;
+  --ff-weight-medium:    500;
+  --ff-weight-semibold:  600;
+  --ff-weight-bold:      700;
+
+  /* Tracking */
+  --ff-track-display:    -0.05em;
+  --ff-track-headline:   -0.035em;
+  --ff-track-body:       -0.005em;
+  --ff-track-eyebrow:    0.14em;     /* uppercase mono */
+
+  /* ── Spacing scale (4-step) ───────────────────────────────────── */
+  --ff-space-1:          4px;
+  --ff-space-2:          8px;
+  --ff-space-3:          12px;
+  --ff-space-4:          16px;
+  --ff-space-5:          24px;
+  --ff-space-6:          32px;
+  --ff-space-7:          48px;
+  --ff-space-8:          64px;
+  --ff-space-9:          96px;
+
+  /* ── Radius ────────────────────────────────────────────────────── */
+  --ff-radius-sm:        6px;
+  --ff-radius-md:        10px;
+  --ff-radius-lg:        14px;
+  --ff-radius-pill:      999px;
+
+  /* ── Shadow ────────────────────────────────────────────────────── */
+  --ff-shadow-1:         0 1px 0 rgba(10,11,14,0.04), 0 12px 32px -16px rgba(10,11,14,0.16);
+  --ff-shadow-2:         0 1px 0 rgba(10,11,14,0.04), 0 24px 64px -24px rgba(10,11,14,0.22);
+
+  /* ── Logo clearspace ─────────────────────────────────────────────
+     Minimum padding around the mark/lockup, expressed as a multiple
+     of the cobalt-period square (≈ 1/7 of mark height).             */
+  --ff-clearspace:       0.28em;  /* roughly the period block, expressed as em of mark height */
+}
+
+[data-theme="dark"] {
+  --ff-ink:              #F6F4EF;
+  --ff-ink-2:            #D9D4C6;
+  --ff-muted:            #8F8A7C;
+  --ff-paper:            #0A0B0E;
+  --ff-paper-2:          #14151A;
+  --ff-paper-3:          #1F2027;
+  --ff-line:             rgba(246,244,239,0.12);
+  --ff-line-2:           rgba(246,244,239,0.20);
+  --ff-accent:           var(--ff-cobalt-bright);
+  --ff-accent-soft:      rgba(85, 119, 255, 0.16);
+  --ff-accent-ink:       #B5C2FF;
+}
+
+/* Selection */
+::selection { background: var(--ff-accent); color: var(--ff-paper); }

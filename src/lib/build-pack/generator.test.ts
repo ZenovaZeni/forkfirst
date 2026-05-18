@@ -1,0 +1,438 @@
+import { describe, expect, test } from "vitest";
+import type { ClassifiedRepo } from "@/lib/analysis/types";
+import type { IdeaCheckResult } from "@/types/idea-check";
+import { buildProjectBuildPack, notToBuildInV1 } from "./generator";
+
+const REQUIRED_SECTIONS = [
+  "# STARTER_REPO",
+  "## Selected Foundation",
+  "## Clone Or Fork Commands",
+  "## File Inspection Checklist",
+  "## Original Idea",
+  "## Product Goal",
+  "## Primary User",
+  "## Problem To Solve",
+  "## Product Promise",
+  "## Brand And Design Brief",
+  "## Core Workflow",
+  "## Must Have (MVP Scope)",
+  "## Skip In v1",
+  "## Repo Research Notes",
+  "## License And Reuse",
+  "## First Milestone",
+  "## Wow Demo Script",
+  "## Verification Checklist",
+  "## Prompt To Start"
+];
+
+function expectAllRequiredSections(markdown: string): void {
+  for (const section of REQUIRED_SECTIONS) {
+    expect(markdown).toContain(section);
+  }
+}
+
+function makeResult(overrides: Partial<IdeaCheckResult>, repoOverrides: Partial<ClassifiedRepo> = {}): IdeaCheckResult {
+  return {
+    id: "1",
+    prompt: "Original idea: build something",
+    createdAt: "2026-01-01T00:00:00Z",
+    queries: [],
+    warnings: [],
+    verdict: "fork_candidate_found",
+    verdictLabel: "Fork candidate found",
+    summary: "A useful repo exists.",
+    confidence: 70,
+    mode: "demo",
+    gaps: [],
+    repos: [{ ...repo(), ...repoOverrides }],
+    ...overrides
+  };
+}
+
+function repo(): ClassifiedRepo {
+  return {
+    id: 1,
+    owner: "owner",
+    name: "starter",
+    fullName: "owner/starter",
+    url: "https://github.com/owner/starter",
+    description: "A starter app for validating ideas.",
+    language: "TypeScript",
+    topics: [],
+    stars: 1200,
+    forks: 100,
+    openIssues: 3,
+    license: "MIT",
+    pushedAt: "2026-01-01T00:00:00Z",
+    createdAt: "2025-01-01T00:00:00Z",
+    updatedAt: "2026-01-01T00:00:00Z",
+    archived: false,
+    homepage: null,
+    category: "forkable",
+    score: { total: 82, fit: 80, activity: 80, popularity: 80, license: 80, docs: 80, reasons: ["Strong keyword fit"] },
+    summary: "Strong lead",
+    readme: {
+      excerpt: "Install with npm, run the demo, and inspect the examples folder before adapting the starter.",
+      url: "https://github.com/owner/starter#readme",
+      hasSetup: true,
+      hasExamples: true,
+      hasApiDetails: false,
+      hasLocalDevelopment: true,
+      hasLicenseText: true,
+      qualityScore: 82,
+      reasons: ["Setup path found", "Examples found"]
+    }
+  };
+}
+
+function result(): IdeaCheckResult {
+  return {
+    id: "1",
+    prompt: "Build an open-source repo discovery app",
+    createdAt: "2026-01-01T00:00:00Z",
+    queries: [],
+    warnings: [],
+    verdict: "fork_candidate_found",
+    verdictLabel: "Fork candidate found",
+    summary: "A useful repo exists.",
+    confidence: 82,
+    mode: "demo",
+    gaps: ["Differentiate with workflow"],
+    repos: [repo()]
+  };
+}
+
+describe("build pack generator", () => {
+  test("generates Codex-specific project context", () => {
+    const markdown = buildProjectBuildPack(result(), "codex");
+
+    expect(markdown).toContain("Target builder: Codex");
+    expect(markdown).toContain("# AGENTS");
+    expect(markdown).toContain("owner/starter");
+    expect(markdown).toContain("Acceptance Criteria");
+    expect(markdown).toContain("- [ ] Inspect the current repo before editing and summarize what already exists.");
+  });
+
+  test("generates Claude Code-specific instructions", () => {
+    const markdown = buildProjectBuildPack(result(), "claude-code");
+
+    expect(markdown).toContain("Target builder: Claude Code");
+    expect(markdown).toContain("CLAUDE.md");
+  });
+
+  test("exports separate builder handoff documents", () => {
+    const markdown = buildProjectBuildPack(result(), "codex");
+
+    expect(markdown).toContain("# PRD");
+    expect(markdown).toContain("# STARTER_REPO");
+    expect(markdown).toContain("# BUILD_PLAN");
+    expect(markdown).toContain("# REPO_STARTER_NOTES");
+    expect(markdown).toContain("# AGENTS");
+    expect(markdown).toContain("## License And Reuse");
+    expect(markdown).toContain("MIT");
+  });
+
+  test("includes concrete PRD and repo reuse evidence from the idea result", () => {
+    const markdown = buildProjectBuildPack(result(), "codex");
+
+    expect(markdown).toContain("## Snapshot\n- Verdict: Fork candidate found (82% confidence)");
+    expect(markdown).toContain("- Summary: Fork candidate: owner/starter is the first repo to inspect from this pass. Fit score: 80%.");
+    expect(markdown).toContain("- [ ] Differentiate with workflow");
+    expect(markdown).toContain("- Score: total 82%, fit 80%, activity 80%, popularity 80%, license 80%, docs 80%");
+    expect(markdown).toContain("- Activity snapshot: 1,200 stars, 100 forks, 3 open issues, last pushed 2026-01-01");
+    expect(markdown).toContain("- README signals: setup docs, examples, local development notes");
+    expect(markdown).toContain("git clone https://github.com/owner/starter");
+    expect(markdown).toContain("- [ ] README and setup docs for owner/starter.");
+    expect(markdown).toContain("## Recommended Repo Decision");
+    expect(markdown).toContain("- [ ] Record setup, license, and architecture evidence in REPO_STARTER_NOTES.md before implementation.");
+  });
+
+  test("turns build phases and verification into editable checklists", () => {
+    const markdown = buildProjectBuildPack(result(), "claude-code");
+
+    expect(markdown).toContain("### Phase 0 - Clone Foundation And Add Handoff Files");
+    expect(markdown).toContain("- [ ] Create STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and CLAUDE.md in the cloned repo root from this combined handoff packet.");
+    expect(markdown).toContain("- [ ] Copy/split the relevant sections yourself without asking the user to manually arrange the Markdown.");
+    expect(markdown).toContain("### Phase 2 - Smallest Product Loop");
+    expect(markdown).toContain("## Verification Checklist");
+    expect(markdown).toContain("- [ ] Run npm run lint and address any new violations.");
+    expect(markdown).toContain("- [ ] Run npm run typecheck and resolve any new errors.");
+    expect(markdown).toContain("- [ ] Run npm test and confirm the primary workflow has at least one focused test.");
+  });
+
+  test("cleans follow-up lookup noise out of the handoff", () => {
+    const lookupResult = {
+      ...result(),
+      prompt:
+        "Build an open-source repo discovery app\n\nFollow-up refinement: Find more GitHub repos and alternatives for this idea. Avoid repeating the same top three when possible.\n\nOriginal idea: I want to build a ChatGPT-like app that tells me if my idea already exists on GitHub and finds the best repo to start from."
+    };
+
+    const markdown = buildProjectBuildPack(lookupResult, "codex");
+
+    expect(markdown).toContain(
+      "## Original Idea\nI want to build a ChatGPT-like app that tells me if my idea already exists on GitHub and finds the best repo to start from."
+    );
+    expect(markdown).not.toContain("Find more GitHub repos and alternatives");
+    expect(markdown).not.toContain("Avoid repeating the same top three");
+    expect(markdown).not.toContain("## Original Idea\nBuild an open-source repo discovery app\n\nFollow-up refinement");
+    expect(markdown).toContain("clear reuse decision, repo evidence, and a build-ready plan");
+  });
+
+  test("keeps a realtor image-generator build pack focused on the actual product", () => {
+    const lowFitRepo = {
+      ...repo(),
+      fullName: "erxes/erxes",
+      url: "https://github.com/erxes/erxes",
+      description: "Experience Operating System for marketing, sales, operations, and support.",
+      category: "reference" as const,
+      score: { total: 65, fit: 5, activity: 100, popularity: 100, license: 100, docs: 100, reasons: ["Weak idea fit"] }
+    };
+    const realtorResult: IdeaCheckResult = {
+      ...result(),
+      prompt:
+        "I want to make an image generator for realtors.\n\nFollow-up refinement: Find more GitHub repos similar to AleksNeStu/ai-real-estate-assistant.\n\nOriginal idea: I want to make an image generator for realtors.",
+      queries: [
+        "real estate crm in:name,description,readme",
+        "real estate marketing in:name,description,readme",
+        "open source voice assistant in:name,description,readme"
+      ],
+      repos: [lowFitRepo],
+      verdictLabel: "Fork Candidate Found",
+      confidence: 72
+    };
+
+    const markdown = buildProjectBuildPack(realtorResult, "codex");
+
+    expect(markdown).toContain("## Original Idea\nI want to make an image generator for realtors.");
+    expect(markdown).toContain("Help realtors turn a listing, property photo, or marketing prompt into usable branded visuals");
+    expect(markdown).toContain("A realtor, real-estate marketer, or solo agent");
+    expect(markdown).toContain("- Verdict: Needs more focused research");
+    expect(markdown).toContain("Fit score: 5%");
+    expect(markdown).toContain("erxes/erxes is a research lead only");
+    expect(markdown).toContain("real estate marketing in:name,description,readme");
+    expect(markdown).not.toContain("open source voice assistant");
+    expect(markdown).toContain("You are building the product described in Original Idea, not ForkFirst itself.");
+  });
+
+  test("includes every required Build Pack section for a default idea", () => {
+    const markdown = buildProjectBuildPack(result(), "codex");
+    expectAllRequiredSections(markdown);
+    expect(markdown).toContain("## Core Workflow\n1. ");
+  });
+
+  test("turns brand answers and chat context into builder constraints", () => {
+    const markdown = buildProjectBuildPack(result(), "codex", repo(), {
+      productName: "JobShelf",
+      audience: "solo founders applying to jobs",
+      vibe: "calm and editorial",
+      accentColor: "#2647F0",
+      skipInV1: ["Billing"],
+      chatContext: "user: I want CSV export and a calm mobile flow."
+    });
+
+    expect(markdown).toContain("Focused on: owner/starter");
+    expect(markdown).toContain("- Product name: JobShelf");
+    expect(markdown).toContain("- Audience: solo founders applying to jobs");
+    expect(markdown).toContain("- Brand vibe: calm and editorial");
+    expect(markdown).toContain("- Accent color: #2647F0");
+    expect(markdown).toContain("- Conversation context: user: I want CSV export and a calm mobile flow.");
+    expect(markdown).toContain("- Billing");
+    expect(markdown).toContain("- Product promise to express in the UI:");
+    expect(markdown).toContain("git clone https://github.com/owner/starter jobshelf");
+  });
+
+  test("uses the chosen focus repo as the clone foundation", () => {
+    const selectedRepo: ClassifiedRepo = {
+      ...repo(),
+      id: 2,
+      owner: "chosen",
+      name: "better-base",
+      fullName: "chosen/better-base",
+      url: "https://github.com/chosen/better-base",
+      score: { ...repo().score, fit: 92 }
+    };
+    const markdown = buildProjectBuildPack(
+      { ...result(), repos: [repo(), selectedRepo] },
+      "claude-code",
+      selectedRepo
+    );
+
+    expect(markdown).toContain("Focused on: chosen/better-base");
+    expect(markdown).toContain("- Repo: chosen/better-base");
+    expect(markdown).toContain("git clone https://github.com/chosen/better-base");
+    expect(markdown).not.toContain("- Repo: owner/starter");
+  });
+
+  test("realtor image generator prompt produces a domain-specific Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to make an image generator for realtors."
+      }),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toContain("## Original Idea\nI want to make an image generator for realtors.");
+    expect(markdown).toContain("Help realtors turn a listing");
+    expect(markdown).toContain("listing hero");
+    expect(markdown).toMatch(/Direct MLS data ingestion|Automated posting to Instagram/);
+    expect(markdown).not.toMatch(/\bnotebook app\b|\bCursor alternative\b|\bClickUp\b/i);
+  });
+
+  test("open-source ClickUp prompt produces a project-tool Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want an open-source version of ClickUp."
+      }),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toContain("ClickUp");
+    expect(markdown).toMatch(/task and project tracker|task board|board view/i);
+    expect(markdown).toMatch(/Multi-tenant SaaS billing|seats|organization admin/i);
+    expect(markdown).not.toMatch(/\brealtor\b|\bnotebook\b|\bvoice assistant\b|\bCursor alternative\b/i);
+  });
+
+  test("WhisperFlow-style voice assistant prompt produces a voice-tool Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build a voice assistant like WhisperFlow."
+      }),
+      "claude-code"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toContain("WhisperFlow");
+    expect(markdown).toMatch(/Whisper|transcribe|transcript/i);
+    expect(markdown).toMatch(/System-wide global hotkey|real-time live captioning|custom voice training/i);
+    expect(markdown).not.toMatch(/\brealtor\b|\bClickUp\b|\bnotebook app\b|\btask board\b/i);
+  });
+
+  test("Obsidian-style notebook prompt produces a notes-tool Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build a notebook app like Obsidian."
+      }),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toContain("Obsidian");
+    expect(markdown).toMatch(/Markdown|backlink|wiki-link/i);
+    expect(markdown).toMatch(/Cloud sync|Mobile apps|Plugin marketplace/i);
+    expect(markdown).not.toMatch(/\brealtor\b|\bClickUp\b|\bvoice assistant\b|\bCursor alternative\b/i);
+  });
+
+  test("AI lead-gen for real-estate agents prompt produces a real-estate lead Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build an AI lead-gen tool for real estate agents."
+      }),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toMatch(/realtor|real-estate|real estate/i);
+    expect(markdown).toMatch(/lead|prospect/i);
+    expect(markdown).toMatch(/MLS|Zillow|Realtor\.com|terms of service/i);
+    expect(markdown).not.toMatch(/\bnotebook app\b|\bClickUp\b|\bvoice assistant\b|\bCursor alternative\b/i);
+  });
+
+  test("open-source Cursor alternative prompt produces a code-editor Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: Is there an open-source Cursor alternative?"
+      }),
+      "claude-code"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toContain("Cursor");
+    expect(markdown).toMatch(/inline completion|diff|edit/i);
+    expect(markdown).toMatch(/Multi-file agentic refactors|hosted accounts|marketplace/i);
+    expect(markdown).not.toMatch(/\brealtor\b|\bnotebook app\b|\bvoice assistant\b|\bClickUp\b/i);
+  });
+
+  test("flags weak repo matches as research leads, not safe forks", () => {
+    const weakRepo: ClassifiedRepo = {
+      ...repo(),
+      fullName: "owner/loosely-related",
+      url: "https://github.com/owner/loosely-related",
+      category: "reference",
+      score: { total: 30, fit: 12, activity: 60, popularity: 60, license: 60, docs: 50, reasons: ["Loose match"] }
+    };
+    const markdown = buildProjectBuildPack(
+      makeResult(
+        {
+          prompt: "Original idea: I want to make an image generator for realtors.",
+          repos: [weakRepo],
+          verdictLabel: "Fork candidate found",
+          confidence: 60
+        }
+      ),
+      "codex"
+    );
+
+    expect(markdown).toContain("- Verdict: Needs more focused research");
+    expect(markdown).toContain("owner/loosely-related is a research lead only");
+    expect(markdown).not.toMatch(/owner\/loosely-related is a fork candidate/i);
+  });
+
+  test("does not pretend a starter repo is license-cleared", () => {
+    const unlicensedRepo: ClassifiedRepo = {
+      ...repo(),
+      license: null,
+      score: { ...repo().score, fit: 80 }
+    };
+    const markdown = buildProjectBuildPack(
+      makeResult({ prompt: "Original idea: build a niche workflow tool", repos: [unlicensedRepo] }),
+      "codex"
+    );
+
+    expect(markdown).toMatch(/No license was detected/i);
+    expect(markdown).toContain("Do not copy third-party code until license and attribution are documented.");
+  });
+
+  test("notToBuildInV1 does not emit a fallback bullet for unclassified gaps", () => {
+    // Bug 2 guard: unrecognized gaps must not produce a raw "Anything directly related to:" bullet
+    const gappyResult = makeResult({
+      gaps: [
+        "Differentiate with saved research cases and deep product context that competitors skip.",
+        "Some unrelated product nuance that does not classify neatly."
+      ]
+    });
+    const bullets = notToBuildInV1(gappyResult);
+    for (const bullet of bullets) {
+      expect(bullet).not.toMatch(/Anything directly related to:/i);
+      // Each bullet must end at a word boundary (no mid-word truncation)
+      expect(bullet).toMatch(/[a-zA-Z0-9.)"']$/);
+    }
+  });
+
+  test("Skip In v1 section dedupes and does not repeat the same concept twice", () => {
+    // Bug 1 guard: merged section must not contain near-duplicate entries
+    const markdown = buildProjectBuildPack(result(), "codex");
+
+    expect(markdown).not.toContain("## Not In First Version");
+    expect(markdown).not.toContain("## What NOT To Build In v1");
+    expect(markdown).toContain("## Skip In v1");
+
+    // Extract the Skip In v1 section
+    const skipSection = markdown.split("## Skip In v1")[1]?.split("##")[0] ?? "";
+    const bullets = skipSection.split("\n").filter((line) => line.startsWith("- "));
+    // No exact duplicates
+    const unique = new Set(bullets);
+    expect(unique.size).toBe(bullets.length);
+    // Capped at 6
+    expect(bullets.length).toBeLessThanOrEqual(6);
+  });
+
+  test("Skip In v1 section does not contain enterprise jargon", () => {
+    const markdown = buildProjectBuildPack(result(), "codex");
+    expect(markdown).not.toContain("SBOM");
+    expect(markdown).not.toContain("legal clearance claims");
+    expect(markdown).not.toContain("third-party AI app store integrations");
+    expect(markdown).not.toContain("Background crawling or scraping of GitHub beyond the documented search API");
+  });
+});

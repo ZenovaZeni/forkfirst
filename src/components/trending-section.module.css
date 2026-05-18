@@ -1,0 +1,315 @@
+/* trending-section.module.css
+   Uses existing CSS tokens: --bg, --panel, --panel-2, --line, --signal,
+   --text, --muted, --dim, --paper-shadow, --font-sans, --font-display
+*/
+
+/* ── Outer sections ──────────────────────────────────────── */
+.section {
+  padding: 72px 40px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+  border-top: 1px solid var(--line);
+}
+
+.sectionFull {
+  padding: 48px 40px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 16px;
+}
+
+.headerText {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.headerIcon {
+  color: var(--signal);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.heading {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.subheading {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── Tab strip ──────────────────────────────────────────── */
+.tabStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+
+.tab:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--line) 80%, var(--text) 20%);
+  background: color-mix(in srgb, var(--panel) 60%, transparent);
+}
+
+.tabActive {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border: 1px solid color-mix(in srgb, var(--text) 28%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-2) 80%, transparent);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: default;
+}
+
+/* ── Category blurb ─────────────────────────────────────── */
+.blurb {
+  font-size: 0.85rem;
+  color: var(--dim);
+  margin: 0 0 24px;
+  font-style: italic;
+}
+
+/* ── Repo grid ──────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section,
+  .sectionFull {
+    padding: 48px 20px 60px;
+  }
+}
+
+/* ── Repo card ──────────────────────────────────────────── */
+.repoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: var(--paper-shadow);
+  transition: border-color 0.14s;
+}
+
+.repoCard:hover {
+  border-color: color-mix(in srgb, var(--line) 60%, var(--signal) 40%);
+}
+
+.cardTop {
+  flex: 1;
+  min-width: 0;
+}
+
+.repoName {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--signal);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+
+.repoName:hover {
+  text-decoration: underline;
+}
+
+.repoDesc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.noDesc {
+  color: var(--dim);
+  font-style: italic;
+}
+
+/* ── Card meta ──────────────────────────────────────────── */
+.cardMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.starBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.langPill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-2) 80%, transparent);
+  border: 1px solid var(--line);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.licensePill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-2) 60%, transparent);
+  border: 1px solid var(--line);
+  font-size: 0.7rem;
+  color: var(--dim);
+}
+
+/* ── Card actions ───────────────────────────────────────── */
+.cardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btnSave,
+.btnSaved,
+.btnHandoff {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.btnSave {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+.btnSave:hover {
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.btnSaved {
+  border: 1px solid color-mix(in srgb, var(--forkable, #16a34a) 50%, transparent);
+  background: color-mix(in srgb, var(--forkable, #16a34a) 12%, transparent);
+  color: var(--forkable, #16a34a);
+}
+
+.btnHandoff {
+  border: 1px solid color-mix(in srgb, var(--signal) 40%, transparent);
+  background: color-mix(in srgb, var(--signal) 10%, transparent);
+  color: var(--signal);
+}
+
+.btnHandoff:hover {
+  background: color-mix(in srgb, var(--signal) 18%, transparent);
+}
+
+/* ── Skeleton ───────────────────────────────────────────── */
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.4; }
+}
+
+.skeletonLine {
+  height: 12px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.skeletonFooter {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.skeletonPill {
+  width: 56px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ── Error state ────────────────────────────────────────── */
+.errorState {
+  grid-column: 1 / -1;
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.88rem;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}

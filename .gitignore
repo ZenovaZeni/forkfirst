@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Local research / runtime state
+.forkfirst/
+.open-repo/
+.superpowers/
+.starter-reference/
+.redesign/
+.tmp/
+
+# Local QA screenshots (regenerate via Playwright; release assets live in public/screenshots)
+.qa-*.png
+qa-*.png
+.qa-screenshots/
+.qa-screenshots-after/
+
+# Dev server logs
+.dev-server*.log
+.dev-server*.err.log
+
+# Generic logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Local archives / handoff drops
+*.zip
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+
+# Vercel
+.vercel
