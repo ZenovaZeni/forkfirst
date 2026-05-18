@@ -2119,7 +2119,9 @@ function EmptyApp({
   loading,
   foundationDraft,
   setPrompt,
+  savedRepos,
   onSelectFoundation,
+  onSaveRepo,
   onClearFoundation,
   onSubmit
 }: {
@@ -2127,142 +2129,173 @@ function EmptyApp({
   loading: boolean;
   foundationDraft: FoundationDraft | null;
   setPrompt: (value: string) => void;
+  savedRepos: ClassifiedRepo[];
   onSelectFoundation: (repo: FoundationDraft) => void;
+  onSaveRepo: (repo: ClassifiedRepo) => void;
   onClearFoundation: () => void;
   onSubmit: (promptOverride?: string) => void;
 }) {
   const [pasteUrl, setPasteUrl] = useState("");
+  const [detailsRepo, setDetailsRepo] = useState<TrendingRepo | null>(null);
   const trending = useTrendingRepos("ai-agents");
+  const trendingCategory = TRENDING_CATEGORIES.find((item) => item.id === "ai-agents");
   const repoPath = parseGitHubRepoInput(pasteUrl);
   const showRepoHint = pasteUrl.trim().length > 0 && !repoPath;
   return (
-    <section className="ws-empty" data-screen-label="02 App empty">
-      <h1 className="greeting">
-        What are you <span className="accent-word">about to build?</span>
-      </h1>
-      <p className="sub">
-        {foundationDraft
-          ? "Tell ForkFirst what you want to build from this repo. We will inspect it before the handoff."
-          : "Tell ForkFirst what you want to build. We will find a strong repo foundation and prep the handoff."}
-      </p>
-      {foundationDraft ? (
-        <div className="foundation-attach" aria-label="Selected foundation repo">
-          <div>
-            <span className="fa-kicker">Foundation attached</span>
-            <strong>{foundationDraft.fullName}</strong>
-            <p>
-              {foundationDraft.description || "ForkFirst will treat this as the repo to inspect first, then ask whether it should be cloned, studied, or avoided for your idea."}
-            </p>
-            <div className="fa-meta">
-              {foundationDraft.stars ? <span>{formatStars(foundationDraft.stars)} stars</span> : null}
-              {foundationDraft.language ? <span>{foundationDraft.language}</span> : null}
-              {foundationDraft.license ? <span>{foundationDraft.license}</span> : null}
+    <>
+      <section className="ws-empty" data-screen-label="02 App empty">
+        <h1 className="greeting">
+          What are you <span className="accent-word">about to build?</span>
+        </h1>
+        <p className="sub">
+          {foundationDraft
+            ? "Tell ForkFirst what you want to build from this repo. We will inspect it before the handoff."
+            : "Tell ForkFirst what you want to build. We will find a strong repo foundation and prep the handoff."}
+        </p>
+        {foundationDraft ? (
+          <div className="foundation-attach" aria-label="Selected foundation repo">
+            <div>
+              <span className="fa-kicker">Foundation attached</span>
+              <strong>{foundationDraft.fullName}</strong>
+              <p>
+                {foundationDraft.description || "ForkFirst will treat this as the repo to inspect first, then ask whether it should be cloned, studied, or avoided for your idea."}
+              </p>
+              <div className="fa-meta">
+                {foundationDraft.stars ? <span>{formatStars(foundationDraft.stars)} stars</span> : null}
+                {foundationDraft.language ? <span>{foundationDraft.language}</span> : null}
+                {foundationDraft.license ? <span>{foundationDraft.license}</span> : null}
+              </div>
             </div>
+            <button className="icon-btn" type="button" onClick={onClearFoundation} aria-label="Remove attached foundation repo">
+              <X size={15} />
+            </button>
           </div>
-          <button className="icon-btn" type="button" onClick={onClearFoundation} aria-label="Remove attached foundation repo">
-            <X size={15} />
-          </button>
-        </div>
-      ) : null}
-      <Composer
-        value={prompt}
-        loading={loading}
-        onChange={setPrompt}
-        placeholder={foundationDraft ? `What are you trying to build with ${foundationDraft.fullName}?` : undefined}
-        submitLabel={foundationDraft ? "Inspect foundation" : undefined}
-        onSubmit={() => onSubmit()}
-      />
-      <div className="paste-shortcut">
-        <span className="pico">
-          <GitFork size={13} /> Already know the repo?
-        </span>
-        <input
-          value={pasteUrl}
-          onChange={(event) => setPasteUrl(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && repoPath && !loading) {
+        ) : null}
+        <Composer
+          value={prompt}
+          loading={loading}
+          onChange={setPrompt}
+          placeholder={foundationDraft ? `What are you trying to build with ${foundationDraft.fullName}?` : undefined}
+          submitLabel={foundationDraft ? "Inspect foundation" : undefined}
+          onSubmit={() => onSubmit()}
+        />
+        <div className="paste-shortcut">
+          <span className="pico">
+            <GitFork size={13} /> Already know the repo?
+          </span>
+          <input
+            value={pasteUrl}
+            onChange={(event) => setPasteUrl(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && repoPath && !loading) {
+                onSelectFoundation(foundationFromRepoPath(repoPath));
+                setPasteUrl("");
+              }
+            }}
+            aria-invalid={showRepoHint}
+            placeholder="paste github.com/owner/repo or owner/repo"
+          />
+          <button
+            className="go-btn"
+            type="button"
+            disabled={!repoPath || loading}
+            onClick={() => {
+              if (!repoPath) return;
               onSelectFoundation(foundationFromRepoPath(repoPath));
               setPasteUrl("");
-            }
-          }}
-          aria-invalid={showRepoHint}
-          placeholder="paste github.com/owner/repo or owner/repo"
-        />
-        <button
-          className="go-btn"
-          type="button"
-          disabled={!repoPath || loading}
-          onClick={() => {
-            if (!repoPath) return;
-            onSelectFoundation(foundationFromRepoPath(repoPath));
-            setPasteUrl("");
-          }}
-        >
-          Use repo
-        </button>
-      </div>
-      {showRepoHint ? <p className="paste-hint">Use owner/repo or github.com/owner/repo.</p> : null}
-      <div className="starters-trending">
-        <div className="row-label">
-          <span className="pulse" />
-          <span>Trending repos for inspiration</span>
-          <span className="row-label-right">Popular picks from the Trending tab</span>
+            }}
+          >
+            Use repo
+          </button>
         </div>
-        <div className="starter-grid">
-          {trending.status === "loading" ? [1, 2, 3].map((item) => (
-            <div key={item} className="starter-rich">
-              <span className="badge">Loading</span>
-              <div className="who">
-                <span className="dot" />
-                GitHub Search API
-              </div>
-              <div className="ttl-rich">Fetching live repos...</div>
-              <div className="desc-rich">No placeholder trend metrics shown.</div>
-            </div>
-          )) : null}
-          {trending.status === "error" ? (
-            <div className="starter-rich">
-              <span className="badge">GitHub</span>
-              <div className="who">
-                <span className="dot" />
-                Live data unavailable
-              </div>
-              <div className="ttl-rich">Could not load live repos</div>
-              <div className="desc-rich">Try again later or paste a repo above.</div>
-            </div>
-          ) : null}
-          {trending.status === "ok" ? trending.repos.slice(0, 3).map((repo) => (
-            <button
-              key={repo.fullName}
-              className="starter-rich"
-              type="button"
-              onClick={() => {
-                onSelectFoundation(foundationFromTrendingRepo(repo));
-              }}
-            >
-              <div className="starter-card-top">
+        {showRepoHint ? <p className="paste-hint">Use owner/repo or github.com/owner/repo.</p> : null}
+        <div className="starters-trending">
+          <div className="row-label">
+            <span className="pulse" />
+            <span>Trending repos for inspiration</span>
+            <span className="row-label-right">Popular picks from the Trending tab</span>
+          </div>
+          <div className="starter-grid">
+            {trending.status === "loading" ? [1, 2, 3].map((item) => (
+              <div key={item} className="starter-rich">
+                <span className="badge">Loading</span>
                 <div className="who">
                   <span className="dot" />
-                  {formatStars(repo.stars)} stars{repo.language ? ` - ${repo.language}` : ""}{repo.license ? ` - ${repo.license}` : ""}
+                  GitHub Search API
                 </div>
+                <div className="ttl-rich">Fetching live repos...</div>
+                <div className="desc-rich">No placeholder trend metrics shown.</div>
+              </div>
+            )) : null}
+            {trending.status === "error" ? (
+              <div className="starter-rich">
                 <span className="badge">GitHub</span>
-              </div>
-              <div className="ttl-rich">{repo.fullName}</div>
-              <div className="desc-rich">{repo.description || "No GitHub description provided."}</div>
-              {repo.topics.length ? (
-                <div className="starter-topics" aria-label={`${repo.fullName} topics`}>
-                  {repo.topics.slice(0, 3).map((topic) => <span key={topic}>{topic}</span>)}
+                <div className="who">
+                  <span className="dot" />
+                  Live data unavailable
                 </div>
-              ) : null}
-              <div className="meta-rich">
-                <span className="mono" style={{ fontSize: 11 }}>Top trending lead</span>
-                <span className="foundation-cta">Use as foundation</span>
+                <div className="ttl-rich">Could not load live repos</div>
+                <div className="desc-rich">Try again later or paste a repo above.</div>
               </div>
-            </button>
-          )) : null}
+            ) : null}
+            {trending.status === "ok" ? trending.repos.slice(0, 3).map((repo) => (
+              <article
+                key={repo.fullName}
+                className="starter-rich"
+                role="button"
+                tabIndex={0}
+                onClick={() => setDetailsRepo(repo)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setDetailsRepo(repo);
+                  }
+                }}
+              >
+                <div className="starter-card-top">
+                  <div className="who">
+                    <span className="dot" />
+                    {formatStars(repo.stars)} stars{repo.language ? ` - ${repo.language}` : ""}{repo.license ? ` - ${repo.license}` : ""}
+                  </div>
+                  <span className="badge">GitHub</span>
+                </div>
+                <div className="ttl-rich">{repo.fullName}</div>
+                <div className="desc-rich">{repo.description || "No GitHub description provided."}</div>
+                {repo.topics.length ? (
+                  <div className="starter-topics" aria-label={`${repo.fullName} topics`}>
+                    {repo.topics.slice(0, 3).map((topic) => <span key={topic}>{topic}</span>)}
+                  </div>
+                ) : null}
+                <div className="meta-rich">
+                  <span className="mono" style={{ fontSize: 11 }}>Top trending lead</span>
+                  <button
+                    className="foundation-cta"
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelectFoundation(foundationFromTrendingRepo(repo));
+                    }}
+                  >
+                    Use as foundation
+                  </button>
+                </div>
+              </article>
+            )) : null}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <TrendingRepoDrawer
+        repo={detailsRepo}
+        category={trendingCategory}
+        saved={detailsRepo ? isSavedRepo(classifiedFromTrendingRepo(detailsRepo, trendingCategory), savedRepos) : false}
+        onClose={() => setDetailsRepo(null)}
+        onSave={(repo) => onSaveRepo(classifiedFromTrendingRepo(repo, trendingCategory))}
+        onUse={(repo) => {
+          setDetailsRepo(null);
+          onSelectFoundation(foundationFromTrendingRepo(repo));
+        }}
+      />
+    </>
   );
 }
 
@@ -4983,7 +5016,9 @@ export function ForkFirstRedesignApp() {
                     loading={loading}
                     foundationDraft={foundationDraft}
                     setPrompt={setPrompt}
+                    savedRepos={savedRepos}
                     onSelectFoundation={selectFoundationDraft}
+                    onSaveRepo={saveRepo}
                     onClearFoundation={() => setFoundationDraft(null)}
                     onSubmit={runSearch}
                   />

@@ -5183,10 +5183,12 @@ input, textarea, select { font: inherit; color: inherit; }
   align-items: center;
   justify-content: center;
   min-height: 34px;
+  border: 0;
   padding: 8px 13px;
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
+  cursor: pointer;
   font-size: 11.5px;
   font-weight: 750;
   line-height: 1.1;
