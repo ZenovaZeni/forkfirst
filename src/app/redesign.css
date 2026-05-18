@@ -4124,8 +4124,8 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 14px;
   line-height: 1.65;
   color: var(--ink-2);
-  max-height: 280px;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 .readme-plain {
   border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
@@ -4170,6 +4170,35 @@ input, textarea, select { font: inherit; color: inherit; }
   background: var(--accent);
   margin-top: 7px;
   flex: 0 0 auto;
+}
+.fit-reason-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+.fit-reason-grid div {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper-2);
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+.fit-reason-grid span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+.fit-reason-grid strong {
+  color: var(--ink);
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+@media (max-width: 560px) {
+  .fit-reason-grid { grid-template-columns: 1fr; }
 }
 .drawer-foot {
   border-top: 1px solid var(--line);

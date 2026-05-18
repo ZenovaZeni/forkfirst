@@ -822,6 +822,57 @@ function repoSummary(repo: ClassifiedRepo) {
   return "A public GitHub project worth inspecting for this build.";
 }
 
+const IDEA_STOPWORDS = new Set([
+  "about", "after", "again", "already", "also", "and", "app", "build", "builder", "can", "for", "from", "give",
+  "have", "into", "like", "make", "need", "needs", "one", "product", "project", "repo", "simple", "that", "the",
+  "their", "this", "tool", "want", "with", "would", "your"
+]);
+
+function ideaKeywords(value: string) {
+  const seen = new Set<string>();
+  return cleanReadmeText(value)
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 2 && !IDEA_STOPWORDS.has(word))
+    .filter((word) => {
+      if (seen.has(word)) return false;
+      seen.add(word);
+      return true;
+    })
+    .slice(0, 8);
+}
+
+function repoHaystack(repo: ClassifiedRepo) {
+  return `${repo.fullName} ${repo.name} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
+}
+
+function matchedIdeaTerms(repo: ClassifiedRepo, idea: string) {
+  const haystack = repoHaystack(repo);
+  return ideaKeywords(idea).filter((term) => haystack.includes(term)).slice(0, 4);
+}
+
+function formatTerms(terms: string[]) {
+  if (terms.length === 0) return "";
+  if (terms.length === 1) return terms[0];
+  if (terms.length === 2) return `${terms[0]} and ${terms[1]}`;
+  return `${terms.slice(0, -1).join(", ")}, and ${terms[terms.length - 1]}`;
+}
+
+function repoSignals(repo: ClassifiedRepo, limit = 2) {
+  return repo.score.reasons
+    .filter((reason) => !looksLikeScoreOnlySummary(reason))
+    .slice(0, limit);
+}
+
+function repoIdeaReason(repo: ClassifiedRepo, idea: string) {
+  const terms = matchedIdeaTerms(repo, idea);
+  const summary = repoSummary(repo);
+  const signals = repoSignals(repo, 2);
+  const termText = terms.length ? `It matches your idea around ${formatTerms(terms)}` : "It is the closest GitHub lead from this search";
+  const signalText = signals.length ? ` The strongest signals are ${signals.join(" and ").toLowerCase()}.` : "";
+  return `${termText}, and the repo description gives your builder concrete code to inspect: ${summary}.${signalText}`;
+}
+
 function repoPlainEnglish(repo: ClassifiedRepo) {
   return buildRepoNarrative(repo).overview || repoSummary(repo);
 }
@@ -836,8 +887,12 @@ function repoReadmeBullets(repo: ClassifiedRepo) {
   ];
 }
 
-function repoWhy(repo: ClassifiedRepo) {
-  return buildRepoNarrative(repo).why || "It gives your AI builder real code, docs, or product patterns to inspect before starting from scratch.";
+function repoWhy(repo: ClassifiedRepo, idea: string) {
+  const terms = matchedIdeaTerms(repo, idea);
+  const narrative = buildRepoNarrative(repo);
+  const base = narrative.why || "It gives your AI builder real code, docs, or product patterns to inspect before starting from scratch.";
+  if (!terms.length) return base;
+  return `For this idea, the useful overlap is ${formatTerms(terms)}. ${base}`;
 }
 
 function repoWhat(repo: ClassifiedRepo) {
@@ -847,27 +902,29 @@ function repoWhat(repo: ClassifiedRepo) {
   return `${narrative.kindLabel}. ${narrative.goodFor}`;
 }
 
-function repoWhyShown(repo: ClassifiedRepo) {
-  const signals = repo.score.reasons
-    .filter((reason) => !looksLikeScoreOnlySummary(reason))
-    .slice(0, 2);
+function repoWhyShown(repo: ClassifiedRepo, idea: string) {
+  const terms = matchedIdeaTerms(repo, idea);
+  const signals = repoSignals(repo, 2);
   const fit =
     repo.score.fit >= 70
-      ? "It appears to overlap strongly with your idea."
+      ? "It overlaps strongly with what you asked for."
       : repo.score.fit >= 40
-        ? "It appears to overlap with part of your idea."
+        ? "It overlaps with part of what you asked for."
         : "It is adjacent, so treat it as a research lead instead of a ready-made answer.";
+  const termText = terms.length ? ` Matched idea terms: ${formatTerms(terms)}.` : "";
   const signalText = signals.length > 0 ? ` Signals: ${signals.join(", ")}.` : "";
-  return `${fit}${signalText}`;
+  return `${fit}${termText}${signalText}`;
 }
 
-function repoBestUse(repo: ClassifiedRepo) {
+function repoBestUse(repo: ClassifiedRepo, idea: string) {
   const narrative = buildRepoNarrative(repo);
-  if (repo.category === "forkable") return `Best use: test whether this can be the starting codebase. ${narrative.goodFor}`;
-  if (repo.category === "reference") return `Best use: study the patterns, screens, data model, or architecture. ${narrative.goodFor}`;
-  if (repo.category === "already_exists") return `Best use: compare features so you do not rebuild the same thing blindly. ${narrative.goodFor}`;
-  if (repo.category === "gap") return `Best use: understand what is missing and what adjacent projects already cover. ${narrative.goodFor}`;
-  return `Best use: inspect carefully before relying on it. ${narrative.goodFor}`;
+  const terms = matchedIdeaTerms(repo, idea);
+  const context = terms.length ? ` for the ${formatTerms(terms)} parts of your idea` : "";
+  if (repo.category === "forkable") return `Best use: test whether this can be the starting codebase${context}. ${narrative.goodFor}`;
+  if (repo.category === "reference") return `Best use: study the patterns, screens, data model, or architecture${context}. ${narrative.goodFor}`;
+  if (repo.category === "already_exists") return `Best use: compare features${context} so you do not rebuild the same thing blindly. ${narrative.goodFor}`;
+  if (repo.category === "gap") return `Best use: understand what is missing${context} and what adjacent projects already cover. ${narrative.goodFor}`;
+  return `Best use: inspect carefully before relying on it${context}. ${narrative.goodFor}`;
 }
 
 function repoWatch(repo: ClassifiedRepo) {
@@ -1015,8 +1072,11 @@ function buildZipBlob(files: Array<{ path: string; content: string }>) {
   return new Blob(zipParts, { type: "application/zip" });
 }
 
-function repoNext(repo: ClassifiedRepo) {
-  return buildRepoNarrative(repo).next;
+function repoNext(repo: ClassifiedRepo, idea = "") {
+  const terms = matchedIdeaTerms(repo, idea);
+  const next = buildRepoNarrative(repo).next;
+  if (!terms.length) return next;
+  return `${next} Focus the first inspection on ${formatTerms(terms)} so the handoff explains exactly what to keep, replace, or ignore.`;
 }
 
 function TopNav({ go }: { go: (screen: Screen) => void }) {
@@ -2017,6 +2077,7 @@ function Mark() {
 
 function FeaturedRepo({
   repo,
+  idea,
   saved,
   cautious = false,
   onOpen,
@@ -2024,6 +2085,7 @@ function FeaturedRepo({
   onUse
 }: {
   repo: ClassifiedRepo;
+  idea: string;
   saved: boolean;
   cautious?: boolean;
   onOpen: (repo: ClassifiedRepo) => void;
@@ -2044,7 +2106,7 @@ function FeaturedRepo({
             {repo.fullName}
           </button>
           <p className="rc-tagline">{repoSummary(repo)}</p>
-          <p className="rc-user-hint"><strong>How it could help:</strong> {repoBestUse(repo)}</p>
+          <p className="rc-user-hint"><strong>Why start here:</strong> {repoIdeaReason(repo, idea)}</p>
         </div>
         <div className="rc-fit">
           <span className="num">{repo.score.total}%</span>
@@ -2070,7 +2132,7 @@ function FeaturedRepo({
         </div>
         <div className="rc-note">
           <div className="nlabel">Why it showed up</div>
-          <div className="nbody">{repoWhyShown(repo)}</div>
+          <div className="nbody">{repoWhyShown(repo, idea)}</div>
         </div>
         <div className="rc-note warn">
           <div className="nlabel">Watch out</div>
@@ -2078,7 +2140,7 @@ function FeaturedRepo({
         </div>
         <div className="rc-note next">
           <div className="nlabel">Next move</div>
-          <div className="nbody">{repoNext(repo)}</div>
+          <div className="nbody">{repoNext(repo, idea)}</div>
         </div>
       </div>
 
@@ -2108,10 +2170,12 @@ function FeaturedRepo({
 
 function CompactRepo({
   repo,
+  idea,
   onOpen,
   onUse
 }: {
   repo: ClassifiedRepo;
+  idea: string;
   onOpen: (repo: ClassifiedRepo) => void;
   onUse: (repo: ClassifiedRepo) => void;
 }) {
@@ -2125,7 +2189,7 @@ function CompactRepo({
           {repo.fullName}
         </button>
         <p className="rc-tagline">{repoSummary(repo)}</p>
-        <p className="rc-user-hint"><strong>Why it showed up:</strong> {repoWhyShown(repo)}</p>
+        <p className="rc-user-hint"><strong>Why it showed up:</strong> {repoWhyShown(repo, idea)}</p>
       </div>
       <div className="right">
         <div className="rc-fit">
@@ -2217,8 +2281,7 @@ function ChatResults({
             recovery.reassurance
           ) : best ? (
             <>
-              I&apos;d start with <strong>{best.fullName}</strong>. Two more options are below in case the first one does not fit how
-              you think.
+              I&apos;d start with <strong>{best.fullName}</strong>. Why: {repoIdeaReason(best, prompt)}
             </>
           ) : (
             "I did not find a strong repo yet. Try a more specific product shape or name a repo you expected to see."
@@ -2227,6 +2290,7 @@ function ChatResults({
         {best ? (
           <FeaturedRepo
             repo={best}
+            idea={prompt}
             saved={isSavedRepo(best, savedRepos)}
             cautious={isWeakSearch}
             onOpen={onOpenRepo}
@@ -2243,7 +2307,7 @@ function ChatResults({
               <span>Other options</span>
             </div>
             {repos.slice(1, 3).map((repo) => (
-              <CompactRepo key={repo.fullName} repo={repo} onOpen={onOpenRepo} onUse={(chosen) => {
+              <CompactRepo key={repo.fullName} repo={repo} idea={prompt} onOpen={onOpenRepo} onUse={(chosen) => {
                 onSelectStarter(chosen);
                 onStartBranding();
               }} />
@@ -2282,7 +2346,7 @@ function ChatResults({
               <div>Pulled <strong>{repos.length - 3} more</strong> repos from a wider GitHub scan. Quality can drop here, so treat these as lower-ranked options.</div>
             </div>
             {repos.slice(3).map((repo) => (
-              <CompactRepo key={repo.fullName} repo={repo} onOpen={onOpenRepo} onUse={(chosen) => {
+              <CompactRepo key={repo.fullName} repo={repo} idea={prompt} onOpen={onOpenRepo} onUse={(chosen) => {
                 onSelectStarter(chosen);
                 onStartBranding();
               }} />
@@ -2670,12 +2734,14 @@ function ReadyCard({
 
 function RepoDrawer({
   repo,
+  idea,
   saved,
   onClose,
   onSave,
   onUse
 }: {
   repo: ClassifiedRepo | null;
+  idea: string;
   saved: boolean;
   onClose: () => void;
   onSave: (repo: ClassifiedRepo) => void;
@@ -2725,12 +2791,12 @@ function RepoDrawer({
               <div className="readme-plain repo-explain-card">
                 <strong>Non-technical read</strong>
                 <p>{repoWhat(repo)}</p>
-                <p>{repoBestUse(repo)}</p>
+                <p>{repoBestUse(repo, idea)}</p>
               </div>
-              <div className="repo-section"><h3>Why this showed up</h3><p>{repoWhyShown(repo)}</p></div>
-              <div className="repo-section"><h3>Why this might help</h3><p>{repoWhy(repo)}</p></div>
+              <div className="repo-section"><h3>Why this showed up</h3><p>{repoWhyShown(repo, idea)}</p></div>
+              <div className="repo-section"><h3>Why this might help</h3><p>{repoWhy(repo, idea)}</p></div>
               <div className="repo-section"><h3>Watch out for</h3><p>{repoWatch(repo)}</p></div>
-              <div className="repo-section"><h3>Your next move</h3><p>{repoNext(repo)}</p></div>
+              <div className="repo-section"><h3>Your next move</h3><p>{repoNext(repo, idea)}</p></div>
             </>
           ) : null}
           {tab === "readme" ? (
@@ -2749,9 +2815,15 @@ function RepoDrawer({
           ) : null}
           {tab === "why this fits" ? (
             <div className="repo-section">
-              <h3>Signals we matched on</h3>
-              <p>{repoWhyShown(repo)}</p>
-              {repo.score.reasons.map((reason) => (
+              <h3>Fit reasoning</h3>
+              <p>{repoIdeaReason(repo, idea)}</p>
+              <div className="fit-reason-grid">
+                <div><span>Idea overlap</span><strong>{matchedIdeaTerms(repo, idea).length ? formatTerms(matchedIdeaTerms(repo, idea)) : "Closest search lead"}</strong></div>
+                <div><span>Fit score</span><strong>{repo.score.fit}%</strong></div>
+                <div><span>Docs score</span><strong>{repo.score.docs}%</strong></div>
+                <div><span>Reuse type</span><strong>{repoCategoryLabel(repo)}</strong></div>
+              </div>
+              {repoSignals(repo, 4).map((reason) => (
                 <p key={reason} style={{ marginBottom: 8 }}>{reason}</p>
               ))}
               <p style={{ marginBottom: 8 }}><strong style={{ color: "var(--ink)" }}>Risk:</strong> {repoWatch(repo)}</p>
@@ -3830,12 +3902,6 @@ function ChatComposerBar({
           <Send size={16} />
         </button>
       </div>
-      <div className="composer-helpers">
-        <span className="ck">Enter to send</span>
-        <span className="ck">Public GitHub</span>
-        <span className="ck">Quality ranked</span>
-        <span className={`ck voice-copy ${voice.listening ? "is-listening" : ""}`}>{voice.message}</span>
-      </div>
     </div>
   );
 }
@@ -4620,6 +4686,7 @@ export function ForkFirstRedesignApp() {
       </div>
       <RepoDrawer
         repo={drawerRepo}
+        idea={result?.prompt ?? prompt}
         saved={drawerRepo ? isSavedRepo(drawerRepo, savedRepos) : false}
         onClose={() => setDrawerRepo(null)}
         onSave={saveRepo}
