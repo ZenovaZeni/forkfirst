@@ -89,7 +89,7 @@ export function KeySettings({
         <section className="key-panel security-disclosure" aria-label="How keys work">
           <div className="key-panel-heading">
             <strong>How keys work</strong>
-            <span>This is a BYOK app, so you stay in control of provider keys. Demo mode still works without adding keys.</span>
+            <span>ForkFirst defaults to Groq for low-cost hosted runs. You can still bring your own provider key or use demo mode without adding keys.</span>
           </div>
           <ul>
             <li>On the hosted link, keys are sent to this app&apos;s API route only for the request you trigger, then forwarded to GitHub or your selected AI provider.</li>

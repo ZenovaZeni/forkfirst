@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { analyzeWithDemo } from "./demo-analyst";
-import { optionalServerKey, optionalServerModel } from "@/lib/security/server-keys";
+import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
 import type { AnalysisResult, ClassifiedRepo } from "./types";
 
 type OpenAIAnalystOptions = {
@@ -12,7 +12,7 @@ type OpenAIAnalystOptions = {
 
 const providerDefaults = {
   openai: { model: "gpt-4.1-nano", baseUrl: undefined },
-  groq: { model: "llama-3.1-8b-instant", baseUrl: "https://api.groq.com/openai/v1" },
+  groq: { model: DEFAULT_GROQ_MODEL, baseUrl: GROQ_OPENAI_BASE_URL },
   deepseek: { model: "deepseek-v4-flash", baseUrl: "https://api.deepseek.com" },
   custom: { model: "model-name", baseUrl: undefined }
 } as const;
@@ -22,16 +22,17 @@ export async function analyzeWithOpenAI(
   repos: ClassifiedRepo[],
   options: OpenAIAnalystOptions = {}
 ): Promise<AnalysisResult> {
-  const apiKey = options.apiKey || optionalServerKey("OPENAI_API_KEY");
+  const serverAi = options.apiKey ? undefined : optionalServerAiConfig();
+  const apiKey = options.apiKey || serverAi?.apiKey;
   if (!apiKey) {
     return analyzeWithDemo(prompt, repos);
   }
 
-  const provider = options.provider ?? "openai";
+  const provider = options.apiKey ? options.provider ?? "groq" : serverAi?.provider ?? options.provider ?? "groq";
   const defaults = providerDefaults[provider];
   const client = new OpenAI({
     apiKey,
-    baseURL: options.baseUrl || defaults.baseUrl
+    baseURL: options.apiKey ? options.baseUrl || defaults.baseUrl : serverAi?.baseUrl || options.baseUrl || defaults.baseUrl
   });
   const compactRepos = repos.slice(0, 12).map((repo) => ({
     fullName: repo.fullName,
@@ -47,7 +48,7 @@ export async function analyzeWithOpenAI(
 
   try {
     const completion = await client.chat.completions.create({
-      model: options.model || optionalServerModel() || defaults.model,
+      model: options.apiKey ? options.model || defaults.model : serverAi?.model || options.model || defaults.model,
       temperature: 0.2,
       ...(provider === "openai" || provider === "deepseek" ? { response_format: { type: "json_object" as const } } : {}),
       messages: [

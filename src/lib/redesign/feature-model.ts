@@ -133,10 +133,10 @@ export const LEGACY_REDESIGN_STORAGE_KEYS: Record<keyof typeof REDESIGN_STORAGE_
 
 export const DEFAULT_REDESIGN_USER_KEYS: RedesignUserKeys = {
   githubToken: "",
-  aiProvider: "openai",
+  aiProvider: "groq",
   aiApiKey: "",
-  aiModel: "gpt-4.1-nano",
-  aiBaseUrl: "",
+  aiModel: "llama-3.1-8b-instant",
+  aiBaseUrl: "https://api.groq.com/openai/v1",
   aiBaseUrlAcknowledged: false
 };
 

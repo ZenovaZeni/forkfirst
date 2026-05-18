@@ -1,6 +1,6 @@
 import { analyzeWithDemo } from "./demo-analyst";
 import { analyzeWithOpenAI } from "./openai-analyst";
-import { optionalServerKey, optionalServerModel } from "@/lib/security/server-keys";
+import { optionalServerAiConfig } from "@/lib/security/server-keys";
 import type { AnalysisResult, ClassifiedRepo } from "./types";
 
 type AnalyzeIdeaOptions = {
@@ -15,13 +15,14 @@ export async function analyzeIdea(
   repos: ClassifiedRepo[],
   options: AnalyzeIdeaOptions = {}
 ): Promise<AnalysisResult> {
-  const apiKey = options.apiKey || optionalServerKey("OPENAI_API_KEY");
+  const serverAi = options.apiKey ? undefined : optionalServerAiConfig();
+  const apiKey = options.apiKey || serverAi?.apiKey;
   if (apiKey) {
     return analyzeWithOpenAI(prompt, repos, {
       apiKey,
-      provider: options.provider ?? "openai",
-      model: options.model || optionalServerModel(),
-      baseUrl: options.baseUrl
+      provider: options.apiKey ? options.provider ?? "groq" : serverAi?.provider ?? options.provider ?? "groq",
+      model: options.apiKey ? options.model : serverAi?.model || options.model,
+      baseUrl: options.apiKey ? options.baseUrl : serverAi?.baseUrl || options.baseUrl
     });
   }
 

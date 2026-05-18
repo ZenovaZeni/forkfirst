@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
+import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
 
 export const runtime = "nodejs";
 
@@ -73,10 +74,10 @@ const FALLBACK_QUESTIONS: WizardQuestion[] = [
 // Provider helpers (mirrors verify-keys pattern)
 // ---------------------------------------------------------------------------
 function providerBaseUrl(provider?: string, baseUrl?: string): string {
-  if (provider === "groq") return "https://api.groq.com/openai/v1";
+  if (provider === "groq") return GROQ_OPENAI_BASE_URL;
   if (provider === "deepseek") return "https://api.deepseek.com";
   if (provider === "custom") return baseUrl || "";
-  return "https://api.openai.com/v1";
+  return GROQ_OPENAI_BASE_URL;
 }
 
 const SYSTEM_PROMPT = `You are a senior product engineer helping a builder scope a project before they fork a GitHub repo. The user has shared a one-line idea. Generate 3-4 highly relevant follow-up questions that will help tailor the build plan.
@@ -131,16 +132,19 @@ export async function POST(request: Request) {
     }
   }
 
-  const apiKey = body.data.aiApiKey?.trim();
-  const model = body.data.aiModel?.trim() || "gpt-4.1-nano";
-  const baseUrl = providerBaseUrl(body.data.aiProvider, body.data.aiBaseUrl?.trim());
+  const serverAi = body.data.aiApiKey ? undefined : optionalServerAiConfig();
+  const usingServerAi = !body.data.aiApiKey && Boolean(serverAi);
+  const provider = usingServerAi ? serverAi!.provider : body.data.aiProvider ?? "groq";
+  const apiKey = body.data.aiApiKey?.trim() || serverAi?.apiKey;
+  const model = usingServerAi ? serverAi!.model : body.data.aiModel?.trim() || DEFAULT_GROQ_MODEL;
+  const baseUrl = body.data.aiBaseUrl?.trim() || serverAi?.baseUrl || providerBaseUrl(provider, body.data.aiBaseUrl?.trim());
 
   if (!apiKey || !baseUrl) {
     return NextResponse.json({ questions: FALLBACK_QUESTIONS });
   }
 
   try {
-    const isOpenAI = !body.data.aiProvider || body.data.aiProvider === "openai";
+    const isOpenAI = provider === "openai";
     const payload: Record<string, unknown> = {
       model,
       messages: [

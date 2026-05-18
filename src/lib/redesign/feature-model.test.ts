@@ -114,8 +114,9 @@ describe("redesign feature model", () => {
 
     expect(body).toEqual({
       prompt: "small local-first issue tracker",
-      aiProvider: "openai",
-      aiModel: "gpt-4.1-nano",
+      aiProvider: "groq",
+      aiModel: "llama-3.1-8b-instant",
+      aiBaseUrl: "https://api.groq.com/openai/v1",
       aiBaseUrlAcknowledged: false
     });
   });

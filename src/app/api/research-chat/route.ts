@@ -5,7 +5,7 @@ import { getRepoKindInsight } from "@/lib/analysis/repo-kind";
 import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
-import { optionalServerKey, optionalServerModel } from "@/lib/security/server-keys";
+import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import type { IdeaCheckResult } from "@/types/idea-check";
 
@@ -32,7 +32,7 @@ const RequestSchema = z.object({
 
 const providerDefaults = {
   openai: { model: "gpt-4.1-nano", baseUrl: undefined },
-  groq: { model: "llama-3.1-8b-instant", baseUrl: "https://api.groq.com/openai/v1" },
+  groq: { model: DEFAULT_GROQ_MODEL, baseUrl: GROQ_OPENAI_BASE_URL },
   deepseek: { model: "deepseek-v4-flash", baseUrl: "https://api.deepseek.com" },
   custom: { model: "model-name", baseUrl: undefined }
 } as const;
@@ -413,9 +413,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ reply: fallbackReply(body.data.prompt, result, body.data.messages ?? []), mode: "guided" });
   }
 
-  const provider = body.data.aiProvider ?? "openai";
+  const serverAi = body.data.aiApiKey ? undefined : optionalServerAiConfig();
+  const usingServerAi = !body.data.aiApiKey && Boolean(serverAi);
+  const provider = usingServerAi ? serverAi!.provider : body.data.aiProvider ?? "groq";
   const defaults = providerDefaults[provider];
-  const apiKey = body.data.aiApiKey || optionalServerKey("OPENAI_API_KEY");
+  const apiKey = body.data.aiApiKey || serverAi?.apiKey;
 
   if (!apiKey) {
     return NextResponse.json({ reply: fallbackReply(body.data.prompt, result, body.data.messages ?? []), mode: "demo" });
@@ -424,7 +426,7 @@ export async function POST(request: Request) {
   try {
     const client = new OpenAI({
       apiKey,
-      baseURL: body.data.aiBaseUrl || defaults.baseUrl
+      baseURL: body.data.aiBaseUrl || serverAi?.baseUrl || defaults.baseUrl
     });
     const saved = savedRepoContext(body.data.prompt);
     const repos = result?.repos?.slice(0, 8).map(compactRepo) ?? [];
@@ -440,7 +442,7 @@ export async function POST(request: Request) {
       : null;
     const recentMessages = (body.data.messages ?? []).slice(-10);
     const completion = await client.chat.completions.create({
-      model: body.data.aiModel || optionalServerModel() || defaults.model,
+      model: usingServerAi ? serverAi!.model : body.data.aiModel || defaults.model,
       temperature: 0.35,
       messages: [
         {

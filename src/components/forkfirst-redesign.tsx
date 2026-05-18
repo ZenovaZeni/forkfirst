@@ -4418,10 +4418,10 @@ export function ForkFirstRedesignApp() {
   const [brand, setBrand] = useState<BrandAnswers | null>(null);
   const [keys, setKeys] = useState<UserKeys>({
     githubToken: "",
-    aiProvider: "openai",
+    aiProvider: "groq",
     aiApiKey: "",
-    aiModel: "gpt-4.1-nano",
-    aiBaseUrl: "",
+    aiModel: "llama-3.1-8b-instant",
+    aiBaseUrl: "https://api.groq.com/openai/v1",
     aiBaseUrlAcknowledged: false
   });
   const [rememberKeys, setRememberKeys] = useState(false);
@@ -4907,19 +4907,19 @@ export function ForkFirstRedesignApp() {
     Object.values(LEGACY_REDESIGN_STORAGE_KEYS).forEach((key) => window.sessionStorage.removeItem(key));
     setKeys({
       githubToken: "",
-      aiProvider: "openai",
+      aiProvider: "groq",
       aiApiKey: "",
-      aiModel: "gpt-4.1-nano",
-      aiBaseUrl: "",
+      aiModel: "llama-3.1-8b-instant",
+      aiBaseUrl: "https://api.groq.com/openai/v1",
       aiBaseUrlAcknowledged: false
     });
     setRememberKeys(false);
     setVerification(getSavedKeyState({
       githubToken: "",
-      aiProvider: "openai",
+      aiProvider: "groq",
       aiApiKey: "",
-      aiModel: "gpt-4.1-nano",
-      aiBaseUrl: "",
+      aiModel: "llama-3.1-8b-instant",
+      aiBaseUrl: "https://api.groq.com/openai/v1",
       aiBaseUrlAcknowledged: false
     }));
     setSavedRepos([]);

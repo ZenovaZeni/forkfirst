@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
+import { GROQ_OPENAI_BASE_URL } from "@/lib/security/server-keys";
 
 export const runtime = "nodejs";
 
@@ -18,10 +19,10 @@ const RequestSchema = z.object({
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 
 function providerBaseUrl(provider?: string, baseUrl?: string): string {
-  if (provider === "groq") return "https://api.groq.com/openai/v1";
+  if (provider === "groq") return GROQ_OPENAI_BASE_URL;
   if (provider === "deepseek") return "https://api.deepseek.com";
   if (provider === "custom") return baseUrl || "";
-  return "https://api.openai.com/v1";
+  return GROQ_OPENAI_BASE_URL;
 }
 
 async function verifyGithub(token?: string): Promise<boolean | null> {
