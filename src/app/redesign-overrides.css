@@ -1107,3 +1107,9 @@ body {
 .trending-drawer .drawer-foot .btn.accent {
   flex-basis: 190px;
 }
+
+[data-theme="dark"] .trend-card .actions .btn.accent,
+[data-theme="dark"] .trending-drawer .drawer-foot .btn.accent,
+[data-theme="dark"] .starter-rich .foundation-cta {
+  color: #fff;
+}
