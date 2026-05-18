@@ -99,6 +99,20 @@ export default function SecurityPage() {
       </section>
 
       <section style={sectionStyle}>
+        <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Privacy-safe analytics</h2>
+        <p>
+          ForkFirst may use Vercel Web Analytics for basic production traffic numbers and Microsoft Clarity for masked
+          heatmaps/session diagnostics. Analytics events describe product actions, such as starting a check or
+          downloading a handoff, but should not include raw idea text, API keys, README text, or handoff contents.
+        </p>
+        <p>
+          Sensitive app surfaces such as chat transcripts, repo details, README excerpts, handoff files, and key settings
+          are marked for Clarity masking. If you run your own deployment, keep Clarity masking strict and do not add
+          analytics that captures user-entered prompts or secrets.
+        </p>
+      </section>
+
+      <section style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Downloaded repo / local run</h2>
         <p>
           If you clone the repo and run ForkFirst locally, the browser still sends keys to the Next.js API route, but

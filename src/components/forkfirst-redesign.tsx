@@ -73,6 +73,7 @@ import {
 import type { TrendingRepo } from "@/app/api/trending/route";
 import type { IdeaCheckResult } from "@/types/idea-check";
 import type { ResearchChat } from "@/types/research-chat";
+import { trackForkFirstEvent } from "@/lib/analytics/events";
 
 type Screen = "landing" | "app" | "loading" | "results" | "more" | "branding" | "generating" | "ready" | "handoff" | "library" | "settings" | "trending" | "packs";
 type Theme = "light" | "dark";
@@ -1099,7 +1100,10 @@ function TopNav({ go }: { go: (screen: Screen) => void }) {
           <a href="#builders">Builders</a>
           <a href="#trust">Your keys, your data</a>
         </nav>
-      <button className="nav-cta" type="button" onClick={() => go("app")}>
+      <button className="nav-cta" type="button" onClick={() => {
+        trackForkFirstEvent("landing_try_free_clicked", { source: "nav" });
+        go("app");
+      }}>
         Start free <ArrowRight size={14} />
       </button>
     </header>
@@ -1107,6 +1111,10 @@ function TopNav({ go }: { go: (screen: Screen) => void }) {
 }
 
 function Landing({ go }: { go: (screen: Screen) => void }) {
+  function startApp(source: string) {
+    trackForkFirstEvent("landing_try_free_clicked", { source });
+    go("app");
+  }
   const packetTabs = [
     {
       kind: "STR",
@@ -1195,7 +1203,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           and build your version faster.
         </p>
         <div className="hero-cta-row">
-          <button className="btn accent xl" type="button" onClick={() => go("app")}>
+          <button className="btn accent xl" type="button" onClick={() => startApp("hero")}>
             Check my idea <ArrowRight size={18} />
           </button>
           <button
@@ -1450,7 +1458,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           <p>Chat through the idea, find a working foundation, then hand your AI builder the repo, prompt, and files it needs.</p>
         </div>
         <div className="actions">
-          <button className="btn accent xl" type="button" onClick={() => go("app")}>
+          <button className="btn accent xl" type="button" onClick={() => startApp("footer_cta")}>
             Try it free <ArrowRight size={18} />
           </button>
           <span className="meta">No signup. Free forever. Bring your own key.</span>
@@ -2224,6 +2232,7 @@ function ChatResults({
   onCopyHandoff,
   onDownloadHandoff,
   onDownloadHandoffZip,
+  onBuilderSelect,
   onFollowUp,
   onStartBranding,
   onGenerate,
@@ -2244,6 +2253,7 @@ function ChatResults({
   onCopyHandoff: () => void;
   onDownloadHandoff: () => void;
   onDownloadHandoffZip: () => void;
+  onBuilderSelect: (target: BuildTarget, source: string) => void;
   onFollowUp: (message: string) => void;
   onStartBranding: () => void;
   onGenerate: (brand: BrandAnswers) => void;
@@ -2257,7 +2267,7 @@ function ChatResults({
   const isWeakSearch = recovery.state !== "ok";
   const closeMatchCount = recovery.closeMatchCount;
   return (
-    <section className="chat" data-screen-label={`04 Chat / ${phase}`}>
+    <section className="chat" data-screen-label={`04 Chat / ${phase}`} data-clarity-mask="true">
       <div className="t t-user">
         <div className="bubble">{prompt}</div>
       </div>
@@ -2391,6 +2401,7 @@ function ChatResults({
           onCopy={onCopyHandoff}
           onDownload={onDownloadHandoff}
           onDownloadZip={onDownloadHandoffZip}
+          onBuilderSelect={(target) => onBuilderSelect(target, "ready_card")}
         />
       ) : null}
       {followUps.map((turn, index) => (
@@ -2636,7 +2647,8 @@ function ReadyCard({
   onHandoff,
   onCopy,
   onDownload,
-  onDownloadZip
+  onDownloadZip,
+  onBuilderSelect
 }: {
   brand: BrandAnswers | null;
   docs: HandoffDocuments;
@@ -2644,6 +2656,7 @@ function ReadyCard({
   onCopy: () => void;
   onDownload: () => void;
   onDownloadZip: () => void;
+  onBuilderSelect: (target: BuildTarget) => void;
 }) {
   const [previewFile, setPreviewFile] = useState<HandoffDocTab | null>(null);
   const previewText = previewFile ? docs[previewFile] : "";
@@ -2702,7 +2715,16 @@ function ReadyCard({
           </div>
           <div className="send-to-row">
             {BUILD_TARGETS.filter((target) => target.id !== "generic").map((target) => (
-              <button className="send-btn" type="button" onClick={target.id === "replit" || target.id === "lovable" || target.id === "v0" ? onDownload : onCopy} key={target.id}>
+              <button
+                className="send-btn"
+                type="button"
+                onClick={() => {
+                  onBuilderSelect(target.id);
+                  if (target.id === "replit" || target.id === "lovable" || target.id === "v0") onDownload();
+                  else onCopy();
+                }}
+                key={target.id}
+              >
                 <div className="send-row1">
                   <BuilderLogo target={target} />
                   {target.label}
@@ -2726,7 +2748,7 @@ function ReadyCard({
                 <X size={16} />
               </button>
             </div>
-            <pre>{previewText}</pre>
+            <pre data-clarity-mask="true">{previewText}</pre>
             <div className="file-preview-foot">
               <button className="btn ghost" type="button" onClick={() => navigator.clipboard.writeText(previewText)}>
                 <Copy size={14} /> Copy this file
@@ -2820,7 +2842,7 @@ function RepoDrawer({
                   {repoReadmeBullets(repo).map((item) => <span key={item}>{item}</span>)}
                 </div>
               </div>
-              <div className="repo-readme">{cleanReadmeText(repo.readme?.excerpt) || repoSummary(repo)}</div>
+              <div className="repo-readme" data-clarity-mask="true">{cleanReadmeText(repo.readme?.excerpt) || repoSummary(repo)}</div>
             </div>
           ) : null}
           {tab === "why this fits" ? (
@@ -3012,7 +3034,7 @@ function HandoffView({
             <span>{formatByteSize(activeDoc)}</span>
             <span>Editable handoff file - copy and download use your changes.</span>
           </div>
-          <div className="doc-body">
+          <div className="doc-body" data-clarity-mask="true">
             <textarea
               aria-label={`${tab} editable Markdown`}
               spellCheck={false}
@@ -3027,7 +3049,15 @@ function HandoffView({
             <p>Pick your builder for exact next steps.</p>
             <div className="target-row">
               {BUILD_TARGETS.map((item) => (
-                <button key={item.id} className={`target ${target === item.id ? "is-active" : ""}`} type="button" onClick={() => setTarget(item.id)}>
+                <button
+                  key={item.id}
+                  className={`target ${target === item.id ? "is-active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    trackForkFirstEvent("builder_selected", { target: item.id, source: "handoff_view" });
+                    setTarget(item.id);
+                  }}
+                >
                   <BuilderLogo target={item} />
                   <span>{item.label}</span>
                   <small>{item.sub}</small>
@@ -3595,17 +3625,19 @@ function SettingsScreen({
             </section>
           ) : null}
           {settingsTab === "keys" ? (
-            <KeySettings
-              keys={keys}
-              onChange={onChange}
-              verification={verification}
-              verifying={verifying}
-              onVerify={onVerify}
-              rememberKeys={rememberKeys}
-              onRememberKeysChange={onRememberKeysChange}
-              onClearAllData={onClearAllData}
-              onShowWelcome={onShowWelcome}
-            />
+            <div data-clarity-mask="true">
+              <KeySettings
+                keys={keys}
+                onChange={onChange}
+                verification={verification}
+                verifying={verifying}
+                onVerify={onVerify}
+                rememberKeys={rememberKeys}
+                onRememberKeysChange={onRememberKeysChange}
+                onClearAllData={onClearAllData}
+                onShowWelcome={onShowWelcome}
+              />
+            </div>
           ) : null}
           {settingsTab === "usage" ? (
             <UsageSettingsPanel usageEntries={usageEntries} savingsLog={savingsLog} onResetUsage={onResetUsage} />
@@ -4307,6 +4339,24 @@ export function ForkFirstRedesignApp() {
     }
   }, []);
 
+  const openRepoDetails = useCallback((repo: ClassifiedRepo) => {
+    trackForkFirstEvent("repo_details_opened", {
+      category: repo.category,
+      score: repo.score.total,
+      hasLicense: Boolean(repo.license)
+    });
+    setDrawerRepo(repo);
+  }, []);
+
+  const selectStarterForHandoff = useCallback((repo: ClassifiedRepo, source: string) => {
+    trackForkFirstEvent("starter_repo_selected", {
+      category: repo.category,
+      score: repo.score.total,
+      source
+    });
+    setSelectedStarterRepo(repo);
+  }, []);
+
   const downloadHandoff = useCallback((filename: string, text: string) => {
     try {
       downloadTextFile(filename, text);
@@ -4324,6 +4374,9 @@ export function ForkFirstRedesignApp() {
         ...HANDOFF_DOC_TABS.map((file) => ({ path: file, content: docs[file] }))
       ];
       downloadBlobFile(filename, buildZipBlob(files));
+      trackForkFirstEvent("handoff_zip_downloaded", {
+        fileCount: files.length
+      });
       setSavingsLog(logHandoffGenerated(markdown));
       setToast("Downloaded .zip");
     } catch {
@@ -4430,6 +4483,11 @@ export function ForkFirstRedesignApp() {
     setLoading(true);
     setError(null);
     setScreen("loading");
+    trackForkFirstEvent("idea_check_submitted", {
+      hasFoundation: Boolean(foundationDraft),
+      hasGithubToken: Boolean(keys.githubToken),
+      hasAiKey: Boolean(keys.aiApiKey)
+    });
     try {
       const response = await fetch("/api/idea-check", {
         method: "POST",
@@ -4441,6 +4499,12 @@ export function ForkFirstRedesignApp() {
         throw new Error(body?.error ?? "Idea check failed.");
       }
       const data = (await response.json()) as IdeaCheckResult;
+      trackForkFirstEvent("results_returned", {
+        repoCount: data.repos.length,
+        warningCount: data.warnings.length,
+        closeMatches: data.recovery?.closeMatchCount ?? 0,
+        hasAiKey: Boolean(keys.aiApiKey)
+      });
       recordUsage(createUsageEntry({
         provider: "custom",
         model: keys.githubToken ? "GitHub Search API with token" : "GitHub Search API unauthenticated",
@@ -4651,16 +4715,26 @@ export function ForkFirstRedesignApp() {
                   savedRepos={savedRepos}
                   followUps={followUps}
                   sending={chatSending}
-                  onOpenRepo={setDrawerRepo}
+                  onOpenRepo={openRepoDetails}
                   onSaveRepo={saveRepo}
-                  onSelectStarter={setSelectedStarterRepo}
-                  onCopyHandoff={() => copyText(makeHandoffMarkdown())}
+                  onSelectStarter={(repo) => selectStarterForHandoff(repo, "result_card")}
+                  onCopyHandoff={() => {
+                    trackForkFirstEvent("handoff_copied", { source: "ready_card" });
+                    copyText(makeHandoffMarkdown());
+                  }}
                   onDownloadHandoff={() => downloadHandoff("forkfirst-builder-handoff.md", makeHandoffMarkdown())}
                   onDownloadHandoffZip={() => downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(makeHandoffMarkdown()), makeHandoffMarkdown())}
+                  onBuilderSelect={(target, source) => trackForkFirstEvent("builder_selected", { target, source })}
                   onFollowUp={sendFollowUp}
                   readyDocs={createHandoffDocuments(makeHandoffMarkdown())}
                   onStartBranding={() => {
-                    setSelectedStarterRepo((current) => current ?? result.repos[0] ?? null);
+                    const starter = selectedStarterRepo ?? result.repos[0] ?? null;
+                    if (starter && !selectedStarterRepo) selectStarterForHandoff(starter, "handoff_start_default");
+                    trackForkFirstEvent("handoff_started", {
+                      hasStarter: Boolean(starter),
+                      repoCount: result.repos.length
+                    });
+                    setSelectedStarterRepo(starter);
                     go("branding");
                   }}
                   onGenerate={(answers) => {
@@ -4692,7 +4766,10 @@ export function ForkFirstRedesignApp() {
                     savedRepos={savedRepos}
                     savedRepoBoards={savedRepoBoards}
                     activeBuildPack={activeBuildPack}
-                    onCopy={copyText}
+                    onCopy={(text) => {
+                      trackForkFirstEvent("handoff_copied", { source: "handoff_view" });
+                      copyText(text);
+                    }}
                     onDownload={downloadHandoff}
                     onDownloadZip={downloadHandoffZip}
                     onSaveBuildPack={saveBuildPack}
@@ -4707,7 +4784,15 @@ export function ForkFirstRedesignApp() {
                   onOpenBuildPack={openBuildPack}
                   onDeleteBuildPack={deleteBuildPack}
                   onDownloadBuildPack={downloadBuildPack}
-                  onOpen={setSavedModalRepo}
+                  onOpen={(repo) => {
+                    trackForkFirstEvent("repo_details_opened", {
+                      category: repo.category,
+                      score: repo.score.total,
+                      hasLicense: Boolean(repo.license),
+                      source: "library"
+                    });
+                    setSavedModalRepo(repo);
+                  }}
                   onUseRepo={(repo) => selectFoundationDraft(foundationFromClassifiedRepo(repo))}
                   onSetBoard={setRepoBoard}
                 />
@@ -4757,7 +4842,11 @@ export function ForkFirstRedesignApp() {
         onClose={() => setDrawerRepo(null)}
         onSave={saveRepo}
         onUse={(repo) => {
-          setSelectedStarterRepo(repo);
+          selectStarterForHandoff(repo, "details_drawer");
+          trackForkFirstEvent("handoff_started", {
+            hasStarter: true,
+            repoCount: result?.repos.length ?? 0
+          });
           setDrawerRepo(null);
           go("branding");
         }}

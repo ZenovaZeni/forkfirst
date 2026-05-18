@@ -4,16 +4,16 @@ export function middleware(request: NextRequest) {
   const response = NextResponse.next();
   const scriptSrc =
     process.env.NODE_ENV === "development"
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-      : "script-src 'self' 'unsafe-inline'";
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://www.clarity.ms"
+      : "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://www.clarity.ms";
   const csp = [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    "img-src 'self' data: https://img.shields.io https://opengraph.githubassets.com",
-    "connect-src 'self' https://api.github.com https://api.openai.com https://api.groq.com https://api.deepseek.com https://openrouter.ai https://*.openrouter.ai https://api.anthropic.com",
+    "img-src 'self' data: https://img.shields.io https://opengraph.githubassets.com https://*.clarity.ms",
+    "connect-src 'self' https://api.github.com https://api.openai.com https://api.groq.com https://api.deepseek.com https://openrouter.ai https://*.openrouter.ai https://api.anthropic.com https://vitals.vercel-insights.com https://*.clarity.ms",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     scriptSrc

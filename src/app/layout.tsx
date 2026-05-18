@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./redesign.css";
 import "./redesign-overrides.css";
+import { Analytics } from "@/components/analytics";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 const SITE_DESCRIPTION =
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "ForkFirst - don't make your AI builder start from zero",
   description: SITE_DESCRIPTION,
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -60,6 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         {children}
+        <Analytics enableVercel={process.env.VERCEL === "1"} />
         <PWAInstallPrompt />
       </body>
     </html>
