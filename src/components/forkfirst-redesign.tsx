@@ -3410,7 +3410,7 @@ function HandoffView({
       <div className="handoff-head">
         <div>
           <h2>
-            Builder Handoff
+            Builder <span>Handoff</span>
             <small>One packet for {BUILD_TARGETS.find((item) => item.id === target)?.label ?? "your AI builder"}. Drop it in and let it read from the top.</small>
           </h2>
           <p className="handoff-subline">{starterName} to {packTitle}. Repo, prompt, and build files your AI builder can follow.</p>
