@@ -2150,7 +2150,7 @@ function EmptyApp({
               <div className="desc-rich">{repo.description || "No GitHub description provided."}</div>
               <div className="meta-rich">
                 <span className="mono" style={{ fontSize: 11 }}>pushed in last 30 days</span>
-                <span style={{ color: "var(--accent)", fontWeight: 600 }}>use as foundation</span>
+                <span className="foundation-cta">Use as foundation</span>
               </div>
             </button>
           )) : null}
