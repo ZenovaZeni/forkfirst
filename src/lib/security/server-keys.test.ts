@@ -42,7 +42,7 @@ describe("server key fallback policy", () => {
     expect(optionalServerKey("OPENAI_API_KEY")).toBe("sk-server");
   });
 
-  it("prefers Groq for hosted AI fallback when configured", () => {
+  it("prefers Groq for private server AI fallback when configured", () => {
     process.env.FORKFIRST_ALLOW_SERVER_KEYS = "true";
     process.env.GROQ_API_KEY = "gsk-server";
     process.env.GROQ_MODEL = "llama-test";

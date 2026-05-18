@@ -2,7 +2,7 @@
 
 ForkFirst can run for free in demo mode, but BYOK makes it better.
 
-BYOK means the repo maintainer does not need to ship private production credentials. Each user can decide whether to use the default demo path, paste keys in the browser, or set local development defaults in `.env.local`.
+BYOK means the repo maintainer does not need to ship private production credentials. Each user can decide whether to use the default demo path, paste keys in the browser, or set local/private development defaults in `.env.local`.
 
 ## GitHub Token
 
@@ -24,10 +24,10 @@ GITHUB_TOKEN=github_pat_your_token_here
 
 ## AI Provider Keys
 
-ForkFirst supports:
+ForkFirst defaults to Groq in the app because Groq offers a free path for users to try with their own account. ForkFirst also supports:
 
-- OpenAI
 - Groq
+- OpenAI
 - DeepSeek
 - Custom OpenAI-compatible providers
 
@@ -39,7 +39,7 @@ Groq:     https://console.groq.com/keys
 DeepSeek: https://platform.deepseek.com/api_keys
 ```
 
-The default OpenAI model is `gpt-4.1-nano`. Groq defaults to `llama-3.1-8b-instant`. DeepSeek defaults to `deepseek-v4-flash`.
+The default Groq model is `llama-3.1-8b-instant`. OpenAI defaults to `gpt-4.1-nano`. DeepSeek defaults to `deepseek-v4-flash`.
 
 ## Where Keys Are Stored
 
@@ -53,9 +53,12 @@ To clear pasted keys, use the app panel to replace them with empty values or cle
 
 If you publish ForkFirst as a free public repo, do not include your own production keys. Let users bring their own keys.
 
+Do not enable maintainer-owned AI provider keys on a public no-login deployment unless you have auth, quotas, rate limits, abuse controls, and clear disclosure that visitors are using a hosted allowance.
+
 Before launch, check:
 
 - `.env.local` is not committed.
 - `.env.example` contains only placeholders.
+- `FORKFIRST_ALLOW_SERVER_KEYS=false` on public hosted deployments.
 - Logs do not print request bodies.
 - README and screenshots do not reveal real tokens.

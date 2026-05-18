@@ -18,7 +18,7 @@ The user asks in natural language. The app searches GitHub, enriches repository 
 - Visual direction is Ink Circuit.
 - Storage is local SQLite.
 - `GITHUB_TOKEN` is optional.
-- `OPENAI_API_KEY` is optional.
+- AI provider keys are optional. Groq is the default BYOK provider in the UI.
 - Missing keys should not block the app; use warnings and demo-mode fallbacks.
 
 ## Core User Flow
@@ -56,4 +56,3 @@ The app must feel like a serious developer tool, not a generic SaaS dashboard.
 The prompt box must be the main first impression. The Discovery Radar is the memorable answer view, not the initial obstacle.
 
 Evidence should be clearly separated from model interpretation. GitHub facts and AI reasoning should not blur together.
-

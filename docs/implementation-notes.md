@@ -18,14 +18,14 @@ This is not the full implementation plan. It captures non-negotiable engineering
 Keep external dependencies behind interfaces:
 
 - GitHub provider should have real and fixture-backed implementations.
-- AI analyst should have real OpenAI and deterministic demo implementations.
+- AI analyst should have real OpenAI-compatible provider support and deterministic demo implementations. Groq is the default BYOK provider in the UI.
 - Persistence should be isolated from UI components.
 
 ## Demo Mode
 
 Demo mode is required.
 
-When `OPENAI_API_KEY` is missing, the app should:
+When an AI provider key is missing, the app should:
 
 - Use deterministic query expansion.
 - Use deterministic scoring.
