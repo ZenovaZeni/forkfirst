@@ -1411,25 +1411,21 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
 function Sidebar({
   active,
   go,
-  theme,
   savingsLog,
   recentChats,
   activeChatId,
   onOpenChat,
   onRenameChat,
-  onDeleteChat,
-  onToggleTheme
+  onDeleteChat
 }: {
   active: Screen;
   go: (screen: Screen) => void;
-  theme: Theme;
   savingsLog: SavingsLog;
   recentChats: ResearchChat[];
   activeChatId: string | null;
   onOpenChat: (chat: ResearchChat) => void;
   onRenameChat: (chatId: string, title: string) => void;
   onDeleteChat: (chatId: string) => void;
-  onToggleTheme: () => void;
 }) {
   const formattedHandoffTokens = formatTokensShort(savingsLog.totalHandoffTokens);
   const firstRecentIsActive = ["app", "loading", "results", "more", "branding", "generating", "ready"].includes(active);
@@ -1526,10 +1522,6 @@ function Sidebar({
         </button>
         <button className={`rail-item ${active === "settings" ? "active" : ""}`} type="button" onClick={() => go("settings")}>
           <SettingsIcon size={16} /><span className="ttl">Settings</span>
-        </button>
-        <button className="rail-item" type="button" onClick={onToggleTheme}>
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          <span className="ttl">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
         </button>
       </div>
       {renameChat ? (
@@ -4505,14 +4497,12 @@ export function ForkFirstRedesignApp() {
           <Sidebar
             active={screen}
             go={go}
-            theme={theme}
             savingsLog={savingsLog}
             recentChats={chats}
             activeChatId={activeChatId}
             onOpenChat={openChat}
             onRenameChat={renameChat}
             onDeleteChat={deleteChat}
-            onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
           />
           <main className={`workspace ${screen === "app" ? "start-mode" : "chat-mode"}`}>
             <Topbar title={title} theme={theme} onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))} go={go} screen={screen} />

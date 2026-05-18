@@ -247,6 +247,10 @@ input, textarea, select { font: inherit; color: inherit; }
 .brand-name-accent {
   color: var(--accent);
 }
+[data-theme="dark"] .brand-name {
+  background: transparent;
+  color: var(--ink);
+}
 
 /* ── Buttons ──────────────────────────────────────────────────────────── */
 .btn {

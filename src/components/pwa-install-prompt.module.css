@@ -20,9 +20,7 @@
   padding: 12px;
   border: 1px solid var(--install-line);
   border-radius: 16px;
-  background:
-    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--install-accent) 12%, transparent), transparent 8rem),
-    color-mix(in srgb, var(--install-paper-2) 94%, transparent);
+  background: var(--install-paper-2);
   color: var(--install-ink);
   box-shadow: 0 20px 54px -30px rgba(10, 11, 14, 0.42);
   backdrop-filter: blur(18px) saturate(135%);
@@ -46,11 +44,13 @@
 }
 
 .banner[data-theme="dark"] {
-  --install-paper: #0d0f12;
-  --install-paper-2: #15181d;
-  --install-ink: #f4f1e8;
-  --install-muted: #aaa59a;
-  --install-line: rgba(244, 241, 232, 0.14);
+  --install-paper: #090b12;
+  --install-paper-2: #10131d;
+  --install-ink: #f8faff;
+  --install-muted: #a8b0c3;
+  --install-line: #222a3d;
+  --install-accent-soft: rgba(85, 119, 255, 0.16);
+  box-shadow: 0 24px 60px -34px rgba(0, 0, 0, 0.72);
 }
 
 .close {
@@ -161,7 +161,7 @@
 
 .dismiss {
   border-color: var(--install-line);
-  background: color-mix(in srgb, var(--install-paper) 70%, transparent);
+  background: var(--install-paper);
   color: var(--install-muted);
 }
 
