@@ -1061,6 +1061,132 @@ body {
   padding: 14px 12px;
 }
 
+.chat-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  border: 0;
+  background: color-mix(in srgb, var(--ink) 26%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.topbar-chat-drawer {
+  position: fixed;
+  top: 62px;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 59;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(560px, calc(100dvh - 86px));
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--paper) 98%, transparent);
+  color: var(--ink);
+  box-shadow: var(--shadow-2);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: topbarChatIn 160ms ease-out;
+}
+
+.topbar-chat-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topbar-chat-drawer-head > div {
+  display: grid;
+  gap: 2px;
+}
+
+.topbar-chat-drawer-head strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.topbar-chat-drawer-head button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--muted);
+}
+
+.topbar-new-chat {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 800;
+}
+
+.topbar-chat-list {
+  display: grid;
+  gap: 6px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.topbar-chat-list button {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.topbar-chat-list button.active,
+.topbar-chat-list button:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
+  background: var(--accent-soft);
+}
+
+.topbar-chat-list button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.topbar-chat-list button small {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.icon-btn.active {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@keyframes topbarChatIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
 [data-theme="dark"] .composer .composer-send,
 [data-theme="dark"] .chat-composer-bar .composer-send {
   color: #fff;

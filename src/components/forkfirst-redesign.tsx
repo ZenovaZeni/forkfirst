@@ -11,7 +11,6 @@ import {
   Download,
   ExternalLink,
   GitFork,
-  MessageSquare,
   Mic,
   Moon,
   MoreHorizontal,
@@ -1790,19 +1789,12 @@ function SavingsRing({ savingsLog }: { savingsLog: SavingsLog }) {
 
 function MobileNav({
   active,
-  go,
-  recentChats,
-  activeChatId,
-  onOpenChat
+  go
 }: {
   active: Screen;
   go: (screen: Screen) => void;
-  recentChats: ResearchChat[];
-  activeChatId: string | null;
-  onOpenChat: (chat: ResearchChat) => void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const [chatsOpen, setChatsOpen] = useState(false);
   const primary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
     { screen: "trending", label: "Trends", icon: <Star size={15} /> },
     { screen: "handoff", label: "Handoff", icon: <Download size={15} /> },
@@ -1815,50 +1807,12 @@ function MobileNav({
   const moreIsActive = secondary.some((item) => item.screen === active);
   const navigate = (screen: Screen) => {
     setMoreOpen(false);
-    setChatsOpen(false);
     go(screen);
-  };
-  const openChatFromMobile = (chat: ResearchChat) => {
-    setMoreOpen(false);
-    setChatsOpen(false);
-    onOpenChat(chat);
   };
   return (
     <>
-      {chatsOpen ? (
-        <div className="mobile-chat-history" role="dialog" aria-label="Recent chats">
-          <div className="mobile-chat-history-head">
-            <strong>Recent chats</strong>
-            <button type="button" onClick={() => setChatsOpen(false)} aria-label="Close recent chats">
-              <X size={14} />
-            </button>
-          </div>
-          <div className="mobile-chat-history-list">
-            {recentChats.slice(0, 8).length ? recentChats.slice(0, 8).map((chat) => (
-              <button
-                key={chat.id}
-                type="button"
-                className={activeChatId === chat.id ? "active" : ""}
-                onClick={() => openChatFromMobile(chat)}
-              >
-                <span>{chat.title}</span>
-                <small>{relativeChatTime(chat.updatedAt)}</small>
-              </button>
-            )) : (
-              <div className="mobile-chat-empty">Your recent idea checks will show here.</div>
-            )}
-          </div>
-        </div>
-      ) : null}
       {moreOpen ? (
         <div className="mobile-more-menu" role="menu" aria-label="More navigation">
-          <button type="button" role="menuitem" onClick={() => {
-            setMoreOpen(false);
-            setChatsOpen(true);
-          }}>
-            <MessageSquare size={15} />
-            <span>Chats</span>
-          </button>
           {secondary.map((item) => (
             <button key={item.screen} type="button" role="menuitem" className={active === item.screen ? "active" : ""} onClick={() => navigate(item.screen)}>
               {item.icon}
@@ -1905,7 +1859,6 @@ function MobileNav({
           aria-expanded={moreOpen}
           aria-haspopup="menu"
           onClick={() => {
-            setChatsOpen(false);
             setMoreOpen((open) => !open);
           }}
         >
@@ -1917,35 +1870,109 @@ function MobileNav({
   );
 }
 
-function Topbar({ title, theme, onToggleTheme, go, screen }: { title: string; theme: Theme; onToggleTheme: () => void; go: (screen: Screen) => void; screen: Screen }) {
+function Topbar({
+  title,
+  theme,
+  onToggleTheme,
+  go,
+  screen,
+  recentChats,
+  activeChatId,
+  onOpenChat
+}: {
+  title: string;
+  theme: Theme;
+  onToggleTheme: () => void;
+  go: (screen: Screen) => void;
+  screen: Screen;
+  recentChats: ResearchChat[];
+  activeChatId: string | null;
+  onOpenChat: (chat: ResearchChat) => void;
+}) {
   const inChat = ["results", "more", "branding", "generating", "ready"].includes(screen);
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const openChatFromDrawer = (chat: ResearchChat) => {
+    setChatDrawerOpen(false);
+    onOpenChat(chat);
+  };
   return (
-    <header className="ws-topbar">
-      <div className="crumbs">
-        <button className="crumb-home crumb-wordmark" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
-          <span>Fork</span>
-          <span className="crumb-wordmark-accent">First</span>
-        </button>
-        <span>/</span>
-        <strong>{title}</strong>
-      </div>
-      <div className="actions">
-        {inChat ? (
-          <button className="icon-btn" type="button" onClick={() => go("handoff")} title="Share">
-            <ExternalLink size={16} />
+    <>
+      <header className="ws-topbar">
+        <div className="crumbs">
+          <button className="crumb-home crumb-wordmark" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
+            <span>Fork</span>
+            <span className="crumb-wordmark-accent">First</span>
           </button>
-        ) : null}
-        <button className="icon-btn" type="button" onClick={onToggleTheme} title="Toggle theme">
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-        <button className="icon-btn" type="button" onClick={() => go("library")} title="Library">
-          <Bookmark size={16} />
-        </button>
-        <button className="icon-btn" type="button" onClick={() => go("settings")} title="Settings">
-          <SettingsIcon size={16} />
-        </button>
-      </div>
-    </header>
+          <span>/</span>
+          <strong>{title}</strong>
+        </div>
+        <div className="actions">
+          {inChat ? (
+            <button className="icon-btn" type="button" onClick={() => go("handoff")} title="Open handoff">
+              <ExternalLink size={16} />
+            </button>
+          ) : null}
+          <button className="icon-btn" type="button" onClick={onToggleTheme} title="Toggle theme">
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button
+            className={`icon-btn ${chatDrawerOpen ? "active" : ""}`}
+            type="button"
+            onClick={() => setChatDrawerOpen((open) => !open)}
+            title="Recent chats"
+            aria-expanded={chatDrawerOpen}
+            aria-haspopup="dialog"
+          >
+            <Bookmark size={16} />
+          </button>
+          <button className="icon-btn" type="button" onClick={() => go("settings")} title="Settings">
+            <SettingsIcon size={16} />
+          </button>
+        </div>
+      </header>
+      {chatDrawerOpen ? (
+        <>
+          <button className="chat-drawer-scrim" type="button" aria-label="Close recent chats" onClick={() => setChatDrawerOpen(false)} />
+          <aside className="topbar-chat-drawer" role="dialog" aria-label="Recent chats">
+            <div className="topbar-chat-drawer-head">
+              <div>
+                <span className="eyebrow">Recent</span>
+                <strong>Chats</strong>
+              </div>
+              <button type="button" onClick={() => setChatDrawerOpen(false)} aria-label="Close recent chats">
+                <X size={14} />
+              </button>
+            </div>
+            <button
+              type="button"
+              className="topbar-new-chat"
+              onClick={() => {
+                setChatDrawerOpen(false);
+                go("app");
+              }}
+            >
+              <Plus size={15} />
+              New idea check
+            </button>
+            <div className="topbar-chat-list">
+              {recentChats.slice(0, 10).length ? recentChats.slice(0, 10).map((chat) => (
+                <button
+                  key={chat.id}
+                  type="button"
+                  className={activeChatId === chat.id ? "active" : ""}
+                  onClick={() => openChatFromDrawer(chat)}
+                >
+                  <span>{chat.title}</span>
+                  <small>{relativeChatTime(chat.updatedAt)}</small>
+                </button>
+              )) : (
+                <div className="mobile-chat-empty">Your recent idea checks will show here.</div>
+              )}
+            </div>
+          </aside>
+        </>
+      ) : null}
+    </>
   );
 }
 
@@ -5040,7 +5067,16 @@ export function ForkFirstRedesignApp() {
             onDeleteChat={deleteChat}
           />
           <main className={`workspace ${screen === "app" ? "start-mode" : "chat-mode"}`}>
-            <Topbar title={title} theme={theme} onToggleTheme={toggleTheme} go={go} screen={screen} />
+            <Topbar
+              title={title}
+              theme={theme}
+              onToggleTheme={toggleTheme}
+              go={go}
+              screen={screen}
+              recentChats={chats}
+              activeChatId={activeChatId}
+              onOpenChat={openChat}
+            />
             <div className="ws-route">
               {screen === "app" ? (
                 <>
@@ -5184,7 +5220,7 @@ export function ForkFirstRedesignApp() {
               <ChatComposerBar disabled={chatSending || !result} onSubmit={sendFollowUp} />
             ) : null}
           </main>
-          <MobileNav active={screen} go={go} recentChats={chats} activeChatId={activeChatId} onOpenChat={openChat} />
+          <MobileNav active={screen} go={go} />
         </div>
         <SavingsRing savingsLog={savingsLog} />
       </div>

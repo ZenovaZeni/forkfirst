@@ -55,6 +55,10 @@ export function PWAInstallPrompt() {
     const showAfterPageSettles = () => {
       if (showTimer) clearTimeout(showTimer);
       showTimer = setTimeout(() => {
+        if (wasInstallDismissed()) {
+          setShowPrompt(false);
+          return;
+        }
         setVisualState(readVisualState());
         setShowPrompt(installReady && isInAppExperience());
       }, 7000);
@@ -62,6 +66,10 @@ export function PWAInstallPrompt() {
 
     const observer = new MutationObserver(() => {
       setVisualState(readVisualState());
+      if (wasInstallDismissed()) {
+        setShowPrompt(false);
+        return;
+      }
       if (!isInAppExperience()) {
         setShowPrompt(false);
         return;
