@@ -4168,24 +4168,27 @@ function LiveTrendingScreen({
             const saved = isSavedRepo(asSavedRepo, savedRepos);
             return (
             <article key={repo.fullName} className="trend-card">
-              <span className="nm">{repo.fullName}</span>
+              <button className="nm" type="button" onClick={() => setDetailsRepo(repo)}>
+                {repo.fullName}
+              </button>
               <p className="desc">{repo.description || "No GitHub description provided."}</p>
               <div className="meta">
                 <span><GitHubStarIcon /> <strong>{formatStars(repo.stars)}</strong></span>
                 {repo.language ? <span>{repo.language}</span> : null}
                 {repo.license ? <span>{repo.license}</span> : null}
               </div>
-              {repo.topics.length ? (
-                <div className="trend-topics" aria-label={`${repo.fullName} topics`}>
-                  {repo.topics.slice(0, 3).map((topic) => <span key={topic}>{topic}</span>)}
-                </div>
-              ) : null}
-              <div className="actions">
-                <button className="btn accent" type="button" onClick={() => onSelectFoundation(foundationFromTrendingRepo(repo))}>Use</button>
-                <button className="btn ghost" type="button" onClick={() => setDetailsRepo(repo)}>Details</button>
-                <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSaveRepo(asSavedRepo)}>
+              <div className="trend-card-mid">
+                {repo.topics.length ? (
+                  <div className="trend-topics" aria-label={`${repo.fullName} topics`}>
+                    {repo.topics.slice(0, 3).map((topic) => <span key={topic}>{topic}</span>)}
+                  </div>
+                ) : <span />}
+                <button className={`btn ghost trend-save ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSaveRepo(asSavedRepo)}>
                   <Bookmark size={12} /> {saved ? "Saved" : "Save"}
                 </button>
+              </div>
+              <div className="actions">
+                <button className="btn accent" type="button" onClick={() => onSelectFoundation(foundationFromTrendingRepo(repo))}>Use</button>
                 <RepoSiteLink url={repo.homepage} />
                 <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}><ExternalLink size={12} /> GitHub</a>
               </div>

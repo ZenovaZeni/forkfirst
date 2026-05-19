@@ -4720,7 +4720,20 @@ input, textarea, select { font: inherit; color: inherit; }
   position: relative;
 }
 .trend-card:hover { border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); transform: translateY(-2px); box-shadow: var(--shadow-1); }
-.trend-card .nm { font-family: var(--font-mono); font-size: 14px; font-weight: 600; word-break: break-all; color: var(--ink); }
+.trend-card .nm {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  text-align: left;
+  word-break: break-all;
+}
+.trend-card .nm:hover { color: var(--accent); }
 .trend-card .desc { font-size: 13.5px; color: var(--ink-2); line-height: 1.5; min-height: 38px; }
 .trend-card .meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 .trend-card .meta span {
@@ -4731,7 +4744,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .trend-card .meta strong { color: var(--ink); font-weight: 600; }
 .trend-card .actions {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   margin-top: 4px;
   align-items: center;
@@ -4764,6 +4777,12 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .trend-card .meta .github-star-icon {
   color: #f6c945;
+}
+.trend-card-mid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
 }
 .trend-topics {
   display: flex;
