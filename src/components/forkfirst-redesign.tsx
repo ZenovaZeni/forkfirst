@@ -3742,6 +3742,9 @@ function HandoffView({
           <p className="handoff-subline">{starterName} to {packTitle}. Repo, prompt, and build files your AI builder can follow.</p>
         </div>
         <div className="handoff-actions">
+          <div className="handoff-token-pill" title="Estimated tokens in this handoff">
+            ~{formatTokensShort(handoffTokens)} tokens
+          </div>
           <div className="handoff-actions-main">
             <button className="btn ghost" type="button" onClick={() => onCopy(markdown)}>
               <Copy size={14} /> Copy

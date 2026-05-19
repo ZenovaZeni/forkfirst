@@ -2421,6 +2421,22 @@ input, textarea, select { font: inherit; color: inherit; }
   justify-content: flex-end;
   gap: 8px;
 }
+.handoff-token-pill {
+  width: fit-content;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 26%, var(--paper));
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
 .handoff-actions > .btn.accent {
   justify-self: end;
   min-width: 154px;

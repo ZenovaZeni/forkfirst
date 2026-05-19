@@ -758,6 +758,11 @@ body {
 
   .app-shell .handoff-actions {
     justify-content: stretch;
+    justify-items: start;
+  }
+
+  .app-shell .handoff-token-pill {
+    justify-self: start;
   }
 
   .app-shell .handoff-actions .btn {
