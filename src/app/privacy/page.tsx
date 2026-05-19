@@ -37,8 +37,10 @@ function ForkFirstWordmark() {
   return (
     <span className="legal-page__wordmark" aria-label="ForkFirst">
       <ForkFirstLogo />
-      <span>Fork</span>
-      <span>First</span>
+      <span className="legal-page__wordmark-text">
+        <span>Fork</span>
+        <span>First</span>
+      </span>
     </span>
   );
 }
