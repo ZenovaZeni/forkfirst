@@ -4426,6 +4426,14 @@ input, textarea, select { font: inherit; color: inherit; }
   color: var(--ink);
 }
 .bq-input:focus { outline: 0; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.bq-textarea {
+  min-height: 108px;
+  resize: vertical;
+  line-height: 1.45;
+}
+.bq-textarea.compact {
+  min-height: 76px;
+}
 
 /* Vibe / chip picker for brand answers */
 .vibe-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -4495,9 +4503,22 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .chip-multi .x { margin-left: 6px; opacity: 0.6; }
 
-.bq-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+.bq-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
 .bq-foot .skip { font-size: 13px; color: var(--muted); cursor: pointer; }
 .bq-foot .skip:hover { color: var(--ink); }
+.bq-link {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+.bq-link:hover {
+  color: var(--accent);
+}
 
 /* Brand answer summary card (after they answer) */
 .brand-summary {

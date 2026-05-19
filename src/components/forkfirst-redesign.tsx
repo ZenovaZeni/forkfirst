@@ -77,6 +77,7 @@ import type { ChatIntent, ChatUiAction } from "@/lib/research-chat/types";
 import { trackForkFirstEvent } from "@/lib/analytics/events";
 
 type Screen = "landing" | "app" | "loading" | "results" | "more" | "branding" | "generating" | "ready" | "handoff" | "library" | "settings" | "trending" | "packs";
+type GoOptions = { scroll?: "top" | "preserve" };
 type Theme = "light" | "dark";
 type ChatTurn = { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent };
 type SettingsTab = "appearance" | "keys" | "usage" | "install";
@@ -267,7 +268,7 @@ const DEFAULT_BRAND_ANSWERS: BrandAnswers = {
   designNotes: "",
   vibe: "calm",
   color: "#2647F0",
-  notList: ["User accounts", "Email digests"]
+  notList: []
 };
 
 function normalizeBrandAnswers(brand: Partial<BrandAnswers> | null | undefined): BrandAnswers | null {
@@ -1816,7 +1817,7 @@ function Sidebar({
   onDeleteChat
 }: {
   active: Screen;
-  go: (screen: Screen) => void;
+  go: (screen: Screen, options?: GoOptions) => void;
   savedBuildPackCount: number;
   savedRepoCount: number;
   recentChats: ResearchChat[];
@@ -2154,7 +2155,7 @@ function MobileNav({
   onOpenChat
 }: {
   active: Screen;
-  go: (screen: Screen) => void;
+  go: (screen: Screen, options?: GoOptions) => void;
   recentChats: ResearchChat[];
   activeChatId: string | null;
   onOpenChat: (chat: ResearchChat) => void;
@@ -3016,6 +3017,7 @@ function ChatResults({
   result,
   phase,
   brand,
+  selectedStarterRepo,
   savedRepos,
   followUps,
   sending,
@@ -3037,6 +3039,7 @@ function ChatResults({
   result: IdeaCheckResult;
   phase: Screen;
   brand: BrandAnswers | null;
+  selectedStarterRepo: ClassifiedRepo | null;
   savedRepos: ClassifiedRepo[];
   followUps: ChatTurn[];
   sending: boolean;
@@ -3052,7 +3055,7 @@ function ChatResults({
   onGenerate: (brand: BrandAnswers) => void;
   onReady: () => void;
   readyDocs: HandoffDocuments;
-  go: (screen: Screen) => void;
+  go: (screen: Screen, options?: GoOptions) => void;
 }) {
   const repos = phase === "more" ? result.repos.slice(0, 6) : result.repos.slice(0, 3);
   const best = repos[0];
@@ -3066,14 +3069,15 @@ function ChatResults({
     const countGrew = followUps.length > previousFollowUpCountRef.current;
     previousFollowUpCountRef.current = followUps.length;
 
-    if (!countGrew && !sending) return;
+    const phaseShouldFollow = phase === "branding" || phase === "generating" || phase === "ready";
+    if (!countGrew && !sending && !phaseShouldFollow) return;
 
     const frame = window.requestAnimationFrame(() => {
       chatTailRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [followUps.length, sending]);
+  }, [followUps.length, phase, sending]);
 
   return (
     <section className="chat" data-screen-label={`04 Chat / ${phase}`} data-clarity-mask="true">
@@ -3200,8 +3204,8 @@ function ChatResults({
           </>
         ) : null}
       </div>
-      {phase === "branding" ? <BrandingInterview onComplete={onGenerate} /> : null}
-      {phase === "generating" ? <Generating brand={brand} result={result} onReady={onReady} /> : null}
+      {phase === "branding" ? <BrandingInterview onComplete={onGenerate} onCancel={() => go("results", { scroll: "preserve" })} /> : null}
+      {phase === "generating" ? <Generating brand={brand} result={result} selectedStarterRepo={selectedStarterRepo} onReady={onReady} /> : null}
       {phase === "ready" ? (
         <ReadyCard
           brand={brand}
@@ -3260,17 +3264,18 @@ function ChatResults({
   );
 }
 
-function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) => void }) {
+function BrandingInterview({
+  onComplete,
+  onCancel
+}: {
+  onComplete: (brand: BrandAnswers) => void;
+  onCancel: () => void;
+}) {
   const [step, setStep] = useState(1);
-  const [brand, setBrand] = useState<BrandAnswers>(DEFAULT_BRAND_ANSWERS);
+  const [brand, setBrand] = useState<BrandAnswers>({ ...DEFAULT_BRAND_ANSWERS, notList: [] });
 
   function done() {
     onComplete({ ...brand, name: brand.name.trim() || "Untitled app" });
-  }
-
-  function skip() {
-    if (step < 5) setStep(step + 1);
-    else done();
   }
 
   return (
@@ -3282,32 +3287,50 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
           <time>- now</time>
         </div>
         <p className="say">
-          Good. I&apos;ll package this repo as the foundation for your AI builder. Answer these only if you want the handoff tailored; otherwise skip through and ForkFirst will keep it simple.
+          Good. I&apos;ll turn this repo into a builder brief, not just a clone. These five quick answers tell your AI what product you actually want, what to keep from the foundation, and what to build first.
         </p>
         <div className="brand-question">
           <span className="bq-step">Step {step} of 5</span>
           {step === 1 ? (
             <>
-              <h4>What should we call it?</h4>
-              <p className="help">Just a working name. You can change it any time.</p>
-              <input className="bq-input" autoFocus value={brand.name} onChange={(event) => setBrand({ ...brand, name: event.target.value })} placeholder="e.g. JobShelf" />
+              <h4>What are we turning this into?</h4>
+              <p className="help">Give the builder the product name and the plain-English outcome, so it does not just re-skin the repo.</p>
+              <input className="bq-input" autoFocus value={brand.name} onChange={(event) => setBrand({ ...brand, name: event.target.value })} placeholder="Product name, e.g. ClientNest" />
+              <textarea className="bq-input bq-textarea" value={brand.productGoal} onChange={(event) => setBrand({ ...brand, productGoal: event.target.value })} placeholder="What should this become? e.g. A simple client portal where small agencies can share files, messages, approvals, and project updates." />
             </>
           ) : null}
           {step === 2 ? (
             <>
-              <h4>Who is this for, in one line?</h4>
-              <input className="bq-input" autoFocus value={brand.audience} onChange={(event) => setBrand({ ...brand, audience: event.target.value })} placeholder="e.g. solo founders applying to 20+ jobs" />
+              <h4>Who is it for, and what pain should it solve?</h4>
+              <p className="help">This makes the handoff speak to the user, not just the tech stack.</p>
+              <textarea className="bq-input bq-textarea" autoFocus value={brand.audience} onChange={(event) => setBrand({ ...brand, audience: event.target.value })} placeholder="e.g. Solo consultants who need one place for clients to see deliverables, upload assets, and approve work without hunting through email." />
             </>
           ) : null}
           {step === 3 ? (
             <>
-              <h4>What should it feel like?</h4>
-              <p className="help">This gives your builder tone, spacing, and copy direction.</p>
+              <h4>What should work when you come back?</h4>
+              <p className="help">Describe the first useful prototype moment. This becomes the first milestone your AI builder works toward.</p>
+              <textarea className="bq-input bq-textarea" autoFocus value={brand.firstMilestone} onChange={(event) => setBrand({ ...brand, firstMilestone: event.target.value })} placeholder="e.g. A client can log in, open a project, view three shared files, leave a comment, and mark one item approved." />
+            </>
+          ) : null}
+          {step === 4 ? (
+            <>
+              <h4>What should the builder keep, change, and add?</h4>
+              <p className="help">This is the repo-to-your-product map. Short phrases are fine.</p>
+              <textarea className="bq-input bq-textarea compact" autoFocus value={brand.keepFromRepo} onChange={(event) => setBrand({ ...brand, keepFromRepo: event.target.value })} placeholder="Keep from the repo: auth, dashboard layout, file upload flow, data model..." />
+              <textarea className="bq-input bq-textarea compact" value={brand.replaceFromRepo} onChange={(event) => setBrand({ ...brand, replaceFromRepo: event.target.value })} placeholder="Replace: sample data, wording, colors, navigation, domain-specific assumptions..." />
+              <textarea className="bq-input bq-textarea compact" value={brand.addToRepo} onChange={(event) => setBrand({ ...brand, addToRepo: event.target.value })} placeholder="Add: the one thing your idea needs that the repo does not already do..." />
+            </>
+          ) : null}
+          {step === 5 ? (
+            <>
+              <h4>How should it feel, and what should it avoid?</h4>
+              <p className="help">This gives the builder a design direction and guardrails so it does not overbuild.</p>
               <div className="vibe-row">
                 {[
-                  { id: "calm", name: "Calm + considered", sub: "Apple-like restraint" },
-                  { id: "bold", name: "Bold + loud", sub: "Big type, hard edges" },
-                  { id: "playful", name: "Playful + warm", sub: "Friendly, rounded" }
+                  { id: "calm and trustworthy", name: "Calm + trustworthy", sub: "Clear, focused, low-noise" },
+                  { id: "bold and modern", name: "Bold + modern", sub: "Confident, crisp, high contrast" },
+                  { id: "friendly and simple", name: "Friendly + simple", sub: "Warm, approachable, non-techy" }
                 ].map((vibe) => (
                   <button key={vibe.id} className={`vibe-card ${brand.vibe === vibe.id ? "selected" : ""}`} type="button" onClick={() => setBrand({ ...brand, vibe: vibe.id })}>
                     <strong>{vibe.name}</strong>
@@ -3315,32 +3338,10 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
                   </button>
                 ))}
               </div>
-            </>
-          ) : null}
-          {step === 4 ? (
-            <>
-              <h4>Pick a signature color.</h4>
-              <p className="help">Optional, but it gives the builder one visual anchor.</p>
-              <div className="color-row">
-                {["#2647F0", "#0F8060", "#D8412F", "#5B3DD8", "#0A0B0E", "#F7C800", "#E83E8C", "#0EA5E9"].map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    className={`color-dot ${brand.color === color ? "selected" : ""}`}
-                    style={{ background: color }}
-                    onClick={() => setBrand({ ...brand, color })}
-                    aria-label={color}
-                  />
-                ))}
-              </div>
-            </>
-          ) : null}
-          {step === 5 ? (
-            <>
-              <h4>Anything to absolutely NOT build in v1?</h4>
-              <p className="help">The handoff will tell your AI &quot;don&apos;t go here.&quot; Stops scope creep before it starts.</p>
+              <textarea className="bq-input bq-textarea compact" value={brand.designNotes} onChange={(event) => setBrand({ ...brand, designNotes: event.target.value })} placeholder="Optional design notes: colors, tone, examples, or anything that should feel different from the starter repo." />
+              <p className="help">Optional: tap only the things your first version should avoid.</p>
               <div className="not-grid">
-                {["User accounts", "Billing", "Email digests", "Browser extension", "Native app", "Multi-user", "Team sharing", "Backend / hosting", "Notifications", "Analytics"].map((item) => {
+                {["Billing", "Team accounts", "Admin dashboard", "Native app", "Browser extension", "Complex automations", "Public marketplace", "Analytics", "Email/SMS", "AI agents"].map((item) => {
                   const selected = brand.notList.includes(item);
                   return (
                     <button
@@ -3363,7 +3364,8 @@ function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) =
             </>
           ) : null}
           <div className="bq-foot">
-            {step === 2 || step === 5 ? <span className="skip" onClick={skip}>Skip this -&gt;</span> : <span />}
+            <button className="btn ghost compact" type="button" onClick={onCancel}>Back</button>
+            <button className="bq-link" type="button" onClick={done}>Skip and create simple handoff</button>
             <button className="btn accent" type="button" onClick={() => (step < 5 ? setStep(step + 1) : done())}>
               {step < 5 ? "Next" : "Create handoff"} <ArrowRight size={14} />
             </button>
@@ -3380,22 +3382,28 @@ function BrandRecap({ brand }: { brand: BrandAnswers | null }) {
     <div className="t t-user">
       <div className="brand-summary" style={{ background: "var(--accent-soft)", borderColor: "color-mix(in srgb, var(--accent) 30%, var(--line))" }}>
         <div className="bs-row"><span className="k">Name</span><span className="v">{brand.name || "-"}</span></div>
+        {brand.productGoal ? <div className="bs-row"><span className="k">Goal</span><span className="v">{brand.productGoal}</span></div> : null}
         {brand.audience ? <div className="bs-row"><span className="k">For</span><span className="v">{brand.audience}</span></div> : null}
+        {brand.firstMilestone ? <div className="bs-row"><span className="k">First win</span><span className="v">{brand.firstMilestone}</span></div> : null}
+        {brand.keepFromRepo || brand.replaceFromRepo || brand.addToRepo ? (
+          <div className="bs-row"><span className="k">Repo map</span><span className="v">{[brand.keepFromRepo && `Keep: ${brand.keepFromRepo}`, brand.replaceFromRepo && `Change: ${brand.replaceFromRepo}`, brand.addToRepo && `Add: ${brand.addToRepo}`].filter(Boolean).join(" | ")}</span></div>
+        ) : null}
         <div className="bs-row"><span className="k">Vibe</span><span className="v">{brand.vibe}</span></div>
         <div className="bs-row"><span className="k">Color</span><span className="v"><span className="sw" style={{ background: brand.color }} />{brand.color}</span></div>
+        {brand.designNotes ? <div className="bs-row"><span className="k">Design</span><span className="v">{brand.designNotes}</span></div> : null}
         {brand.notList.length > 0 ? <div className="bs-row"><span className="k">Skip in v1</span><span className="v">{brand.notList.join(", ")}</span></div> : null}
       </div>
     </div>
   );
 }
 
-function StreamingDoc({ step, brand, result }: { step: number; brand: BrandAnswers | null; result?: IdeaCheckResult }) {
-  const starter = result?.repos[0]?.fullName ?? "the recommended starter repo";
+function StreamingDoc({ step, brand, result, selectedStarterRepo }: { step: number; brand: BrandAnswers | null; result?: IdeaCheckResult; selectedStarterRepo?: ClassifiedRepo | null }) {
+  const starter = selectedStarterRepo?.fullName ?? result?.repos[0]?.fullName ?? "the recommended starter repo";
   const sections = [
     { h: "## STARTER_REPO", body: `**Foundation** - ${starter}\n**First move** - clone it, inspect setup and license, then write the handoff files in the repo root.` },
-    { h: "## PRD", body: `**Name** - ${brand?.name || "JobShelf"}\n**For** - ${brand?.audience || "solo founders applying to 20+ jobs"}\n**Verdict** - ${result?.verdictLabel || "Strong fit"}. Start from ${starter}.\n**Must have** - Core workflow, local persistence, exportable handoff, friendly empty state.` },
-    { h: "## Build plan", body: "Phase 1 - Fork the repo, inspect the core flows, swap UI.\nPhase 2 - Wire persistence and export.\nPhase 3 - Your differentiator (deferred - write this only after phase 2 ships)." },
-    { h: "## Brand", body: `**Vibe** - ${brand?.vibe || "calm"}.\n**Color** - ${brand?.color || "#2647F0"}.\n**Type** - Geist, 15px base, no negative tracking inside compact UI.` },
+    { h: "## PRD", body: `**Name** - ${brand?.name || "Your app"}\n**Goal** - ${brand?.productGoal || "Turn the selected repo into the user's product idea."}\n**For** - ${brand?.audience || "the target user from the idea"}\n**Verdict** - ${result?.verdictLabel || "Strong fit"}. Start from ${starter}.` },
+    { h: "## Build plan", body: `Phase 1 - ${brand?.firstMilestone || "Clone the repo, inspect the core flows, and ship the smallest useful workflow."}\nPhase 2 - Replace repo-specific assumptions with the user's product direction.\nPhase 3 - Add differentiators only after phase 1 works.` },
+    { h: "## Brand", body: `**Vibe** - ${brand?.vibe || "calm"}.\n**Color** - ${brand?.color || "#2647F0"}.\n**Design notes** - ${brand?.designNotes || "Keep it simple, clear, and built around the first useful workflow."}` },
     { h: "## Don't build in v1", body: (brand?.notList.length ? brand.notList : ["User accounts", "Email digests"]).map((item) => `- ${item}`).join("\n") },
     { h: "## Agent rules", body: "Inspect before editing. Match existing code style. Keep the phase checklist current. Run verification before expanding scope." }
   ];
@@ -3416,7 +3424,17 @@ function StreamingDoc({ step, brand, result }: { step: number; brand: BrandAnswe
   );
 }
 
-function Generating({ brand, result, onReady }: { brand: BrandAnswers | null; result: IdeaCheckResult; onReady: () => void }) {
+function Generating({
+  brand,
+  result,
+  selectedStarterRepo,
+  onReady
+}: {
+  brand: BrandAnswers | null;
+  result: IdeaCheckResult;
+  selectedStarterRepo: ClassifiedRepo | null;
+  onReady: () => void;
+}) {
   const [step, setStep] = useState(0);
   useEffect(() => {
     const timers = [700, 1400, 2100, 2800, 3600].map((delay, index) => window.setTimeout(() => setStep(index + 1), delay));
@@ -3438,7 +3456,7 @@ function Generating({ brand, result, onReady }: { brand: BrandAnswers | null; re
         <p className="say">Got it. Turning the foundation into your AI-builder handoff.</p>
         <div className="generating-card">
           <div className="gc-eyebrow">Creating the AI handoff</div>
-          <h4>{brand?.name || "Your app"} / {result.repos[0]?.fullName ?? "starter repo"}</h4>
+          <h4>{brand?.name || "Your app"} / {selectedStarterRepo?.fullName ?? result.repos[0]?.fullName ?? "starter repo"}</h4>
           <div className="gc-steps">
             {["Naming the starting repo", "Writing the product brief", "Writing the first build plan", "Adding builder instructions", "Packaging the handoff"].map((label, index) => (
               <div key={label} className={`gcs ${index < step ? "done" : ""}`}>
@@ -3448,7 +3466,7 @@ function Generating({ brand, result, onReady }: { brand: BrandAnswers | null; re
             ))}
           </div>
         </div>
-        <StreamingDoc step={step} brand={brand} result={result} />
+        <StreamingDoc step={step} brand={brand} result={result} selectedStarterRepo={selectedStarterRepo} />
       </div>
     </>
   );
@@ -4868,7 +4886,7 @@ export function ForkFirstRedesignApp() {
     else window.sessionStorage.removeItem(ACTIVE_CHAT_SESSION_KEY);
   }, [activeChatId, screen]);
 
-  const go = useCallback((next: Screen) => {
+  const go = useCallback((next: Screen, options: GoOptions = {}) => {
     if (!isScreen(next)) return;
     if (next === "app") {
       setPrompt("");
@@ -4883,8 +4901,11 @@ export function ForkFirstRedesignApp() {
       setLoading(false);
     }
     setScreen(next);
-    window.scrollTo({ top: 0 });
-    document.querySelector(".workspace")?.scrollTo({ top: 0 });
+    const stayInChatFlow = next === "branding" || next === "generating" || next === "ready";
+    if (options.scroll !== "preserve" && !stayInChatFlow) {
+      window.scrollTo({ top: 0 });
+      document.querySelector(".workspace")?.scrollTo({ top: 0 });
+    }
   }, []);
 
   const persistKeys = useCallback((next: UserKeys) => {
@@ -5080,6 +5101,7 @@ export function ForkFirstRedesignApp() {
   }, []);
 
   useEffect(() => {
+    if (screen === "branding" || screen === "generating" || screen === "ready") return;
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0 });
       document.querySelector(".workspace")?.scrollTo({ top: 0 });
@@ -5573,6 +5595,7 @@ export function ForkFirstRedesignApp() {
                   result={result}
                   phase={screen}
                   brand={brand}
+                  selectedStarterRepo={selectedStarterRepo}
                   savedRepos={savedRepos}
                   followUps={followUps}
                   sending={chatSending}
@@ -5682,7 +5705,7 @@ export function ForkFirstRedesignApp() {
                 writeFeatureStorage(window.localStorage, { promptPackState: next });
               }} /> : null}
             </div>
-            {(screen === "results" || screen === "more" || screen === "ready") ? (
+            {(screen === "results" || screen === "more" || screen === "branding" || screen === "ready") ? (
               <ChatComposerBar disabled={chatSending || !result} onSubmit={sendFollowUp} />
             ) : null}
           </main>
