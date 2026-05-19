@@ -3947,7 +3947,7 @@ function HandoffSavedPacksScreen({
           <SavedBuildPackCard
             key={pack.id}
             pack={pack}
-            openLabel="Open package"
+            openLabel="Open"
             onOpenBuildPack={onOpenBuildPack}
             onDeleteBuildPack={onDeleteBuildPack}
             onDownloadBuildPack={onDownloadBuildPack}
