@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { TRENDING_CATEGORIES, TRENDING_CATEGORY_IDS, buildTrendingQueries, type TrendingCategoryId } from "@/lib/trending/categories";
+import { balancedTrendingItems, topTrendingItems } from "@/lib/trending/merge";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
 
@@ -47,6 +48,10 @@ type GitHubSearchResult = {
   ok: boolean;
   status: number;
   items: GitHubSearchItem[];
+};
+
+type CategorizedGitHubSearchResult = GitHubSearchResult & {
+  categoryId: TrendingCategoryId;
 };
 
 const trendingRateLimit = new Map<string, { count: number; windowStart: number }>();
@@ -380,8 +385,8 @@ export async function POST(request: Request) {
     headers.Authorization = `Bearer ${body.data.githubToken}`;
   }
 
-  async function fetchTrendingQuery(query: string): Promise<GitHubSearchResult> {
-    const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=8`;
+  async function fetchTrendingQuery(query: string, perPage = 8): Promise<GitHubSearchResult> {
+    const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=${perPage}`;
     const res = await fetch(url, {
       headers,
       next: { revalidate: TRENDING_CACHE_MS / 1000 }
@@ -396,13 +401,28 @@ export async function POST(request: Request) {
     return { query, ok: true, status: res.status, items: Array.isArray(data.items) ? data.items : [] };
   }
 
-  const queries = buildTrendingQueries(category);
-  let results: GitHubSearchResult[];
+  const allCategories = TRENDING_CATEGORIES.filter((item) => item.id !== "all");
+  const queryGroups = body.data.categoryId === "all"
+    ? allCategories.map((item) => ({
+      categoryId: item.id,
+      queries: buildTrendingQueries(item),
+      perPage: 4
+    }))
+    : [{
+      categoryId: category.id,
+      queries: buildTrendingQueries(category),
+      perPage: 8
+    }];
+  const queries = queryGroups.flatMap((group) => group.queries);
+  let results: CategorizedGitHubSearchResult[];
 
   try {
     results = [];
-    for (const query of queries) {
-      results.push(await fetchTrendingQuery(query));
+    for (const group of queryGroups) {
+      for (const query of group.queries) {
+        const result = await fetchTrendingQuery(query, group.perPage);
+        results.push({ ...result, categoryId: group.categoryId });
+      }
     }
   } catch {
     console.error("[trending] fetch failed");
@@ -438,17 +458,11 @@ export async function POST(request: Request) {
     });
   }
 
-  const deduped = new Map<string, GitHubSearchItem>();
-  for (const item of successfulResults.flatMap((result) => result.items)) {
-    const existing = deduped.get(item.full_name);
-    if (!existing || item.stargazers_count > existing.stargazers_count) {
-      deduped.set(item.full_name, item);
-    }
-  }
+  const orderedItems = body.data.categoryId === "all"
+    ? balancedTrendingItems(successfulResults, allCategories.map((item) => item.id), 36)
+    : topTrendingItems(successfulResults.flatMap((result) => result.items), 12);
 
-  const repos: TrendingRepo[] = Array.from(deduped.values())
-    .sort((a, b) => b.stargazers_count - a.stargazers_count)
-    .slice(0, 12)
+  const repos: TrendingRepo[] = orderedItems
     .map((item) => ({
       fullName: item.full_name,
       description: item.description ?? "",
