@@ -30,7 +30,6 @@ import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import { buildProjectBuildPack, type BuildPackPreferences, type BuildTarget } from "@/lib/build-pack/generator";
-import { buildExportMarkdown } from "@/lib/export/report";
 import { decodeHandoff } from "@/lib/handoff/share-url";
 import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-status";
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
@@ -482,80 +481,6 @@ function buildPackDocCount(pack: SavedBuildPack) {
 
 function buildPackUpdatedLabel(pack: SavedBuildPack) {
   return relativeChatTime(pack.updatedAt || pack.createdAt);
-}
-
-function launchSteps(target: BuildTarget, starterRepo: string) {
-  const repo = starterRepo || "the selected starter repo";
-  if (target === "claude-code") {
-    return [
-      "Copy or download this handoff and give it to Claude Code as the starting message/file.",
-      `The handoff tells Claude to clone or open ${repo}, place the handoff files in the project, and inspect the repo first.`,
-      "Your only job is to provide the handoff. Claude handles the repo setup, file placement, first build plan, and verification notes.",
-      "If you paste instead of upload, paste the whole handoff and say: follow this exactly, then build Phase 1."
-    ];
-  }
-  if (target === "codex") {
-    return [
-      "Copy or download this handoff and give it to Codex as the first instruction.",
-      `The handoff tells Codex to use ${repo} as the foundation, create the project notes it needs, and work from the repo evidence.`,
-      "Codex should handle cloning/opening, file organization, implementation phases, and verification.",
-      "If you paste it into a fresh Codex task, say: use this handoff as the source of truth and start with Phase 0."
-    ];
-  }
-  if (target === "cursor") {
-    return [
-      "Copy or download this handoff, then paste it into Cursor chat or attach it in the project.",
-      `The handoff tells Cursor to use ${repo}, create project notes/rules as needed, and inspect before generating code.`,
-      "Cursor should turn the packet into repo files and build from the plan without you manually sorting sections.",
-      "Start by asking Cursor to follow the handoff and implement only the first milestone."
-    ];
-  }
-  if (target === "replit") {
-    return [
-      "Copy or download this handoff and give it to Replit after importing or cloning the starter repo.",
-      `The handoff tells Replit to use ${repo} as the foundation and place the generated handoff files in the repo root.`,
-      "Replit should inspect setup and run commands before editing, then build only the first milestone.",
-      "Tell it: follow this packet exactly and keep the project runnable after each change."
-    ];
-  }
-  if (target === "lovable") {
-    return [
-      "Paste this handoff into Lovable as the project brief.",
-      `The handoff tells Lovable what ${repo} is for, what product to build, what to keep small, and what not to invent.`,
-      "Lovable should translate the packet into screens, data model, and first milestone without extra manual setup.",
-      "Ask it to build the smallest branded MVP from the handoff before adding integrations."
-    ];
-  }
-  if (target === "v0") {
-    return [
-      "Paste this handoff into v0 when you want the first branded interface or screen flow.",
-      `The handoff tells v0 what ${repo} contributes, what product direction to follow, and what scope to avoid.`,
-      "v0 should use the product brief, brand notes, and build plan instead of inventing a fresh generic UI.",
-      "Ask it to produce only the Phase 1 screens/components from the packet."
-    ];
-  }
-  if (target === "gemini-cli") {
-    return [
-      "Copy or download this handoff and provide it to Gemini CLI as the first instruction/file.",
-      `The handoff tells Gemini CLI to clone or open ${repo}, place the handoff files in the repo root, and inspect before editing.`,
-      "Gemini CLI should handle file placement, first milestone planning, and verification notes.",
-      "Tell it: use this handoff as source of truth and implement Phase 1 only."
-    ];
-  }
-  if (target === "antigravity") {
-    return [
-      "Copy or download this handoff and open it with Antigravity in the starter repo workspace.",
-      `The handoff tells Antigravity to use ${repo} as the working foundation before planning or editing.`,
-      "Antigravity should add the handoff files, inspect the repo, and keep scope limited to the first build phase.",
-      "Tell it: follow this packet top to bottom and ask only if the repo inspection reveals a blocker."
-    ];
-  }
-  return [
-    "Copy, download, or upload this handoff to your AI builder.",
-    `The handoff tells the builder to use ${repo}, organize the project notes, inspect the foundation, and build Phase 1.`,
-    "You should not need to manually split files unless your builder cannot read the packet as-is.",
-    "Tell the builder: follow this handoff as the source of truth and ask only when something is blocked."
-  ];
 }
 
 function formatByteSize(value: string) {
@@ -3720,11 +3645,8 @@ function HandoffView({
   promptPackState,
   prompt,
   activeChatId,
-  savedRepos,
-  savedRepoBoards,
   activeBuildPack,
   onCopy,
-  onDownload,
   onDownloadZip,
   onSaveBuildPack
 }: {
@@ -3735,11 +3657,8 @@ function HandoffView({
   promptPackState: PromptPackState;
   prompt: string;
   activeChatId: string | null;
-  savedRepos: ClassifiedRepo[];
-  savedRepoBoards: Record<string, string>;
   activeBuildPack: SavedBuildPack | null;
   onCopy: (text: string) => void;
-  onDownload: (filename: string, text: string) => void;
   onDownloadZip: (filename: string, docs: HandoffDocuments, markdown: string) => void;
   onSaveBuildPack: (pack: SavedBuildPack) => void;
 }) {
@@ -3838,38 +3757,6 @@ function HandoffView({
       </div>
       <div className="handoff-grid">
         <div className="handoff-utility">
-          <div className="card launch-card">
-            <h3>Launch in {BUILD_TARGETS.find((item) => item.id === target)?.label}</h3>
-            <ol>
-              {launchSteps(target, starterName).slice(0, 3).map((step) => <li key={step}>{step}</li>)}
-            </ol>
-          </div>
-          <div className="card handoff-draft-card">
-            <div className="utility-card-head">
-              <h3>Draft tools</h3>
-              <span>~{formatTokensShort(handoffTokens)} tokens</span>
-            </div>
-            <p>Autosaved locally. Copy, save, and downloads use your current edits.</p>
-            <div className="handoff-mini-actions">
-              <button className="btn ghost" type="button" disabled={!canExport} onClick={() => onSaveBuildPack({ ...pack, status: "draft" })}>
-                <Bookmark size={14} /> Save
-              </button>
-              <button className="btn ghost" type="button" disabled={!canExport} onClick={() => saveWithVersion("Manual save", "draft")}>
-                <Bookmark size={14} /> Version
-              </button>
-              {result ? (
-                <button className="btn ghost" type="button" onClick={() => onDownload("forkfirst-idea-report.md", buildExportMarkdown(result, savedRepos, savedRepoBoards))}>
-                  <Download size={14} /> Report
-                </button>
-              ) : null}
-              <button className="btn ghost" type="button" disabled={!canExport} onClick={() => {
-                saveWithVersion("Exported .md", "exported");
-                onDownload("forkfirst-builder-handoff.md", markdown);
-              }}>
-                <Download size={14} /> .md
-              </button>
-            </div>
-          </div>
           <div className="handoff-side">
             <div className="card">
               <h3>Send to</h3>
@@ -3942,7 +3829,7 @@ function HandoffView({
           <div className="doc-meta">
             <span>{tab}</span>
             <span>{formatByteSize(activeDoc)}</span>
-            <span>Editable handoff file - copy and download use your changes.</span>
+            <span>Autosaved locally - copy and download use your latest edits.</span>
           </div>
           <div className="doc-body" data-clarity-mask="true">
             <textarea
@@ -5670,14 +5557,11 @@ export function ForkFirstRedesignApp() {
                     promptPackState={promptPackState}
                     prompt={prompt}
                     activeChatId={activeChatId}
-                    savedRepos={savedRepos}
-                    savedRepoBoards={savedRepoBoards}
                     activeBuildPack={activeBuildPack}
                     onCopy={(text) => {
                       trackForkFirstEvent("handoff_copied", { source: "handoff_view" });
                       copyText(text);
                     }}
-                    onDownload={downloadHandoff}
                     onDownloadZip={downloadHandoffZip}
                     onSaveBuildPack={saveBuildPack}
                   />
