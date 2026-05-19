@@ -82,6 +82,7 @@ const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
 const ACTIVE_CHAT_SESSION_KEY = "forkfirst:active-chat";
+const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "https://github.com/ZenovaZeni/forkfirst#support-forkfirst";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
 
@@ -1290,7 +1291,53 @@ function TopNav({ go }: { go: (screen: Screen) => void }) {
   );
 }
 
+function AboutModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="modal-scrim about-scrim" role="dialog" aria-modal="true" aria-labelledby="about-title" onClick={onClose}>
+      <div className="about-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="about-top">
+          <div>
+            <span className="eyebrow">About ForkFirst</span>
+            <h2 id="about-title">Start with a working foundation.</h2>
+          </div>
+          <button className="icon-btn" type="button" onClick={onClose} aria-label="Close about ForkFirst">
+            <X size={18} />
+          </button>
+        </div>
+        <p>
+          ForkFirst is a free open-source tool by Josh Douglas, powered by Zenova AI. It helps AI builders find a
+          working open-source foundation for an app idea, then turn it into a clean handoff for Cursor, Claude Code,
+          Codex, Replit, v0, Lovable, Gemini CLI, Antigravity, and other AI builders.
+        </p>
+        <div className="about-grid">
+          <div>
+            <strong>What it is</strong>
+            <span>A repo-first research and handoff workflow before your AI builder starts coding.</span>
+          </div>
+          <div>
+            <strong>What it is not</strong>
+            <span>Not a cloning tool, license scanner, hosted SaaS, or promise that any repo is safe to reuse.</span>
+          </div>
+        </div>
+        <p className="about-note">
+          The goal is to rebrand, redesign, refocus, and build your own product faster with real code as context.
+        </p>
+        <div className="about-actions">
+          <a className="btn accent" href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">
+            GitHub <ExternalLink size={14} />
+          </a>
+          <a className="btn ghost" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+            Support development
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Landing({ go }: { go: (screen: Screen) => void }) {
+  const [showAbout, setShowAbout] = useState(false);
+
   function startApp(source: string) {
     trackForkFirstEvent("landing_try_free_clicked", { source });
     go("app");
@@ -1660,16 +1707,19 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
         <button className="left brand-home" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
           <Logo />
           <Wordmark />
-          <span className="footer-meta">(c) 2026 / MIT</span>
+          <span className="footer-meta">Built by Josh Douglas · Powered by Zenova AI · MIT</span>
         </button>
         <div className="right">
+          <button type="button" onClick={() => setShowAbout(true)}>About</button>
           <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
+          <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a>
           <a href="/security">Security</a>
           <a href="/security">Privacy</a>
           <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
           <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
         </div>
       </footer>
+      {showAbout ? <AboutModal onClose={() => setShowAbout(false)} /> : null}
     </div>
   );
 }

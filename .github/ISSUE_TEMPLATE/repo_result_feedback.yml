@@ -1,0 +1,39 @@
+name: Repo result feedback
+description: Tell us when a ForkFirst repo recommendation felt wrong or surprisingly useful
+title: "[Repo result]: "
+labels: ["repo-feedback"]
+body:
+  - type: input
+    id: idea
+    attributes:
+      label: What idea did you search?
+      placeholder: A local-first CRM for real estate agents...
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Which repo did ForkFirst show?
+      placeholder: owner/repo
+    validations:
+      required: true
+  - type: dropdown
+    id: result-quality
+    attributes:
+      label: How did the result feel?
+      options:
+        - Great foundation
+        - Useful reference
+        - Too generic
+        - Wrong category
+        - Risky / misleading
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why?
+      description: What should ForkFirst have noticed or explained better?
+    validations:
+      required: true

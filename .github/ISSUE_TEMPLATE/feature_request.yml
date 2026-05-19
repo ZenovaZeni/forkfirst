@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an improvement for ForkFirst
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: When I use ForkFirst, I want to...
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+      placeholder: Add a button/view/export that...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - Idea chat
+        - Repo results
+        - Builder Handoff
+        - Saved repos / handoffs
+        - Trending
+        - Prompt packs
+        - BYOK / settings
+        - README / docs
+        - Other
+    validations:
+      required: true

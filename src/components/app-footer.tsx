@@ -3,21 +3,21 @@
 export function AppFooter() {
   return (
     <footer className="app-footer">
-      <span>ForkFirst - </span>
+      <span>Built by Josh Douglas · Powered by Zenova AI · </span>
       <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">
-        open source
+        GitHub
       </a>
-      <span> - BYOK - </span>
+      <span> · </span>
+      <a href="https://github.com/ZenovaZeni/forkfirst#support-forkfirst" target="_blank" rel="noreferrer">
+        Support
+      </a>
+      <span> · </span>
       <a href="/security">
-        security model
+        Security
       </a>
-      <span> - </span>
+      <span> · </span>
       <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">
-        report security issue
-      </a>
-      <span> - </span>
-      <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">
-        GitHub repo
+        Report security issue
       </a>
     </footer>
   );

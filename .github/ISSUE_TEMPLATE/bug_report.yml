@@ -1,0 +1,39 @@
+name: Bug report
+description: Report something broken in ForkFirst
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Tell us what broke and what you expected instead.
+      placeholder: I searched for... then clicked... and...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to...
+        2. Type...
+        3. Click...
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where did this happen?
+      options:
+        - Hosted site
+        - Local clone
+        - Both
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Browser, device, screenshots, console errors, or anything else useful. Do not paste API keys.

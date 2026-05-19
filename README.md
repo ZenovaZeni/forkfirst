@@ -6,34 +6,32 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-111111.svg)](https://nextjs.org/)
 [![BYOK](https://img.shields.io/badge/BYOK-demo_mode_ready-2647F0.svg)](#security-model)
 
-> Do not make your AI builder start from zero.
+ForkFirst helps you find a working open-source foundation for your app idea, then turn it into a clean handoff for Cursor, Claude Code, Codex, Replit, v0, Lovable, Gemini CLI, Antigravity, and other AI builders.
 
-Talk through your app idea like you would with ChatGPT. ForkFirst finds real GitHub projects that can become your foundation, then creates the repo, prompt, and handoff files your AI builder needs to clone, customize, and build your version faster.
+> Start with a working foundation. Build your own product faster.
 
 [Try the hosted demo](https://forkfirst.vercel.app) · [Read the security model](./SECURITY.md) · [View sample handoffs](#public-sample-handoffs)
 
-## Why this exists
+## What it does
 
-AI coding tools are powerful, but they waste time and tokens when they invent from a blank page. ForkFirst is the step before Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, Antigravity, or any similar AI builder:
+Talk through your app idea like you would with ChatGPT. ForkFirst searches GitHub for real projects that may already include useful pieces like auth, dashboards, CRUD, payments, admin panels, layouts, or workflows. Then it helps you decide what to keep, replace, ignore, or inspect before your AI builder starts coding.
 
-1. Your plain-English idea.
-2. Real GitHub projects most people would not know to search for.
-3. A working foundation, useful reference, or avoid signal.
-4. Repo, prompt, and handoff files for the AI builder you already use.
+ForkFirst is not about cloning apps. It is about finding a better starting point, rebranding, redesigning, refocusing, and building your own product with real code as context.
 
 ## 60-second flow
 
-1. Chat through the idea like you would with ChatGPT.
-2. ForkFirst searches GitHub for real projects that could become your starting point.
-3. Pick the working foundation, reference repo, or safer next search.
-4. Generate the Builder Handoff.
-5. Give the repo, prompt, and files to Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, Antigravity, or another AI builder.
+1. Describe the product you want to build.
+2. ForkFirst searches public GitHub repos most people would not know to search for.
+3. It ranks the strongest foundations, references, and caution signals.
+4. You pick a repo or ask follow-up questions.
+5. ForkFirst generates a Builder Handoff.
+6. Give the repo, prompt, and files to Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, Antigravity, or another AI builder.
 
 ## Screenshots
 
 | Start with an idea | Compare working foundations | Export the builder handoff |
 |---|---|---|
-| ![ForkFirst home screen](./public/screenshots/rebrand-desktop-paper.png) | ![ForkFirst repo results](./public/screenshots/results.png) | ![ForkFirst Build Pack](./public/screenshots/build-pack.png) |
+| ![ForkFirst home screen](./public/screenshots/01-home-paper.png) | ![ForkFirst repo results](./public/screenshots/03-chat-results.png) | ![ForkFirst Builder Handoff](./public/screenshots/05-build-pack.png) |
 
 ## Public sample handoffs
 
@@ -43,17 +41,35 @@ These are example output packets checked against live GitHub Search API results 
 - [Local-first journal](./public/sample-handoffs/local-first-journal.md)
 - [AI agent dashboard](./public/sample-handoffs/ai-agent-dashboard.md)
 
+## Use cases
+
+- You have an app idea and do not know what already exists.
+- You want your AI builder to start from a repo instead of a blank page.
+- You want to compare starter repos before asking Cursor, Claude Code, Codex, or Replit to build.
+- You found a repo and want a plain-English read on whether it is a foundation, reference, or caution.
+- You want a Markdown handoff your AI builder can follow.
+
 ## Features
 
 - Chat-first GitHub search and ranking.
-- Builder Handoff exports for Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, and generic Markdown.
-- `STARTER_REPO.md`, `PRD.md`, `BUILD_PLAN.md`, `REPO_STARTER_NOTES.md`, `AGENTS.md`, and `CLAUDE.md` style guidance.
+- Builder Handoff exports for Claude Code, Codex, Cursor, Replit, Lovable, v0, Gemini CLI, Antigravity, and generic Markdown.
+- `STARTER_REPO.md`, `PRD.md`, `BUILD_PLAN.md`, `REPO_STARTER_NOTES.md`, `AGENTS.md`, and `CLAUDE.md` guidance.
 - Optional AI chat and idea refinement.
-- Saved repos, boards, editable handoff docs, and shareable handoff URLs.
+- Saved repos, editable handoff docs, and shareable handoff URLs.
 - Live trending starter feeds from GitHub Search.
 - Prompt packs for reusable builder rules.
 - PWA install support.
 - Demo mode without paid keys.
+
+## What ForkFirst is not
+
+- Not a license scanner or legal advisor.
+- Not a code-copying tool.
+- Not a hosted SaaS with accounts, billing, or team workspaces.
+- Not tied to a single AI provider.
+- Not a promise that any surfaced repo is safe to reuse.
+
+Always inspect setup, license, docs, recent activity, and architecture before building from a repo.
 
 ## AI Builder Handoff Audit
 
@@ -66,6 +82,18 @@ Suggested service tiers:
 - **Quick Handoff:** one idea, starter repo recommendation, and first build plan.
 - **Deep Repo Audit:** compare several foundations, docs, activity, license signals, and reuse risks.
 - **Build Plan + Setup:** handoff plus initial repo setup direction for an AI builder.
+
+## Support ForkFirst
+
+ForkFirst is a free open-source tool by Josh Douglas, powered by Zenova AI.
+
+If it saves you time, the best support right now is simple:
+
+- Star the repo.
+- Share it with someone who builds with AI.
+- Open a clear issue with feedback or a repo result that felt wrong.
+
+A GitHub Sponsors, Ko-fi, or Buy Me a Coffee link can be added later without changing the free tool.
 
 ## Security model
 
@@ -122,8 +150,8 @@ Open `http://localhost:3000`.
 Optional key links:
 
 - [GitHub Personal Access Token](https://github.com/settings/personal-access-tokens)
-- [OpenAI API key](https://platform.openai.com/api-keys)
 - [Groq API key](https://console.groq.com/keys)
+- [OpenAI API key](https://platform.openai.com/api-keys)
 - [DeepSeek API key](https://platform.deepseek.com/api_keys)
 
 ## Verification

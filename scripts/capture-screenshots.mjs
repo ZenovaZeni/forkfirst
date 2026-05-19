@@ -19,7 +19,7 @@ const PUBLIC_DIR = path.resolve("public", "screenshots");
 const ASSETS_DIR = path.resolve("docs", "assets");
 
 const DEMO_PROMPT =
-  "I want to make an image generator for realtors that creates social media visuals from a listing.";
+  "I want to build a job application tracker with a Kanban board, resume notes, and reminders.";
 
 /** @type {Array<{
  *   name: string;
@@ -48,7 +48,7 @@ const SHOTS = [
     describe: "Chat-style results after running the demo prompt.",
     async prepare(page) {
       await typeAndSubmitPrompt(page, DEMO_PROMPT);
-      await page.waitForSelector(".chat-transcript .chat-turn", { timeout: 60_000 });
+      await waitForResults(page);
     }
   },
   {
@@ -67,11 +67,7 @@ const SHOTS = [
     describe: "Build Pack modal with editable Markdown.",
     async prepare(page) {
       await typeAndSubmitPrompt(page, DEMO_PROMPT);
-      await page.waitForSelector(".chat-transcript .chat-turn", { timeout: 60_000 });
-      const buildPackButton = page.getByRole("button", { name: /build pack/i }).first();
-      if (await buildPackButton.isVisible().catch(() => false)) {
-        await buildPackButton.click();
-      }
+      await createHandoff(page);
     }
   },
   {
@@ -87,16 +83,51 @@ const SHOTS = [
     describe: "Mobile chat/results.",
     async prepare(page) {
       await typeAndSubmitPrompt(page, DEMO_PROMPT);
-      await page.waitForSelector(".chat-transcript .chat-turn", { timeout: 60_000 });
+      await waitForResults(page);
     }
   }
 ];
 
 async function typeAndSubmitPrompt(page, prompt) {
+  const start = page.getByRole("button", { name: /check my idea|start free|try it free/i }).first();
+  if (await start.isVisible().catch(() => false)) {
+    await start.click();
+  }
   const input = page.locator("textarea, input[type='text']").first();
+  await input.waitFor({ state: "visible", timeout: 30_000 });
   await input.fill(prompt);
-  const submit = page.getByRole("button", { name: /check|search|ask|go/i }).first();
+  const submit = page.locator(".composer .composer-send").first();
   await submit.click();
+}
+
+async function waitForResults(page) {
+  await page.waitForSelector(".repo-card, .next-step-card, .recovery-card, .verdict-ribbon", { timeout: 60_000 });
+}
+
+async function createHandoff(page) {
+  await waitForResults(page);
+  const create = page.getByRole("button", { name: /create handoff/i }).first();
+  if (await create.isVisible().catch(() => false)) {
+    await create.click();
+  }
+  for (let step = 0; step < 5; step += 1) {
+    const next = page.getByRole("button", { name: step === 4 ? /create handoff/i : /^next/i }).first();
+    if (await next.isVisible().catch(() => false)) {
+      await next.click();
+      await page.waitForTimeout(250);
+    }
+  }
+  const openHandoff = page.getByRole("button", { name: /open handoff|builder handoff/i }).first();
+  if (await openHandoff.isVisible().catch(() => false)) {
+    await openHandoff.click();
+  }
+  await page.waitForSelector(".handoff-page, .ready-card", { timeout: 60_000 }).catch(() => {});
+  await page.evaluate(() => {
+    window.scrollTo({ top: 0, left: 0 });
+    document.querySelector(".workspace")?.scrollTo({ top: 0, left: 0 });
+    document.querySelector(".ws-route")?.scrollTo({ top: 0, left: 0 });
+  });
+  await page.waitForTimeout(250);
 }
 
 async function openDrawer(page, label) {
