@@ -7,6 +7,7 @@ type AnalyticsEvent =
   | "idea_check_submitted"
   | "results_returned"
   | "repo_details_opened"
+  | "github_star_clicked"
   | "starter_repo_selected"
   | "handoff_started"
   | "handoff_zip_downloaded"

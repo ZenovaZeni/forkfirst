@@ -1396,6 +1396,17 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           >
             See sample handoff
           </button>
+          <a
+            className="github-star-pill"
+            href="https://github.com/ZenovaZeni/forkfirst"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackForkFirstEvent("github_star_clicked", { source: "landing_hero" })}
+          >
+            <Star size={15} />
+            <span>Open Source · Star on GitHub</span>
+            <ArrowRight size={14} />
+          </a>
         </div>
         <div className="hero-meta">
           <span>Save tokens</span>
