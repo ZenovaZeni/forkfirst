@@ -2733,6 +2733,22 @@ function ChatResults({
   const recovery = result.recovery ?? buildSearchRecovery({ prompt: result.prompt, repos: result.repos, warnings: result.warnings });
   const isWeakSearch = recovery.state !== "ok";
   const closeMatchCount = recovery.closeMatchCount;
+  const chatTailRef = useRef<HTMLDivElement | null>(null);
+  const previousFollowUpCountRef = useRef(followUps.length);
+
+  useEffect(() => {
+    const countGrew = followUps.length > previousFollowUpCountRef.current;
+    previousFollowUpCountRef.current = followUps.length;
+
+    if (!countGrew && !sending) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      chatTailRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [followUps.length, sending]);
+
   return (
     <section className="chat" data-screen-label={`04 Chat / ${phase}`} data-clarity-mask="true">
       <div className="t t-user">
@@ -2901,6 +2917,7 @@ function ChatResults({
           </div>
         </div>
       ) : null}
+      <div ref={chatTailRef} className="chat-scroll-anchor" aria-hidden="true" />
     </section>
   );
 }
