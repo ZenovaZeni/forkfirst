@@ -1766,20 +1766,26 @@ function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onSt
       </div>
 
       <footer className="footer">
-        <button className="left brand-home" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
-          <Logo />
-          <Wordmark />
+        <div className="footer-brand">
+          <button className="footer-lockup brand-home" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
+            <Logo />
+            <Wordmark />
+          </button>
           <span className="footer-meta">Built by Josh Douglas · Powered by Zenova AI · MIT</span>
-        </button>
-        <div className="right">
-          <button type="button" onClick={() => setShowAbout(true)}>About</button>
-          <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
-          <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a>
-          <a href="/security">Security</a>
-          <a href="/privacy">Privacy</a>
-          <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
-          <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
         </div>
+        <nav className="footer-links" aria-label="Footer">
+          <div className="footer-link-group">
+            <button type="button" onClick={() => setShowAbout(true)}>About</button>
+            <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
+            <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a>
+          </div>
+          <div className="footer-link-group">
+            <a href="/security">Security</a>
+            <a href="/privacy">Privacy</a>
+            <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
+            <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
+          </div>
+        </nav>
       </footer>
       {showAbout ? <AboutModal onClose={() => setShowAbout(false)} /> : null}
     </div>

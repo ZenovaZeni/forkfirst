@@ -1462,17 +1462,42 @@ input, textarea, select { font: inherit; color: inherit; }
 
 /* footer */
 .footer {
-  padding: 40px clamp(20px, 4vw, 56px);
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  padding: 34px clamp(20px, 4vw, 56px) 44px;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr);
+  align-items: start;
+  gap: clamp(24px, 5vw, 64px);
   border-top: 1px solid var(--landing-line);
-  font-size: 13px; color: color-mix(in srgb, var(--landing-ink) 72%, var(--muted));
-  max-width: 1240px; margin: 0 auto;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--landing-ink) 72%, var(--muted));
+  max-width: 1240px;
+  margin: 0 auto;
 }
-.footer .left { display: flex; align-items: center; gap: 10px; }
-.footer .right { display: flex; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
+.footer-brand {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.footer-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+}
 .footer .brand-name {
   background: transparent;
   color: var(--landing-ink);
+}
+.footer-links {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+.footer-link-group {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .footer .footer-meta,
 .footer a,
@@ -1480,7 +1505,8 @@ input, textarea, select { font: inherit; color: inherit; }
   color: color-mix(in srgb, var(--landing-ink) 68%, var(--muted));
 }
 .footer .footer-meta {
-  margin-left: 12px;
+  max-width: 300px;
+  line-height: 1.5;
 }
 .footer button {
   border: 0;
@@ -6296,6 +6322,15 @@ input, textarea, select { font: inherit; color: inherit; }
   .token-row { grid-template-columns: 1fr; }
   .token-cell { border-right: 0; border-bottom: 1px solid var(--line); }
   .verdict, .cta-strip, .handoff-grid, .lib-grid, .build-pack-grid { grid-template-columns: 1fr; }
+  .footer {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .footer-links,
+  .footer-link-group {
+    justify-items: start;
+    justify-content: flex-start;
+  }
   .app-shell { grid-template-columns: 1fr; }
   .sidebar, .right-rail { display: none; }
   .repo { grid-template-columns: 1fr; }
@@ -6311,5 +6346,11 @@ input, textarea, select { font: inherit; color: inherit; }
   .foundation-type-card { min-height: 0; padding: 18px; }
   .packet-files {
     grid-template-columns: 1fr;
+  }
+  .footer {
+    padding-bottom: 36px;
+  }
+  .footer-link-group {
+    gap: 12px 18px;
   }
 }
