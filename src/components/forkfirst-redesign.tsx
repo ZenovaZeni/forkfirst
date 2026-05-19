@@ -150,6 +150,39 @@ const LANDING_TESTIMONIALS: TestimonialItem[] = [
   }
 ];
 
+const LANDING_FOUNDATION_TYPES = [
+  {
+    title: "SaaS Dashboard",
+    body: "Find foundations with auth, billing, settings, dashboard layouts, and admin basics.",
+    prompt: "I want to build a SaaS dashboard. Find open-source foundations with auth, settings, dashboard layouts, billing or subscription structure, and clean UI patterns that an AI builder can customize."
+  },
+  {
+    title: "Client Portal",
+    body: "Find foundations with login, file sharing, user dashboards, messages, and admin controls.",
+    prompt: "I want to build a client portal. Find open-source foundations with login, file sharing, user dashboards, messaging or notifications, admin controls, and a structure an AI builder can customize."
+  },
+  {
+    title: "AI Tool",
+    body: "Find foundations with chat UI, API routes, prompt flows, usage handling, and settings.",
+    prompt: "I want to build an AI tool. Find open-source foundations with chat UI, API routes, prompt flows, usage tracking or key settings, and clean app structure that an AI builder can customize."
+  },
+  {
+    title: "Directory",
+    body: "Find foundations with listings, filters, search, profiles, and submission flows.",
+    prompt: "I want to build a directory app. Find open-source foundations with listings, filters, search, profiles, submissions, admin review, and a clean layout an AI builder can customize."
+  },
+  {
+    title: "Booking App",
+    body: "Find foundations with calendars, forms, scheduling, confirmations, and user flows.",
+    prompt: "I want to build a booking app. Find open-source foundations with calendars, scheduling, forms, confirmation flows, availability logic, and user/admin views an AI builder can customize."
+  },
+  {
+    title: "Marketplace",
+    body: "Find foundations with users, listings, payments, buyer/seller flows, and admin views.",
+    prompt: "I want to build a marketplace. Find open-source foundations with users, listings, buyer and seller flows, payments or checkout patterns, admin tools, and a structure an AI builder can customize."
+  }
+] as const;
+
 function isScreen(value: unknown): value is Screen {
   return typeof value === "string" && SCREENS.includes(value as Screen);
 }
@@ -1411,12 +1444,17 @@ function AboutModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Landing({ go }: { go: (screen: Screen) => void }) {
+function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onStartWithPrompt: (prompt: string) => void }) {
   const [showAbout, setShowAbout] = useState(false);
 
   function startApp(source: string) {
     trackForkFirstEvent("landing_try_free_clicked", { source });
     go("app");
+  }
+
+  function startFoundationType(title: string, prompt: string) {
+    trackForkFirstEvent("landing_foundation_type_clicked", { title });
+    onStartWithPrompt(prompt);
   }
   const packetTabs = [
     {
@@ -1597,6 +1635,33 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
               <strong>{title}</strong>
               <p>{body}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section foundation-types-section" id="foundation-types">
+        <div className="section-head">
+          <span className="eyebrow">Popular foundation types</span>
+          <h2>Not sure what to search for? Start with a <span className="accent-word">common build shape.</span></h2>
+          <p>
+            Pick a familiar app type and ForkFirst will start the chat with a stronger prompt. You can still edit it
+            before checking GitHub.
+          </p>
+        </div>
+        <div className="foundation-type-grid" aria-label="Popular foundation types">
+          {LANDING_FOUNDATION_TYPES.map((item) => (
+            <button
+              key={item.title}
+              className="foundation-type-card"
+              type="button"
+              onClick={() => startFoundationType(item.title, item.prompt)}
+            >
+              <strong>{item.title}</strong>
+              <span>{item.body}</span>
+              <em>
+                Find foundations like this <ArrowRight size={14} />
+              </em>
+            </button>
           ))}
         </div>
       </section>
@@ -5348,7 +5413,24 @@ export function ForkFirstRedesignApp() {
   if (screen === "landing") {
     return (
       <main className="root" data-theme={theme} data-accent={accent}>
-        <Landing go={go} />
+        <Landing
+          go={go}
+          onStartWithPrompt={(value) => {
+            setPrompt(value);
+            setResult(null);
+            setSelectedStarterRepo(null);
+            setActiveBuildPack(null);
+            setBrand(null);
+            setFoundationDraft(null);
+            setFollowUps([]);
+            setActiveChatId(null);
+            setError(null);
+            setLoading(false);
+            setScreen("app");
+            window.scrollTo({ top: 0 });
+            document.querySelector(".workspace")?.scrollTo({ top: 0 });
+          }}
+        />
       </main>
     );
   }

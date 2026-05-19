@@ -8,6 +8,7 @@ type AnalyticsEvent =
   | "results_returned"
   | "repo_details_opened"
   | "github_star_clicked"
+  | "landing_foundation_type_clicked"
   | "starter_repo_selected"
   | "handoff_started"
   | "handoff_zip_downloaded"
