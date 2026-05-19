@@ -4870,6 +4870,16 @@ input, textarea, select { font: inherit; color: inherit; }
 .packs-summary .lbl { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; color: color-mix(in srgb, var(--accent-contrast) 68%, transparent); }
 .packs-summary .val { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.025em; }
 .packs-summary .val.accent { color: var(--accent-contrast); }
+[data-theme="dark"] .packs-summary {
+  color: #FFFFFF;
+}
+[data-theme="dark"] .packs-summary .lbl {
+  color: color-mix(in srgb, #FFFFFF 72%, transparent);
+}
+[data-theme="dark"] .packs-summary .val,
+[data-theme="dark"] .packs-summary .val.accent {
+  color: #FFFFFF;
+}
 .packs .prompt-packs-panel {
   margin: 0;
   padding: 0;

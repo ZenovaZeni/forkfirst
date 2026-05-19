@@ -1076,22 +1076,25 @@ body {
 
 .topbar-chat-drawer {
   position: fixed;
-  top: 62px;
-  right: max(12px, env(safe-area-inset-right));
+  left: max(10px, env(safe-area-inset-left));
+  right: max(10px, env(safe-area-inset-right));
+  bottom: calc(76px + env(safe-area-inset-bottom));
   z-index: 59;
-  width: min(360px, calc(100vw - 24px));
-  max-height: min(560px, calc(100dvh - 86px));
+  width: auto;
+  max-width: 560px;
+  max-height: min(68dvh, 620px);
   display: grid;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 10px 14px 14px;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 22px 22px 18px 18px;
   background: color-mix(in srgb, var(--paper) 98%, transparent);
   color: var(--ink);
   box-shadow: var(--shadow-2);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  animation: topbarChatIn 160ms ease-out;
+  animation: mobileChatSheetIn 180ms ease-out;
   touch-action: pan-y;
 }
 
@@ -1104,6 +1107,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 2px;
 }
 
 .topbar-chat-drawer-head > div {
@@ -1128,33 +1132,36 @@ body {
 }
 
 .topbar-new-chat {
-  min-height: 42px;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border: 0;
-  border-radius: 13px;
+  border-radius: 15px;
   background: var(--accent);
-  color: var(--accent-ink);
+  color: #FFFFFF;
   font-weight: 800;
 }
 
 .topbar-chat-list {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   overflow: auto;
-  padding-right: 2px;
+  padding: 0 2px 2px;
 }
 
 .topbar-chat-list button {
   display: grid;
-  gap: 3px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   width: 100%;
-  padding: 11px 12px;
-  border: 1px solid transparent;
-  border-radius: 13px;
-  background: transparent;
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--paper-2);
   color: var(--ink);
   text-align: left;
 }
@@ -1169,13 +1176,14 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 750;
 }
 
 .topbar-chat-list button small {
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 12px;
+  justify-self: end;
 }
 
 .icon-btn.active {
@@ -1184,14 +1192,14 @@ body {
   color: var(--accent);
 }
 
-@keyframes topbarChatIn {
+@keyframes mobileChatSheetIn {
   from {
     opacity: 0;
-    transform: translateX(12px) scale(0.98);
+    transform: translateY(18px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
