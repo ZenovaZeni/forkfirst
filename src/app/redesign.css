@@ -2671,7 +2671,12 @@ input, textarea, select { font: inherit; color: inherit; }
   gap: 10px;
 }
 .lib-card .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.lib-card .nm { font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
+.lib-card .nm {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
 .lib-card .d {
   font-size: 13.5px;
   color: var(--ink-2);
