@@ -1398,9 +1398,9 @@ function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onSt
       title: "Starter repo",
       filename: "STARTER_REPO.md",
       lines: [
-        { text: "git clone https://github.com/ganainy/VibeHired-ai jobshelf", tone: "command" },
+        { text: "git clone [selected starter repo] your-app", tone: "command" },
         { text: "Foundation mode: clone/fork candidate" },
-        { text: "Keep: Kanban board, job status model, resume workflow" },
+        { text: "Keep: working routes, data model, setup patterns" },
         { text: "First move: inspect setup, license, data model, and app routes", tone: "accent" }
       ]
     },
@@ -1409,10 +1409,10 @@ function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onSt
       title: "Product brief",
       filename: "PRD.md",
       lines: [
-        { text: "Product: JobShelf" },
-        { text: "Audience: solo job seekers who want local-first tracking" },
-        { text: "Core promise: remember every application without another SaaS account" },
-        { text: "MVP: pipeline board, notes, reminders, CSV export", tone: "accent" }
+        { text: "Product: your app, shaped from the chosen foundation" },
+        { text: "Audience: the specific user you want to serve first" },
+        { text: "Core promise: keep the useful foundation, replace the generic parts" },
+        { text: "MVP: one workflow, one saved outcome, clean handoff notes", tone: "accent" }
       ]
     },
     {
@@ -1421,8 +1421,8 @@ function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onSt
       filename: "BUILD_PLAN.md",
       lines: [
         { text: "Phase 0: run the starter repo and map existing flows" },
-        { text: "Phase 1: replace sample data with job application entities" },
-        { text: "Phase 2: add reminders, search, export, and empty states" },
+        { text: "Phase 1: replace sample data with your product entities" },
+        { text: "Phase 2: add the first workflow, search, persistence, and empty states" },
         { text: "Verify: lint, typecheck, smoke test, mobile pass", tone: "accent" }
       ]
     },
@@ -1680,28 +1680,7 @@ function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onSt
               build plan, brand direction, and builder rules. Your builder starts with <span className="accent-key">working code, not a blank page.</span>
             </p>
           </div>
-          <div className="foundation-visual" aria-label="Foundation packet and example builder outcome">
-            <div className="product-mock">
-              <div className="product-top">
-                <strong>JobShelf</strong>
-                <span>Example builder outcome</span>
-              </div>
-              <div className="kanban-preview">
-                {["Applied", "Interview", "Offer"].map((column) => (
-                  <div key={column} className="kanban-col">
-                    <span>{column}</span>
-                    <i />
-                    <i />
-                  </div>
-                ))}
-              </div>
-              <div className="product-actions">
-                <span>CSV export</span>
-                <span>Reminders</span>
-                <span>Local data</span>
-              </div>
-            </div>
-            <div className="foundation-arrow">first build ← repo + prompt + files</div>
+          <div className="foundation-visual" aria-label="Foundation packet preview">
             <div className="packet-window">
               <div className="packet-files" role="tablist" aria-label="Sample Build Pack files">
                 {packetTabs.map(({ kind, title, filename }) => (
