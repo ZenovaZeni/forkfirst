@@ -2920,9 +2920,9 @@ input, textarea, select { font: inherit; color: inherit; }
   min-width: 0;
 }
 .saved-handoff-card {
-  min-height: 398px;
-  grid-template-rows: 72px 44px 74px 72px 46px;
-  align-content: stretch;
+  min-height: 0;
+  grid-template-rows: auto minmax(44px, auto) auto auto auto;
+  align-content: start;
   container-type: inline-size;
 }
 .build-pack-card.empty {
@@ -3048,8 +3048,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 @container (max-width: 360px) {
   .saved-handoff-card {
-    min-height: 444px;
-    grid-template-rows: 72px 44px 74px 72px auto;
+    grid-template-rows: auto minmax(44px, auto) auto auto auto;
   }
   .saved-handoff-card .pack-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
