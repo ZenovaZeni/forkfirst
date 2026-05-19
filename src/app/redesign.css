@@ -2450,8 +2450,9 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .handoff-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.95fr);
+  grid-template-columns: minmax(0, 58fr) minmax(390px, 42fr);
   gap: 20px;
+  align-items: start;
 }
 .handoff-doc {
   background: var(--paper-2);
@@ -2491,14 +2492,16 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--ink-2);
-  max-height: 540px;
-  overflow-y: auto;
+  height: clamp(500px, calc(100dvh - 290px), 640px);
+  overflow: hidden;
 }
 .handoff-doc .doc-body textarea {
   display: block;
   width: 100%;
-  min-height: 540px;
-  resize: vertical;
+  height: 100%;
+  min-height: 0;
+  resize: none;
+  overflow: auto;
   border: 0;
   outline: none;
   background: transparent;
@@ -2553,13 +2556,27 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: 0;
 }
 
-.handoff-side { display: grid; gap: 12px; align-content: start; }
-.handoff-side .card { padding: 18px; }
+.handoff-side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+.handoff-side .card {
+  padding: 16px;
+}
+.handoff-side .card:nth-child(1),
+.handoff-side .card:nth-child(2),
+.handoff-side .quality-card,
+.handoff-side .launch-card,
+.handoff-side .version-card {
+  grid-column: 1 / -1;
+}
 .handoff-side .card h3 {
   font-family: var(--font-display); font-weight: 600; font-size: 17px;
   letter-spacing: -0.02em; margin: 0 0 6px;
 }
-.handoff-side .card p { font-size: 13.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.5; }
+.handoff-side .card p { font-size: 13px; color: var(--muted); margin: 0 0 10px; line-height: 1.45; }
 .handoff-side .file-list { display: grid; gap: 4px; }
 .handoff-side .file-list .f {
   display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px;
@@ -2586,7 +2603,7 @@ input, textarea, select { font: inherit; color: inherit; }
 [data-theme="dark"] .handoff-side .file-list .f.accent .ico { color: var(--paper); }
 .handoff-side .target-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 .handoff-side .target {
@@ -2599,6 +2616,8 @@ input, textarea, select { font: inherit; color: inherit; }
   font-weight: 600;
   cursor: pointer;
   display: grid; gap: 4px;
+  align-content: center;
+  min-height: 68px;
 }
 .handoff-side .target small { font-size: 9.5px; color: var(--muted); font-weight: 500; }
 .handoff-side .target.is-active {

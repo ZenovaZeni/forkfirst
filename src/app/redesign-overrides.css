@@ -399,31 +399,55 @@ body {
 }
 
 .app-shell .handoff {
-  max-width: 1180px;
+  max-width: 1240px;
   padding-top: clamp(18px, 2vw, 30px);
 }
 
 .app-shell .handoff-grid {
-  grid-template-columns: minmax(560px, 1.48fr) minmax(360px, 0.92fr);
+  grid-template-columns: minmax(0, 58fr) minmax(400px, 42fr);
   align-items: start;
 }
 
 .app-shell .handoff-doc .doc-body,
 .app-shell .handoff-doc .doc-body textarea {
-  min-height: min(720px, calc(100dvh - 250px));
-}
-
-.app-shell .handoff-side .target-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.app-shell .handoff-side .target {
-  align-content: center;
-  min-height: 68px;
+  height: clamp(520px, calc(100dvh - 286px), 660px);
+  min-height: 0;
 }
 
 .app-shell .handoff-side .target span:not(.builder-logo) {
   display: block;
+}
+
+@media (max-width: 1120px) {
+  .app-shell .handoff {
+    max-width: 900px;
+  }
+
+  .app-shell .handoff-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .handoff-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .handoff-side .card:nth-child(1),
+  .app-shell .handoff-side .card:nth-child(2),
+  .app-shell .handoff-side .quality-card,
+  .app-shell .handoff-side .launch-card,
+  .app-shell .handoff-side .version-card {
+    grid-column: auto;
+  }
+
+  .app-shell .handoff-side .card:nth-child(1),
+  .app-shell .handoff-side .card:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .handoff-doc .doc-body,
+  .app-shell .handoff-doc .doc-body textarea {
+    height: min(600px, calc(100dvh - 260px));
+  }
 }
 
 .file-preview-layer {
@@ -744,9 +768,18 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .app-shell .handoff-side {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell .handoff-side .card {
+    grid-column: auto;
+  }
+
   .app-shell .handoff-doc .doc-body,
   .app-shell .handoff-doc .doc-body textarea {
-    min-height: min(560px, calc(100dvh - 260px));
+    height: min(560px, calc(100dvh - 260px));
+    min-height: 0;
   }
 
   .file-preview-layer {
