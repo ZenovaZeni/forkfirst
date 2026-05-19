@@ -1324,3 +1324,26 @@ body {
   width: 40px;
   min-width: 40px;
 }
+
+.lib-card .nm {
+  color: var(--ink);
+}
+
+.lib-copy-clone {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--paper-2) 86%, var(--paper));
+  color: var(--muted);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.lib-copy-clone:hover {
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--line));
+  background: color-mix(in srgb, var(--accent-soft) 42%, var(--paper-2));
+  color: var(--accent);
+}

@@ -862,6 +862,11 @@ function RepoSiteLink({ url, className = "btn ghost" }: { url: string | null | u
   );
 }
 
+function cloneCommandForRepo(repo: Pick<ClassifiedRepo, "url" | "fullName">) {
+  const safeUrl = safeExternalUrl(repo.url);
+  return `git clone ${safeUrl ?? `https://github.com/${repo.fullName}`}`;
+}
+
 function classifiedFromTrendingRepo(repo: TrendingRepo, category?: TrendingCategory): ClassifiedRepo {
   const [owner = "", name = repo.fullName] = repo.fullName.split("/");
   return {
@@ -3899,13 +3904,15 @@ function LibraryScreen({
   savedRepoBoards,
   onOpen,
   onUseRepo,
-  onSetBoard
+  onSetBoard,
+  onCopyClone
 }: {
   savedRepos: ClassifiedRepo[];
   savedRepoBoards: Record<string, string>;
   onOpen: (repo: ClassifiedRepo) => void;
   onUseRepo: (repo: ClassifiedRepo) => void;
   onSetBoard: (repo: ClassifiedRepo, board: string) => void;
+  onCopyClone: (repo: ClassifiedRepo) => void;
 }) {
   const [query, setQuery] = useState("");
   const filteredRepos = savedRepos.filter((repo) => includesSmartSearch([
@@ -3940,6 +3947,15 @@ function LibraryScreen({
           <article key={repo.fullName} className="lib-card">
             <div className="top">
               <button className="nm" type="button" onClick={() => onOpen(repo)}>{repo.fullName}</button>
+              <button
+                className="lib-copy-clone"
+                type="button"
+                onClick={() => onCopyClone(repo)}
+                aria-label={`Copy clone command for ${repo.fullName}`}
+                title="Copy clone command"
+              >
+                <Copy size={14} />
+              </button>
             </div>
             <div className="d">{repoSummary(repo)}</div>
             <div className="row">
@@ -5459,6 +5475,7 @@ export function ForkFirstRedesignApp() {
                   }}
                   onUseRepo={(repo) => selectFoundationDraft(foundationFromClassifiedRepo(repo))}
                   onSetBoard={setRepoBoard}
+                  onCopyClone={(repo) => copyText(cloneCommandForRepo(repo))}
                 />
               ) : null}
               {screen === "settings" ? (

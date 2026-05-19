@@ -2928,7 +2928,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .lib-card .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .lib-card .nm {
-  color: var(--accent);
+  color: var(--ink);
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 700;
