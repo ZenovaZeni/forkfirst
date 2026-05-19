@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -245,10 +245,39 @@ const BUILDER_LOGOS = [
 type BrandAnswers = {
   name: string;
   audience: string;
+  productGoal: string;
+  firstMilestone: string;
+  keepFromRepo: string;
+  replaceFromRepo: string;
+  addToRepo: string;
+  designNotes: string;
   vibe: string;
   color: string;
   notList: string[];
 };
+
+const DEFAULT_BRAND_ANSWERS: BrandAnswers = {
+  name: "",
+  audience: "",
+  productGoal: "",
+  firstMilestone: "",
+  keepFromRepo: "",
+  replaceFromRepo: "",
+  addToRepo: "",
+  designNotes: "",
+  vibe: "calm",
+  color: "#2647F0",
+  notList: ["User accounts", "Email digests"]
+};
+
+function normalizeBrandAnswers(brand: Partial<BrandAnswers> | null | undefined): BrandAnswers | null {
+  if (!brand) return null;
+  return {
+    ...DEFAULT_BRAND_ANSWERS,
+    ...brand,
+    notList: Array.isArray(brand.notList) ? brand.notList : DEFAULT_BRAND_ANSWERS.notList
+  };
+}
 
 function buildPackPreferences(brand: BrandAnswers | null, followUps: ChatTurn[] = []): BuildPackPreferences | undefined {
   const chatContext = followUps
@@ -260,8 +289,14 @@ function buildPackPreferences(brand: BrandAnswers | null, followUps: ChatTurn[] 
   return {
     productName: brand?.name,
     audience: brand?.audience,
+    productGoal: brand?.productGoal,
+    firstMilestone: brand?.firstMilestone,
+    keepFromRepo: brand?.keepFromRepo,
+    replaceFromRepo: brand?.replaceFromRepo,
+    addToRepo: brand?.addToRepo,
     vibe: brand?.vibe,
     accentColor: brand?.color,
+    designNotes: brand?.designNotes,
     skipInV1: brand?.notList,
     chatContext: chatContext || undefined
   };
@@ -1964,36 +1999,71 @@ function SavingsRing({ savedBuildPackCount, savedRepoCount }: { savedBuildPackCo
   );
 }
 
-function useLongPress(onLongPress: () => void, delay = 520) {
+function useLongPress(onLongPress: () => void, delay = 380) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firedRef = useRef(false);
+  const startPointRef = useRef<{ x: number; y: number } | null>(null);
 
   const clear = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = null;
+    startPointRef.current = null;
   }, []);
 
-  const start = useCallback(() => {
+  const startAt = useCallback((x: number, y: number) => {
     firedRef.current = false;
     clear();
+    startPointRef.current = { x, y };
     timerRef.current = setTimeout(() => {
       firedRef.current = true;
       onLongPress();
     }, delay);
   }, [clear, delay, onLongPress]);
 
+  const startPointer = useCallback((event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "mouse") return;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    startAt(event.clientX, event.clientY);
+  }, [startAt]);
+
+  const startTouch = useCallback((event: TouchEvent<HTMLElement>) => {
+    if (window.PointerEvent) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    startAt(touch.clientX, touch.clientY);
+  }, [startAt]);
+
+  const move = useCallback((x: number, y: number) => {
+    const start = startPointRef.current;
+    if (!start) return;
+    if (Math.hypot(x - start.x, y - start.y) > 18) clear();
+  }, [clear]);
+
+  const movePointer = useCallback((event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "mouse") return;
+    move(event.clientX, event.clientY);
+  }, [move]);
+
+  const moveTouch = useCallback((event: TouchEvent<HTMLElement>) => {
+    if (window.PointerEvent) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    move(touch.clientX, touch.clientY);
+  }, [move]);
+
   const wasLongPress = useCallback(() => firedRef.current, []);
   const preventContextMenu = useCallback((event: MouseEvent<HTMLElement>) => {
-    if (firedRef.current) event.preventDefault();
+    event.preventDefault();
   }, []);
 
   return {
     bind: {
-      onPointerDown: start,
-      onPointerLeave: clear,
+      onPointerDown: startPointer,
+      onPointerMove: movePointer,
       onPointerUp: clear,
       onPointerCancel: clear,
-      onTouchStart: start,
+      onTouchStart: startTouch,
+      onTouchMove: moveTouch,
       onTouchEnd: clear,
       onTouchCancel: clear,
       onContextMenu: preventContextMenu
@@ -3192,13 +3262,7 @@ function ChatResults({
 
 function BrandingInterview({ onComplete }: { onComplete: (brand: BrandAnswers) => void }) {
   const [step, setStep] = useState(1);
-  const [brand, setBrand] = useState<BrandAnswers>({
-    name: "",
-    audience: "",
-    vibe: "calm",
-    color: "#2647F0",
-    notList: ["User accounts", "Email digests"]
-  });
+  const [brand, setBrand] = useState<BrandAnswers>(DEFAULT_BRAND_ANSWERS);
 
   function done() {
     onComplete({ ...brand, name: brand.name.trim() || "Untitled app" });
@@ -4779,7 +4843,7 @@ export function ForkFirstRedesignApp() {
         setResult(restoredChat.result);
         setSelectedStarterRepo(workspace?.selectedStarterRepo ?? restoredChat.result.repos[0] ?? null);
         setPrompt(workspace?.prompt || restoredChat.messages.find((message) => message.role === "user")?.content || restoredChat.result.prompt || "");
-        setBrand(workspace?.brand ?? null);
+        setBrand(normalizeBrandAnswers(workspace?.brand));
         setFollowUps(workspace?.followUps ?? []);
         setScreen(workspace?.screen ?? "results");
       } else if (isScreen(storedScreen) && !["landing", "loading", "results", "more", "branding", "generating", "ready"].includes(storedScreen)) {
@@ -4907,7 +4971,7 @@ export function ForkFirstRedesignApp() {
     setActiveBuildPack(null);
     setFoundationDraft(null);
     setPrompt(workspace?.prompt || chat.messages.find((message) => message.role === "user")?.content || chat.result?.prompt || "");
-    setBrand(workspace?.brand ?? null);
+    setBrand(normalizeBrandAnswers(workspace?.brand));
     setError(null);
     setLoading(false);
     setFollowUps(restoredFollowUps);
@@ -5030,7 +5094,7 @@ export function ForkFirstRedesignApp() {
   const openBuildPack = useCallback((pack: SavedBuildPack) => {
     setActiveBuildPack(pack);
     setResult(pack.workspace?.result ?? null);
-    setBrand(pack.workspace?.brand ?? null);
+    setBrand(normalizeBrandAnswers(pack.workspace?.brand));
     setSelectedStarterRepo(pack.workspace?.selectedStarterRepo ?? null);
     setFollowUps(pack.workspace?.followUps ?? []);
     if (pack.workspace?.promptPackState) {

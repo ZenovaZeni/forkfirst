@@ -74,6 +74,12 @@ export type SavedBuildPackWorkspaceSnapshot = {
   brand: {
     name: string;
     audience: string;
+    productGoal: string;
+    firstMilestone: string;
+    keepFromRepo: string;
+    replaceFromRepo: string;
+    addToRepo: string;
+    designNotes: string;
     vibe: string;
     color: string;
     notList: string[];
@@ -368,6 +374,12 @@ function normalizeBuildPackWorkspace(value: unknown): SavedBuildPackWorkspaceSna
     brand: workspace.brand && typeof workspace.brand === "object" ? {
       name: typeof workspace.brand.name === "string" ? workspace.brand.name : "",
       audience: typeof workspace.brand.audience === "string" ? workspace.brand.audience : "",
+      productGoal: typeof workspace.brand.productGoal === "string" ? workspace.brand.productGoal : "",
+      firstMilestone: typeof workspace.brand.firstMilestone === "string" ? workspace.brand.firstMilestone : "",
+      keepFromRepo: typeof workspace.brand.keepFromRepo === "string" ? workspace.brand.keepFromRepo : "",
+      replaceFromRepo: typeof workspace.brand.replaceFromRepo === "string" ? workspace.brand.replaceFromRepo : "",
+      addToRepo: typeof workspace.brand.addToRepo === "string" ? workspace.brand.addToRepo : "",
+      designNotes: typeof workspace.brand.designNotes === "string" ? workspace.brand.designNotes : "",
       vibe: typeof workspace.brand.vibe === "string" ? workspace.brand.vibe : "",
       color: typeof workspace.brand.color === "string" ? workspace.brand.color : "",
       notList: Array.isArray(workspace.brand.notList) ? workspace.brand.notList.filter((item): item is string => typeof item === "string") : []
