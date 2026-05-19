@@ -2652,7 +2652,7 @@ input, textarea, select { font: inherit; color: inherit; }
   line-height: 1.55;
 }
 .handoff-pack-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .handoff-empty-pack {
   min-height: 180px;
