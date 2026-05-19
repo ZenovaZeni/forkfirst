@@ -774,8 +774,8 @@ body {
   }
 
   .mobile-nav button {
-    min-height: 50px;
-    grid-template-rows: 30px 12px;
+    min-height: 54px;
+    grid-template-rows: 38px 12px;
     align-content: center;
     align-items: center;
     gap: 2px;
@@ -794,7 +794,7 @@ body {
     align-self: center;
     margin-top: 0;
     gap: 2px;
-    grid-template-rows: 30px;
+    grid-template-rows: 38px;
     color: var(--accent);
     font-size: 11px;
   }
@@ -805,8 +805,8 @@ body {
   }
 
   .mobile-nav .mobile-new-fab .fab-icon {
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
     display: grid;
     place-items: center;
     border-radius: 999px;
@@ -817,8 +817,8 @@ body {
   }
 
   .mobile-nav .mobile-new-fab .fab-icon svg {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
   }
 
   [data-theme="dark"] .mobile-nav .mobile-new-fab .fab-icon {
