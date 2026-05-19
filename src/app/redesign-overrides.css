@@ -396,7 +396,7 @@ body {
 .target.is-active .builder-logo,
 .send-btn:hover .builder-logo {
   border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
-  background: color-mix(in srgb, var(--accent) 12%, var(--paper));
+  background: #fff;
 }
 
 .app-shell .handoff {
@@ -405,7 +405,7 @@ body {
 }
 
 .app-shell .handoff-grid {
-  grid-template-columns: minmax(0, 58fr) minmax(400px, 42fr);
+  grid-template-columns: minmax(0, calc(40% - 7px)) minmax(0, calc(60% - 7px));
   align-items: start;
 }
 

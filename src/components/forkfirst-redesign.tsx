@@ -33,6 +33,7 @@ import { buildProjectBuildPack, type BuildPackPreferences, type BuildTarget } fr
 import { buildExportMarkdown } from "@/lib/export/report";
 import { decodeHandoff } from "@/lib/handoff/share-url";
 import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-status";
+import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
 import { defaultBoard, repoBoards } from "@/lib/repos/boards";
 import {
   buildIdeaCheckRequestBody,
@@ -73,11 +74,12 @@ import {
 import type { TrendingRepo } from "@/app/api/trending/route";
 import type { IdeaCheckResult } from "@/types/idea-check";
 import type { ResearchChat } from "@/types/research-chat";
+import type { ChatIntent, ChatUiAction } from "@/lib/research-chat/types";
 import { trackForkFirstEvent } from "@/lib/analytics/events";
 
 type Screen = "landing" | "app" | "loading" | "results" | "more" | "branding" | "generating" | "ready" | "handoff" | "library" | "settings" | "trending" | "packs";
 type Theme = "light" | "dark";
-type ChatTurn = { role: "user" | "assistant"; content: string };
+type ChatTurn = { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent };
 type SettingsTab = "appearance" | "keys" | "usage" | "install";
 const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
@@ -783,39 +785,10 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult, messa
 
   if (ADD_ON_INTENT_RE.test(lower)) {
     const priorAddOnCount = messages.filter((turn) => turn.role === "user" && ADD_ON_INTENT_RE.test(turn.content.toLowerCase())).length;
-    if (priorAddOnCount > 0) {
-      return formatChatFallback("Yes - different angle this time.", [
-        {
-          heading: "Add a sharper decision moment",
-          items: [
-            "After the repo results, ask whether the user wants to clone this, study it, or keep searching.",
-            "Let them mark what the AI builder should keep, replace, and ignore before generating the handoff.",
-            "Show a tiny confidence note explaining why this repo is strong enough to start from."
-          ]
-        },
-        {
-          heading: "Add proof before commitment",
-          items: [
-            "Surface any project website from GitHub metadata.",
-            "Call out missing license, weak docs, or setup uncertainty in plain English.",
-            "Offer a one-click question like: 'What would my builder do first with this repo?'"
-          ]
-        },
-        {
-          heading: "Keep it founder-friendly",
-          items: [
-            "Avoid technical file names until the handoff step.",
-            "Use words like starting point, working foundation, and give this to your AI builder.",
-            "Make the next action obvious instead of making the page feel like a dashboard."
-          ]
-        }
-      ], `For this report, I would pressure-test ${best.fullName}: does it save the hardest part of the build, or is it only inspiration?`);
-    }
-    return formatChatFallback("Yes. Add around the gap, not around the repo.", [
-      { heading: "Best additions", items: ["A better first-run flow than the repo has.", "Saved work/history so users can return to the same idea.", "A plain-English comparison that says what to keep, replace, or ignore.", "A one-click builder handoff so users do not have to figure out files manually."] },
-      { heading: "Avoid for v1", items: ["Do not copy every feature from the starter repo.", "Do not add accounts, billing, teams, or dashboards until the core workflow works.", "Do not treat an awesome list, SDK, or scraper as the whole product unless it actually has an app flow."] },
-      { heading: "Project sites found", items: projectSites.length ? projectSites.map((site) => `${site.name}: ${site.url}`) : ["No project website links are in the current top repo metadata."] }
-    ], `Use ${best.fullName} for leverage, then make the v1 outcome clearer than the raw repo.`, "I would not rush into adding more features just because a repo makes them possible. The smarter move is to add the pieces that make your version clearer than the raw project.");
+    return buildConversationalRepoFallback(message, repos, {
+      idea: result.prompt,
+      repeated: priorAddOnCount > 0
+    });
   }
 
   if (lower.includes("build") || lower.includes("mvp") || lower.includes("handoff")) {
@@ -826,17 +799,7 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult, messa
     ], "Create the AI-builder handoff and answer a few product details so the packet becomes specific.");
   }
 
-  return formatChatFallback("Short answer", [
-    {
-      heading: "My take",
-      items: [
-        "I can help with that, and I will keep the current repo report in the background instead of repeating it every time.",
-        `${best.fullName} is the strongest current lead, but treat it as evidence to inspect, not a final decision.`
-      ]
-    },
-    { heading: "Current repo context", items: repos.map((repo, index) => `${index + 1}. ${repo.fullName} - ${repo.score.total}% fit`) },
-    { heading: "What I can help with next", items: ["Critique exact wording.", "Compare the repos.", "Find more options.", "Suggest features.", "Create the AI-builder handoff."] }
-  ], "Send the exact thing you want feedback on, or tell me which repo you are leaning toward.");
+  return buildConversationalRepoFallback(message, repos, { idea: result.prompt });
 }
 
 type TrendingApiState =
@@ -2899,6 +2862,160 @@ function CompactRepo({
   );
 }
 
+function reposByName(result: IdeaCheckResult | null | undefined) {
+  return new Map((result?.repos ?? []).map((repo) => [repo.fullName, repo]));
+}
+
+function InlineChatActions({
+  actions,
+  actionResult,
+  currentResult,
+  savedRepos,
+  idea,
+  onOpenRepo,
+  onSaveRepo,
+  onSelectStarter,
+  onStartBranding,
+  onFollowUp
+}: {
+  actions?: ChatUiAction[];
+  actionResult?: IdeaCheckResult;
+  currentResult: IdeaCheckResult;
+  savedRepos: ClassifiedRepo[];
+  idea: string;
+  onOpenRepo: (repo: ClassifiedRepo) => void;
+  onSaveRepo: (repo: ClassifiedRepo) => void;
+  onSelectStarter: (repo: ClassifiedRepo) => void;
+  onStartBranding: () => void;
+  onFollowUp: (message: string) => void;
+}) {
+  if (!actions?.length) return null;
+
+  const lookup = reposByName(actionResult ?? currentResult);
+  const findRepo = (name: string | null | undefined) => (name ? lookup.get(name) : undefined);
+
+  return (
+    <div className="chat-actions">
+      {actions.map((action, index) => {
+        if (action.type === "repo_cards") {
+          const repos = action.repoFullNames.map(findRepo).filter((repo): repo is ClassifiedRepo => Boolean(repo));
+          if (!repos.length) return null;
+          return (
+            <div className="chat-action-block" key={`${action.type}-${index}`}>
+              {action.title ? <div className="others-label"><span>{action.title}</span></div> : null}
+              {repos.slice(0, 3).map((repo) => (
+                <CompactRepo
+                  key={repo.fullName}
+                  repo={repo}
+                  idea={idea}
+                  onOpen={onOpenRepo}
+                  onUse={(chosen) => {
+                    onSelectStarter(chosen);
+                    onStartBranding();
+                  }}
+                />
+              ))}
+            </div>
+          );
+        }
+
+        if (action.type === "compare_table") {
+          return (
+            <div className="chat-action-block compare-action" key={`${action.type}-${index}`}>
+              <div className="others-label"><span>Comparison</span></div>
+              <div className="mini-compare">
+                {action.rows.slice(0, 4).map((row) => (
+                  <div className="mini-compare-row" key={row.repoFullName}>
+                    <strong>{row.repoFullName}</strong>
+                    <span>{row.score}% fit</span>
+                    <span>{row.license ? `License: ${row.license}` : "License needs checking"}</span>
+                    <span>{row.bestFor}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        if (action.type === "project_links") {
+          return (
+            <div className="chat-action-block project-link-action" key={`${action.type}-${index}`}>
+              <div className="others-label"><span>Project links</span></div>
+              <div className="suggest-row">
+                {action.links.map((link) => (
+                  <a className="suggest-chip" key={`${link.repoFullName}-${link.url}`} href={link.url} target="_blank" rel="noreferrer">
+                    <ExternalLink size={13} /> {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        if (action.type === "search_query") {
+          return (
+            <div className="chat-action-block" key={`${action.type}-${index}`}>
+              <button className="suggest-chip" type="button" onClick={() => onFollowUp(action.query)}>
+                <Search size={13} /> {action.label}
+              </button>
+            </div>
+          );
+        }
+
+        if (action.type === "suggested_prompts") {
+          return (
+            <div className="suggest-row" key={`${action.type}-${index}`}>
+              {action.prompts.slice(0, 4).map((suggestion) => (
+                <button className="suggest-chip" type="button" key={suggestion} onClick={() => onFollowUp(suggestion)}>
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          );
+        }
+
+        if (action.type === "handoff_confirmation") {
+          const repo = findRepo(action.repoFullName);
+          return (
+            <div className="next-step-card chat-action-block" key={`${action.type}-${index}`}>
+              <div>
+                <div className="nlbl">Builder handoff</div>
+                <h4>{repo ? `Start from ${repo.fullName}` : "Start the handoff"}</h4>
+                <p>{action.message}</p>
+              </div>
+              <button
+                className="btn accent"
+                type="button"
+                onClick={() => {
+                  if (repo) onSelectStarter(repo);
+                  onStartBranding();
+                }}
+              >
+                Create handoff <ArrowRight size={14} />
+              </button>
+            </div>
+          );
+        }
+
+        if (action.type === "save_repo") {
+          const repo = findRepo(action.repoFullName);
+          if (!repo) return null;
+          const saved = isSavedRepo(repo, savedRepos);
+          return (
+            <div className="chat-action-block" key={`${action.type}-${index}`}>
+              <button className="suggest-chip" type="button" onClick={() => !saved && onSaveRepo(repo)} disabled={saved}>
+                <Bookmark size={13} /> {saved ? `Saved ${repo.fullName}` : `Save ${repo.fullName}`}
+              </button>
+            </div>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
+}
+
 function ChatResults({
   prompt,
   result,
@@ -3113,6 +3230,18 @@ function ChatResults({
                 <time>- now</time>
               </div>
               <FormattedChatMessage content={turn.content} />
+              <InlineChatActions
+                actions={turn.ui}
+                actionResult={turn.result}
+                currentResult={result}
+                savedRepos={savedRepos}
+                idea={turn.result?.prompt ?? prompt}
+                onOpenRepo={onOpenRepo}
+                onSaveRepo={onSaveRepo}
+                onSelectStarter={onSelectStarter}
+                onStartBranding={onStartBranding}
+                onFollowUp={onFollowUp}
+              />
             </>
           )}
         </div>
@@ -3708,84 +3837,19 @@ function HandoffView({
         </div>
       </div>
       <div className="handoff-grid">
-        <div className="handoff-doc">
-          <div className="tabs">
-            {HANDOFF_DOC_TABS.map((item) => (
-              <button key={item} className={`tab ${tab === item ? "is-active" : ""}`} type="button" onClick={() => setTab(item)} title={item}>{HANDOFF_DOC_TAB_LABELS[item]}</button>
-            ))}
-          </div>
-          <div className="doc-meta">
-            <span>{tab}</span>
-            <span>{formatByteSize(activeDoc)}</span>
-            <span>Editable handoff file - copy and download use your changes.</span>
-          </div>
-          <div className="doc-body" data-clarity-mask="true">
-            <textarea
-              aria-label={`${tab} editable Markdown`}
-              spellCheck={false}
-              value={activeDoc}
-              onChange={(event) => setDocs((current) => ({ ...current, [tab]: event.target.value }))}
-            />
-          </div>
-        </div>
-        <div className="handoff-side">
-          <div className="card">
-            <h3>Send to</h3>
-            <p>Pick your builder. ForkFirst tunes the handoff for how that tool likes to be talked to.</p>
-            <div className="target-row">
-              {BUILD_TARGETS.map((item) => (
-                <button
-                  key={item.id}
-                  className={`target ${target === item.id ? "is-active" : ""}`}
-                  type="button"
-                  onClick={() => {
-                    trackForkFirstEvent("builder_selected", { target: item.id, source: "handoff_view" });
-                    setTarget(item.id);
-                  }}
-                >
-                  <BuilderLogo target={item} />
-                  <span>{item.label}</span>
-                  <small>{item.sub}</small>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="card">
-            <h3>What&apos;s in the folder</h3>
-            <p>Six handoff files. Put them in the cloned starter repo root so your AI builder reads the foundation, product, brand, plan, and rules together.</p>
-            <div className="file-list">
-              {[
-                ["STR", "STARTER_REPO.md", formatByteSize(docs["STARTER_REPO.md"]), "accent"],
-                ["PRD", "PRD.md", formatByteSize(docs["PRD.md"]), ""],
-                ["AGT", "AGENTS.md", formatByteSize(docs["AGENTS.md"]), ""],
-                ["PLN", "BUILD_PLAN.md", formatByteSize(docs["BUILD_PLAN.md"]), ""],
-                ["CLD", "CLAUDE.md", formatByteSize(docs["CLAUDE.md"]), ""],
-                ["RPO", "REPO_STARTER_NOTES.md", formatByteSize(docs["REPO_STARTER_NOTES.md"]), ""]
-              ].map(([kind, file, size, tone]) => (
-                <button
-                  key={file}
-                  className={`f ${tone} ${tab === file ? "is-active" : ""}`}
-                  type="button"
-                  onClick={() => {
-                    if (HANDOFF_DOC_TABS.includes(file as HandoffDocTab)) setTab(file as HandoffDocTab);
-                  }}
-                  disabled={!HANDOFF_DOC_TABS.includes(file as HandoffDocTab)}
-                >
-                  <span className="ico">{kind}</span>
-                  <span>{file}</span>
-                  <span className="mono" style={{ color: "var(--muted)", fontSize: 11 }}>{size}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="card">
-            <h3>Token math</h3>
-            <p>This edited packet is roughly <strong style={{ color: "var(--ink)" }}>{formatTokensShort(handoffTokens)} tokens</strong>, estimated from Markdown text length.</p>
-            <p style={{ margin: 0, color: "var(--accent)", fontWeight: 600 }}>Copy, save, and download use the current edited text.</p>
+        <div className="handoff-utility">
+          <div className="card launch-card">
+            <h3>Launch in {BUILD_TARGETS.find((item) => item.id === target)?.label}</h3>
+            <ol>
+              {launchSteps(target, starterName).slice(0, 3).map((step) => <li key={step}>{step}</li>)}
+            </ol>
           </div>
           <div className="card handoff-draft-card">
-            <h3>Local draft</h3>
-            <p>Autosaved in this browser. Use these when you want a checkpoint or a single Markdown file instead of the zip.</p>
+            <div className="utility-card-head">
+              <h3>Draft tools</h3>
+              <span>~{formatTokensShort(handoffTokens)} tokens</span>
+            </div>
+            <p>Autosaved locally. Copy, save, and downloads use your current edits.</p>
             <div className="handoff-mini-actions">
               <button className="btn ghost" type="button" disabled={!canExport} onClick={() => onSaveBuildPack({ ...pack, status: "draft" })}>
                 <Bookmark size={14} /> Save
@@ -3806,40 +3870,87 @@ function HandoffView({
               </button>
             </div>
           </div>
-          <div className="card quality-card">
-            <div className="quality-top">
-              <h3>Handoff readiness</h3>
-              <strong>{score}%</strong>
+          <div className="handoff-side">
+            <div className="card">
+              <h3>Send to</h3>
+              <p>Pick your builder. ForkFirst tunes the handoff for how that tool likes to be talked to.</p>
+              <div className="target-row">
+                {BUILD_TARGETS.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`target ${target === item.id ? "is-active" : ""}`}
+                    type="button"
+                    onClick={() => {
+                      trackForkFirstEvent("builder_selected", { target: item.id, source: "handoff_view" });
+                      setTarget(item.id);
+                    }}
+                  >
+                    <BuilderLogo target={item} />
+                    <span>{item.label}</span>
+                    <small>{item.sub}</small>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="quality-meter" aria-label={`Handoff readiness ${score}%`}>
-              <span style={{ width: `${score}%` }} />
+            <div className="card">
+              <h3>What&apos;s in the folder</h3>
+              <p>Six handoff files. Put them in the cloned starter repo root so your AI builder reads the foundation, product, brand, plan, and rules together.</p>
+              <div className="file-list">
+                {[
+                  ["STR", "STARTER_REPO.md", formatByteSize(docs["STARTER_REPO.md"]), "accent"],
+                  ["PRD", "PRD.md", formatByteSize(docs["PRD.md"]), ""],
+                  ["AGT", "AGENTS.md", formatByteSize(docs["AGENTS.md"]), ""],
+                  ["PLN", "BUILD_PLAN.md", formatByteSize(docs["BUILD_PLAN.md"]), ""],
+                  ["CLD", "CLAUDE.md", formatByteSize(docs["CLAUDE.md"]), ""],
+                  ["RPO", "REPO_STARTER_NOTES.md", formatByteSize(docs["REPO_STARTER_NOTES.md"]), ""]
+                ].map(([kind, file, size, tone]) => (
+                  <button
+                    key={file}
+                    className={`f ${tone} ${tab === file ? "is-active" : ""}`}
+                    type="button"
+                    onClick={() => {
+                      if (HANDOFF_DOC_TABS.includes(file as HandoffDocTab)) setTab(file as HandoffDocTab);
+                    }}
+                    disabled={!HANDOFF_DOC_TABS.includes(file as HandoffDocTab)}
+                  >
+                    <span className="ico">{kind}</span>
+                    <span>{file}</span>
+                    <span className="mono" style={{ color: "var(--muted)", fontSize: 11 }}>{size}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <ul>
-              {checks.map((item) => (
-                <li key={item.label} className={item.done ? "done" : ""}>
-                  {item.done ? <Check size={13} /> : <span className="dot" />}
-                  {item.label}
-                </li>
-              ))}
-            </ul>
           </div>
-          <div className="card launch-card">
-            <h3>Launch in {BUILD_TARGETS.find((item) => item.id === target)?.label}</h3>
-            <ol>
-              {launchSteps(target, starterName).map((step) => <li key={step}>{step}</li>)}
-            </ol>
-          </div>
-          <div className="card version-card">
-            <h3>Version history</h3>
-            <p>Manual saves and exports keep a lightweight local checkpoint you can restore.</p>
+          <div className="card version-card compact-version-card">
+            <h3>Recent versions</h3>
             <div className="version-list">
-              {(pack.versions ?? []).length ? (pack.versions ?? []).map((version) => (
+              {(pack.versions ?? []).length ? (pack.versions ?? []).slice(0, 2).map((version) => (
                 <button key={version.id} type="button" onClick={() => restoreVersion(version)}>
                   <strong>{version.label}</strong>
-                  <span>{new Date(version.createdAt).toLocaleString()} - {version.qualityScore}% ready - ~{formatTokensShort(version.tokenEstimate)} tokens</span>
+                  <span>{new Date(version.createdAt).toLocaleString()} - ~{formatTokensShort(version.tokenEstimate)}</span>
                 </button>
-              )) : <span className="empty-note">No saved versions yet. Use Save version or export.</span>}
+              )) : <span className="empty-note">No manual versions yet.</span>}
             </div>
+          </div>
+        </div>
+        <div className="handoff-doc">
+          <div className="tabs">
+            {HANDOFF_DOC_TABS.map((item) => (
+              <button key={item} className={`tab ${tab === item ? "is-active" : ""}`} type="button" onClick={() => setTab(item)} title={item}>{HANDOFF_DOC_TAB_LABELS[item]}</button>
+            ))}
+          </div>
+          <div className="doc-meta">
+            <span>{tab}</span>
+            <span>{formatByteSize(activeDoc)}</span>
+            <span>Editable handoff file - copy and download use your changes.</span>
+          </div>
+          <div className="doc-body" data-clarity-mask="true">
+            <textarea
+              aria-label={`${tab} editable Markdown`}
+              spellCheck={false}
+              value={activeDoc}
+              onChange={(event) => setDocs((current) => ({ ...current, [tab]: event.target.value }))}
+            />
           </div>
         </div>
       </div>
@@ -4899,7 +5010,7 @@ export function ForkFirstRedesignApp() {
       ? workspace.followUps
       : chat.messages
         .filter((message) => !(message.role === "user" && message.content === chat.result?.prompt))
-        .map((message) => ({ role: message.role, content: message.content }));
+        .map((message) => ({ role: message.role, content: message.content, ui: message.ui, result: message.result, intent: message.intent }));
     setActiveChatId(chat.id);
     setResult(chat.result);
     setSelectedStarterRepo(workspace?.selectedStarterRepo ?? chat.result?.repos[0] ?? null);
@@ -5318,6 +5429,9 @@ export function ForkFirstRedesignApp() {
     setFollowUps(nextTurns);
     setChatSending(true);
     let assistantContent = "";
+    let assistantUi: ChatUiAction[] | undefined;
+    let assistantResult: IdeaCheckResult | undefined;
+    let assistantIntent: ChatIntent | undefined;
     try {
       const response = await fetch("/api/research-chat", {
         method: "POST",
@@ -5326,22 +5440,40 @@ export function ForkFirstRedesignApp() {
           prompt: message,
           messages: prior,
           result,
-          keys
+          keys,
+          context: {
+            screen,
+            selectedStarterRepoFullName: selectedStarterRepo?.fullName,
+            savedRepoNames: savedRepos.map((repo) => repo.fullName)
+          },
+          allowTools: {
+            search: true,
+            saveRepo: true,
+            handoff: true
+          }
         }))
       });
       const raw = await response.text();
-      let data: { reply?: string; error?: string } = {};
+      let data: { reply?: string; error?: string; actions?: ChatUiAction[]; result?: IdeaCheckResult | null; intent?: ChatIntent } = {};
       try {
-        data = raw ? JSON.parse(raw) as { reply?: string; error?: string } : {};
+        data = raw ? JSON.parse(raw) as { reply?: string; error?: string; actions?: ChatUiAction[]; result?: IdeaCheckResult | null; intent?: ChatIntent } : {};
       } catch {
         data = {};
       }
       assistantContent = data.reply ?? data.error ?? clientChatFallbackReply(message, result, prior);
+      assistantUi = Array.isArray(data.actions) ? data.actions : undefined;
+      assistantResult = data.result ?? undefined;
+      assistantIntent = data.intent;
+      if (assistantResult && assistantResult.id !== result.id) {
+        setResult(assistantResult);
+        setSelectedStarterRepo(assistantResult.repos[0] ?? null);
+        if (screen === "results") setScreen("more");
+      }
     } catch {
       assistantContent = clientChatFallbackReply(message, result, prior);
     }
 
-    const finalTurns = [...nextTurns, { role: "assistant" as const, content: assistantContent }];
+    const finalTurns = [...nextTurns, { role: "assistant" as const, content: assistantContent, ui: assistantUi, result: assistantResult, intent: assistantIntent }];
     setFollowUps(finalTurns);
 
     try {
@@ -5359,36 +5491,40 @@ export function ForkFirstRedesignApp() {
     try {
       const now = new Date().toISOString();
       const existing = chats.find((chat) => chat.id === activeChatId);
+      const storedResult = assistantResult ?? result;
       const chat: ResearchChat = {
-        id: existing?.id ?? result.id,
-        title: existing?.title ?? titleFromPrompt(result.prompt),
-        createdAt: existing?.createdAt ?? result.createdAt ?? now,
+        id: existing?.id ?? storedResult.id,
+        title: existing?.title ?? titleFromPrompt(storedResult.prompt),
+        createdAt: existing?.createdAt ?? storedResult.createdAt ?? now,
         updatedAt: now,
         pinnedAt: existing?.pinnedAt ?? null,
         folderId: existing?.folderId ?? null,
         messages: [
           {
-            id: existing?.messages[0]?.id ?? `${result.id}:prompt`,
+            id: existing?.messages[0]?.id ?? `${storedResult.id}:prompt`,
             role: "user",
             content: existing?.messages[0]?.content ?? prompt,
-            createdAt: result.createdAt ?? now,
-            result
+            createdAt: storedResult.createdAt ?? now,
+            result: storedResult
           },
           ...finalTurns.map((turn, index) => ({
-            id: existing?.messages[index + 1]?.id ?? messageId(`${result.id}:turn:${index}`),
+            id: existing?.messages[index + 1]?.id ?? messageId(`${storedResult.id}:turn:${index}`),
             role: turn.role,
             content: turn.content,
-            createdAt: existing?.messages[index + 1]?.createdAt ?? now
+            createdAt: existing?.messages[index + 1]?.createdAt ?? now,
+            ui: turn.ui,
+            result: turn.result,
+            intent: turn.intent
           }))
         ],
-        result,
+        result: storedResult,
         workspace: {
           ...(existing?.workspace ?? {}),
           screen: isRestorableChatScreen(screen) ? screen : "results",
           brand,
-          selectedStarterRepo,
+          selectedStarterRepo: storedResult.id !== result.id ? storedResult.repos[0] ?? null : selectedStarterRepo,
           followUps: finalTurns,
-          prompt: result.prompt || prompt
+          prompt: storedResult.prompt || prompt
         }
       };
       setActiveChatId(chat.id);
@@ -5398,7 +5534,7 @@ export function ForkFirstRedesignApp() {
     } finally {
       setChatSending(false);
     }
-  }, [activeChatId, brand, chatSending, chats, followUps, keys, prompt, recordUsage, result, screen, selectedStarterRepo, upsertChat]);
+  }, [activeChatId, brand, chatSending, chats, followUps, keys, prompt, recordUsage, result, savedRepos, screen, selectedStarterRepo, upsertChat]);
 
   const title =
     screen === "app" ? "new idea"

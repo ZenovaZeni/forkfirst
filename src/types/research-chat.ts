@@ -1,5 +1,6 @@
 import type { IdeaCheckResult } from "./idea-check";
 import type { ClassifiedRepo } from "../lib/analysis/types";
+import type { ChatIntent, ChatUiAction } from "../lib/research-chat/types";
 
 export type ChatMessage = {
   id: string;
@@ -7,6 +8,8 @@ export type ChatMessage = {
   content: string;
   createdAt: string;
   result?: IdeaCheckResult;
+  ui?: ChatUiAction[];
+  intent?: ChatIntent;
 };
 
 export type ResearchChat = {
@@ -29,7 +32,7 @@ export type ResearchChat = {
       notList: string[];
     } | null;
     selectedStarterRepo?: ClassifiedRepo | null;
-    followUps?: Array<{ role: "user" | "assistant"; content: string }>;
+    followUps?: Array<{ role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent }>;
     prompt?: string;
   };
 };

@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { analyzeIdea } from "@/lib/analysis/analyst";
-import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
-import { searchGithubRepositories } from "@/lib/github/provider";
-import { classifyRepositories } from "@/lib/scoring/scoring";
-import { saveIdeaCheck } from "@/lib/db/research-cases";
+import { runIdeaCheck } from "@/lib/idea-check/run";
 import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
 import { serverDbEnabled } from "@/lib/security/server-db";
-import type { IdeaCheckResult } from "@/types/idea-check";
 
 export const runtime = "nodejs";
 
@@ -45,7 +40,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a more specific idea to check." }, { status: 400 });
   }
 
-  if (body.data.aiProvider === "custom") {
+  if (body.data.aiBaseUrl) {
     try {
       requireSafeBaseUrl(body.data.aiBaseUrl, { allowUntrusted: body.data.aiBaseUrlAcknowledged === true });
     } catch (err) {
@@ -53,40 +48,16 @@ export async function POST(request: Request) {
     }
   }
 
-  const search = await searchGithubRepositories(body.data.prompt, body.data.githubToken);
-  const classified = classifyRepositories(search.repos, body.data.prompt);
-
-  // Wrap untrusted repo content to mitigate prompt injection
-  const wrappedRepos = classified.map((repo) => ({
-    ...repo,
-    description: `<UNTRUSTED_REPO_CONTENT>${repo.description}</UNTRUSTED_REPO_CONTENT>`,
-    readme: repo.readme ? {
-      ...repo.readme,
-      excerpt: `<UNTRUSTED_REPO_CONTENT>${repo.readme.excerpt}</UNTRUSTED_REPO_CONTENT>`
-    } : undefined
-  }));
-
-  const analysis = await analyzeIdea(body.data.prompt, wrappedRepos, {
-    provider: body.data.aiProvider,
-    apiKey: body.data.aiApiKey,
-    model: body.data.aiModel,
-    baseUrl: body.data.aiBaseUrl
-  });
-
-  const result: IdeaCheckResult = {
-    id: crypto.randomUUID(),
+  const result = await runIdeaCheck({
     prompt: body.data.prompt,
-    createdAt: new Date().toISOString(),
-    queries: search.queries,
-    refinement: search.refinement,
-    warnings: search.warnings,
-    recovery: buildSearchRecovery({ prompt: body.data.prompt, repos: analysis.repos, warnings: search.warnings }),
-    ...analysis
-  };
-
-  if (serverDbEnabled()) {
-    saveIdeaCheck(result, body.data.caseId);
-  }
+    caseId: body.data.caseId,
+    githubToken: body.data.githubToken,
+    aiProvider: body.data.aiProvider,
+    aiApiKey: body.data.aiApiKey,
+    aiModel: body.data.aiModel,
+    aiBaseUrl: body.data.aiBaseUrl,
+    save: serverDbEnabled()
+  });
 
   return NextResponse.json(result);
 }

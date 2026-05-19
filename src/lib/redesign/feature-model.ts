@@ -3,6 +3,7 @@ import type { PromptPackState } from "@/lib/prompt-packs/storage";
 import type { SavingsLog } from "@/lib/usage/savings";
 import type { UsageEntry, UsageProvider } from "@/lib/usage/costs";
 import type { IdeaCheckResult } from "@/types/idea-check";
+import type { ChatIntent, ChatUiAction } from "@/lib/research-chat/types";
 import type { ResearchChat, ResearchFolder } from "@/types/research-chat";
 
 export type JsonStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -33,6 +34,17 @@ export type ResearchChatRequestBody = {
   prompt: string;
   messages?: Array<{ role: "user" | "assistant"; content: string }>;
   result?: IdeaCheckResult | null;
+  context?: {
+    screen?: string;
+    selectedStarterRepoFullName?: string;
+    savedRepoNames?: string[];
+  };
+  allowTools?: {
+    search?: boolean;
+    saveRepo?: boolean;
+    handoff?: boolean;
+  };
+  githubToken?: string;
   aiProvider?: UsageProvider;
   aiApiKey?: string;
   aiModel?: string;
@@ -67,7 +79,7 @@ export type SavedBuildPackWorkspaceSnapshot = {
     notList: string[];
   } | null;
   selectedStarterRepo: ClassifiedRepo | null;
-  followUps: Array<{ role: "user" | "assistant"; content: string }>;
+  followUps: Array<{ role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent }>;
   promptPackState: PromptPackState;
   prompt: string;
   activeChatId?: string | null;
@@ -243,17 +255,24 @@ export function buildResearchChatRequestBody({
   prompt,
   messages,
   result,
-  keys
+  keys,
+  context,
+  allowTools
 }: {
   prompt: string;
   messages?: ResearchChatRequestBody["messages"];
   result?: IdeaCheckResult | null;
   keys: RedesignUserKeys;
+  context?: ResearchChatRequestBody["context"];
+  allowTools?: ResearchChatRequestBody["allowTools"];
 }): ResearchChatRequestBody {
   return compactUndefined({
     prompt: prompt.trim(),
     messages,
     result,
+    context,
+    allowTools,
+    githubToken: emptyToUndefined(keys.githubToken),
     aiProvider: keys.aiProvider,
     aiApiKey: emptyToUndefined(keys.aiApiKey),
     aiModel: emptyToUndefined(keys.aiModel),
@@ -355,7 +374,7 @@ function normalizeBuildPackWorkspace(value: unknown): SavedBuildPackWorkspaceSna
     } : null,
     selectedStarterRepo: workspace.selectedStarterRepo ?? null,
     followUps: Array.isArray(workspace.followUps)
-      ? workspace.followUps.filter((turn): turn is { role: "user" | "assistant"; content: string } =>
+      ? workspace.followUps.filter((turn): turn is { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent } =>
         !!turn && (turn.role === "user" || turn.role === "assistant") && typeof turn.content === "string")
       : [],
     promptPackState: normalizePromptPackState(workspace.promptPackState),
