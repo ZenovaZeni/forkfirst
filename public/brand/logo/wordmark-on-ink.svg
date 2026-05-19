@@ -1,8 +1,5 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" width="720" height="192" role="img" aria-label="ForkFirst wordmark">
   <title>ForkFirst wordmark</title>
-  <defs>
-    
-  </defs>
-  <text class="ff-wm" x="0" y="72"><tspan fill="#F6F4EF">Fork</tspan><tspan fill="#5577FF">First</tspan></text>
+  <text x="0" y="68" text-anchor="start" font-family="Geist, Inter, Arial, Helvetica, sans-serif" font-size="52" font-weight="800" letter-spacing="-3"><tspan fill="#F6F4EF">Fork</tspan><tspan fill="#5577FF">First</tspan></text>
 </svg>

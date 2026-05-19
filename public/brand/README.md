@@ -23,6 +23,7 @@ ForkFirst uses the new **Y mark** with the existing two-tone **ForkFirst** wordm
 | `logo/lockup-horizontal.svg` | Mark + existing wordmark |
 | `logo/lockup-horizontal-on-ink.svg` | Mark + existing wordmark for dark surfaces |
 | `favicon/*` | Browser, Apple touch, and PWA app icons |
+| `splash/*` | iOS/iPadOS PWA startup images |
 | `social/og-image.png` | Social preview image |
 | `social/og-image-dark.png` | Alternate social preview image |
 
@@ -35,3 +36,7 @@ The root `public/manifest.json` points at the icons in `brand/favicon/`:
 - `icon-maskable-512.png`
 
 The PWA background and theme color are set to ink so install and splash surfaces match the new mark.
+
+## Apple Startup Images
+
+`brand/splash/` contains portrait and landscape startup images for common iPhone and iPad viewport sizes. The Next.js root layout maps them to `apple-touch-startup-image` links so installed iOS/iPadOS web apps launch with the current Y mark and wordmark.
