@@ -541,7 +541,14 @@ function parseGitHubRepoInput(value: string) {
 function titleFromPrompt(value: string) {
   const cleaned = value.replace(/\s+/g, " ").trim();
   if (!cleaned) return "Untitled idea check";
-  return cleaned.length > 42 ? `${cleaned.slice(0, 39)}...` : cleaned;
+  const title = cleaned.length > 42 ? `${cleaned.slice(0, 39)}...` : cleaned;
+  return capitalizeFirstTitle(title);
+}
+
+function capitalizeFirstTitle(value: string) {
+  const cleaned = value.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+  return `${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}`;
 }
 
 function displayChatTitle(value: string) {
@@ -3784,7 +3791,7 @@ function SavedBuildPackCard({
     <article className="build-pack-card saved-handoff-card">
       <div className="top">
         <div>
-          <strong>{pack.title}</strong>
+          <strong>{capitalizeFirstTitle(pack.title)}</strong>
           <span>Foundation: {pack.starterRepo || "No starter selected"}</span>
         </div>
         <span className={`status ${pack.status}`}>{pack.status}</span>
