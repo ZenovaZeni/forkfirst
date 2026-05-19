@@ -1277,3 +1277,50 @@ body {
 [data-theme="dark"] .starter-rich .foundation-cta {
   color: #fff;
 }
+
+.trend-card .actions {
+  grid-template-columns: minmax(78px, 1fr) minmax(70px, max-content) minmax(58px, max-content);
+  gap: 8px;
+}
+
+.trend-card .actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding-inline: 12px;
+  text-align: center;
+}
+
+.trend-card .actions .btn.accent {
+  min-width: 88px;
+}
+
+.trend-card .actions .icon-only {
+  width: 40px;
+  min-width: 40px;
+  padding-inline: 0;
+}
+
+.lib-actions {
+  grid-template-columns: minmax(86px, 1fr) minmax(76px, max-content) minmax(58px, max-content) 40px;
+  gap: 8px;
+}
+
+.lib-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding-inline: 12px;
+  text-align: center;
+}
+
+.lib-actions .btn.accent {
+  min-width: 92px;
+}
+
+.lib-actions .icon-only {
+  width: 40px;
+  min-width: 40px;
+}
