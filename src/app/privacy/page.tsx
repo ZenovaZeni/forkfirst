@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const sectionStyle = {
-  borderTop: "1px solid #2c313b",
+  borderTop: "1px solid var(--line)",
   paddingTop: 34,
   marginTop: 42
 };
