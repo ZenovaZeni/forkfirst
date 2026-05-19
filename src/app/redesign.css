@@ -1061,13 +1061,17 @@ input, textarea, select { font: inherit; color: inherit; }
     .product-mock,
     .handoff-part,
     .foundation-note,
-    .trust .tcell,
-    .cta-strip,
-    .footer
+    .trust .tcell
   ) {
     animation-timeline: view();
     animation-range: entry 0% cover 28%;
     animation-delay: 0s;
+  }
+
+  .landing .cta-strip,
+  .landing .footer {
+    animation-timeline: auto;
+    animation-range: normal;
   }
 }
 
