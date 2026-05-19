@@ -1384,6 +1384,12 @@ function TopNav({
           <a href="#builders">Builders</a>
           <a href="#trust">Your keys, your data</a>
         </nav>
+      <button className="nav-cta" type="button" onClick={() => {
+        trackForkFirstEvent("landing_try_free_clicked", { source: "nav" });
+        go("app");
+      }}>
+        Start free <ArrowRight size={14} />
+      </button>
       <button
         className="landing-theme-toggle"
         type="button"
@@ -1391,13 +1397,7 @@ function TopNav({
         aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       >
-        {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-      </button>
-      <button className="nav-cta" type="button" onClick={() => {
-        trackForkFirstEvent("landing_try_free_clicked", { source: "nav" });
-        go("app");
-      }}>
-        Start free <ArrowRight size={14} />
+        {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
       </button>
     </header>
   );
