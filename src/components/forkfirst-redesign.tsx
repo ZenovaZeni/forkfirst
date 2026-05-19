@@ -1776,10 +1776,10 @@ function Sidebar({
           <Copy size={16} /><span className="ttl">Prompt Packs</span>
         </button>
         <button className={`rail-item ${active === "library" ? "active" : ""}`} type="button" onClick={() => go("library")}>
-          <Bookmark size={16} /><span className="ttl">Library</span>
+          <Bookmark size={16} /><span className="ttl">Repos</span>
         </button>
         <button className={`rail-item ${active === "handoff" ? "active" : ""}`} type="button" onClick={() => go("handoff")}>
-          <Download size={16} /><span className="ttl">Handoff</span>
+          <Download size={16} /><span className="ttl">Handoffs</span>
         </button>
         <button className={`rail-item ${active === "settings" ? "active" : ""}`} type="button" onClick={() => go("settings")}>
           <SettingsIcon size={16} /><span className="ttl">Settings</span>
@@ -1921,30 +1921,6 @@ function useSwipeDownDismiss(onDismiss: () => void, threshold = 72) {
   };
 }
 
-function useHorizontalSwipe(onLeft: () => void, onRight: () => void, threshold = 72) {
-  const startRef = useRef<{ x: number; y: number } | null>(null);
-
-  return {
-    onPointerDown: (event: PointerEvent<HTMLElement>) => {
-      if (event.pointerType === "mouse") return;
-      startRef.current = { x: event.clientX, y: event.clientY };
-    },
-    onPointerUp: (event: PointerEvent<HTMLElement>) => {
-      const start = startRef.current;
-      startRef.current = null;
-      if (!start) return;
-      const dx = event.clientX - start.x;
-      const dy = event.clientY - start.y;
-      if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy) * 1.35) return;
-      if (dx < 0) onLeft();
-      else onRight();
-    },
-    onPointerCancel: () => {
-      startRef.current = null;
-    }
-  };
-}
-
 function RecentChatsDrawer({
   recentChats,
   activeChatId,
@@ -2018,8 +1994,8 @@ function MobileNav({
   });
   const primary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
     { screen: "trending", label: "Trends", icon: <Star size={15} /> },
-    { screen: "handoff", label: "Handoff", icon: <Download size={15} /> },
-    { screen: "library", label: "Library", icon: <Bookmark size={15} /> }
+    { screen: "handoff", label: "Handoffs", icon: <Download size={15} /> },
+    { screen: "library", label: "Repos", icon: <Bookmark size={15} /> }
   ];
   const secondary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
     { screen: "packs", label: "Prompt Packs", icon: <Copy size={15} /> },
@@ -3700,7 +3676,7 @@ function HandoffSavedPacksScreen({
       <div className="handoff-library-hero">
         <div>
           <span className="eyebrow">Builder handoffs</span>
-          <h2>Open a saved Build Pack.</h2>
+          <h2>Saved handoffs</h2>
           <p>
             Your generated handoffs live here as local drafts. Open one to preview, edit,
             export, or restore the full package.
@@ -3720,7 +3696,7 @@ function HandoffSavedPacksScreen({
       <div className="library-section-head">
         <div>
           <span className="eyebrow">Saved handoffs</span>
-          <h3>Build Packs</h3>
+          <h3>Builder handoffs</h3>
         </div>
         <span>{query ? `${filteredPacks.length} of ${savedBuildPacks.length}` : `${savedBuildPacks.length} saved`}</span>
       </div>
@@ -3736,7 +3712,7 @@ function HandoffSavedPacksScreen({
           />
         )) : (
           <article className="build-pack-card empty handoff-empty-pack">
-            <strong>{savedBuildPacks.length ? "No matching Build Packs" : "No saved Build Packs yet"}</strong>
+            <strong>{savedBuildPacks.length ? "No matching handoffs" : "No saved handoffs yet"}</strong>
             <p>{savedBuildPacks.length ? "Try a repo name, product phrase, builder, or file name." : "Run an idea check, pick a foundation, and generate the Builder Handoff. ForkFirst will autosave it here."}</p>
             {!savedBuildPacks.length ? (
               <button className="btn accent" type="button" onClick={onStartNewIdea}>
@@ -3751,40 +3727,19 @@ function HandoffSavedPacksScreen({
 }
 
 function LibraryScreen({
-  savedBuildPacks,
   savedRepos,
   savedRepoBoards,
-  onOpenBuildPack,
-  onDeleteBuildPack,
-  onDownloadBuildPack,
   onOpen,
   onUseRepo,
   onSetBoard
 }: {
-  savedBuildPacks: SavedBuildPack[];
   savedRepos: ClassifiedRepo[];
   savedRepoBoards: Record<string, string>;
-  onOpenBuildPack: (pack: SavedBuildPack) => void;
-  onDeleteBuildPack: (packId: string) => void;
-  onDownloadBuildPack: (pack: SavedBuildPack) => void;
   onOpen: (repo: ClassifiedRepo) => void;
   onUseRepo: (repo: ClassifiedRepo) => void;
   onSetBoard: (repo: ClassifiedRepo, board: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [activePanel, setActivePanel] = useState<"handoffs" | "repos">("handoffs");
-  const librarySwipe = useHorizontalSwipe(
-    () => setActivePanel("repos"),
-    () => setActivePanel("handoffs")
-  );
-  const filteredBuildPacks = savedBuildPacks.filter((pack) => includesSmartSearch([
-    pack.title,
-    pack.idea,
-    pack.starterRepo,
-    pack.target,
-    pack.status,
-    pack.markdown
-  ].join(" "), query));
   const filteredRepos = savedRepos.filter((repo) => includesSmartSearch([
     repo.fullName,
     repo.description,
@@ -3797,114 +3752,62 @@ function LibraryScreen({
   ].join(" "), query));
 
   return (
-    <section className="library" data-screen-label="06 Library" {...librarySwipe}>
-      <h2>Library</h2>
+    <section className="library" data-screen-label="06 Saved Repos">
+      <h2>Saved <span className="accent-word">Repos</span></h2>
       <p style={{ color: "var(--muted)", margin: "0 0 24px", fontSize: 15 }}>
-        Saved handoffs and repos. None of this is on a server - it lives in your browser.
+        Repos you saved from results and trending. None of this is on a server - it lives in your browser.
       </p>
-      <div className="library-tabs" role="tablist" aria-label="Library sections">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activePanel === "handoffs"}
-          className={activePanel === "handoffs" ? "active" : ""}
-          onClick={() => setActivePanel("handoffs")}
-        >
-          <span>Handoffs</span>
-          <strong>{savedBuildPacks.length}</strong>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activePanel === "repos"}
-          className={activePanel === "repos" ? "active" : ""}
-          onClick={() => setActivePanel("repos")}
-        >
-          <span>Repos</span>
-          <strong>{savedRepos.length}</strong>
-        </button>
-      </div>
       <div className="smart-search">
         <Search size={16} aria-hidden="true" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={activePanel === "handoffs" ? "Search saved handoffs by idea, repo, builder, or text..." : "Search saved repos by name, board, language, or topic..."}
-          aria-label="Search library"
+          placeholder="Search saved repos by name, board, language, or topic..."
+          aria-label="Search saved repos"
         />
         {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
       </div>
-      {activePanel === "handoffs" ? (
-        <>
-          <div className="library-section-head">
-            <div>
-              <span className="eyebrow">Handoffs</span>
-              <h3>Saved handoffs</h3>
+      <div className="library-section-head repo-head">
+        <div>
+          <span className="eyebrow">Repos</span>
+          <h3>Saved repos</h3>
+        </div>
+        <span>{query ? `${filteredRepos.length} of ${savedRepos.length}` : `${savedRepos.length} saved`}</span>
+      </div>
+      <div className="lib-grid">
+        {filteredRepos.length ? filteredRepos.map((repo) => (
+          <article key={repo.fullName} className="lib-card">
+            <div className="top">
+              <button className="nm" type="button" onClick={() => onOpen(repo)}>{repo.fullName}</button>
+              <span className={`tag ${repoTagClass(repo)}`}>{repoCategoryLabel(repo)} / {repo.score.total}%</span>
             </div>
-            <span>{query ? `${filteredBuildPacks.length} of ${savedBuildPacks.length}` : `${savedBuildPacks.length} saved`}</span>
-          </div>
-          <div className="build-pack-grid handoff-pack-grid">
-            {filteredBuildPacks.length ? filteredBuildPacks.map((pack) => (
-              <SavedBuildPackCard
-                key={pack.id}
-                pack={pack}
-                onOpenBuildPack={onOpenBuildPack}
-                onDeleteBuildPack={onDeleteBuildPack}
-                onDownloadBuildPack={onDownloadBuildPack}
-              />
-            )) : (
-              <article className="build-pack-card empty">
-                <strong>{savedBuildPacks.length ? "No matching handoffs" : "No saved handoffs yet"}</strong>
-                <p>{savedBuildPacks.length ? "Try a product phrase, repo, builder, or file name." : "Generate a builder handoff and ForkFirst will autosave the editable packet here."}</p>
-              </article>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="library-section-head repo-head">
-            <div>
-              <span className="eyebrow">Repos</span>
-              <h3>Saved repos</h3>
+            <div className="d">{repoSummary(repo)}</div>
+            <div className="row">
+              <span><Star size={12} /> {repo.stars.toLocaleString()}</span>
+              <span><GitFork size={12} /> {repo.forks.toLocaleString()}</span>
+              <span>{repo.license ?? "Inspect"}</span>
             </div>
-            <span>{query ? `${filteredRepos.length} of ${savedRepos.length}` : `${savedRepos.length} saved`}</span>
-          </div>
-          <div className="lib-grid">
-            {filteredRepos.length ? filteredRepos.map((repo) => (
-              <article key={repo.fullName} className="lib-card">
-                <div className="top">
-                  <button className="nm" type="button" onClick={() => onOpen(repo)}>{repo.fullName}</button>
-                  <span className={`tag ${repoTagClass(repo)}`}>{repoCategoryLabel(repo)} / {repo.score.total}%</span>
-                </div>
-                <div className="d">{repoSummary(repo)}</div>
-                <div className="row">
-                  <span><Star size={12} /> {repo.stars.toLocaleString()}</span>
-                  <span><GitFork size={12} /> {repo.forks.toLocaleString()}</span>
-                  <span>{repo.license ?? "Inspect"}</span>
-                </div>
-                <div className="lib-actions">
-                  <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use as foundation</button>
-                  <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
-                  <RepoSiteLink url={repo.homepage} />
-                  <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
-                    <ExternalLink size={13} />
-                  </a>
-                </div>
-                <BoardPicker
-                  value={repoBoardLabel(repo, savedRepoBoards)}
-                  onChange={(board) => onSetBoard(repo, board)}
-                  label={`Board for ${repo.fullName}`}
-                />
-              </article>
-            )) : (
-              <article className="lib-card">
-                <div className="top"><span className="nm">{savedRepos.length ? "No matching repos" : "No saved repos yet"}</span></div>
-                <div className="d">{savedRepos.length ? "Try a repo name, language, board, license, or topic." : "Save a repo from results or trending and it will appear here with board assignment."}</div>
-              </article>
-            )}
-          </div>
-        </>
-      )}
+            <div className="lib-actions">
+              <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use as foundation</button>
+              <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
+              <RepoSiteLink url={repo.homepage} />
+              <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
+                <ExternalLink size={13} />
+              </a>
+            </div>
+            <BoardPicker
+              value={repoBoardLabel(repo, savedRepoBoards)}
+              onChange={(board) => onSetBoard(repo, board)}
+              label={`Board for ${repo.fullName}`}
+            />
+          </article>
+        )) : (
+          <article className="lib-card">
+            <div className="top"><span className="nm">{savedRepos.length ? "No matching repos" : "No saved repos yet"}</span></div>
+            <div className="d">{savedRepos.length ? "Try a repo name, language, board, license, or topic." : "Save a repo from results or trending and it will appear here with board assignment."}</div>
+          </article>
+        )}
+      </div>
     </section>
   );
 }
@@ -5250,8 +5153,8 @@ export function ForkFirstRedesignApp() {
   const title =
     screen === "app" ? "new idea"
       : screen === "loading" ? "checking..."
-      : screen === "handoff" ? "Builder Handoff"
-      : screen === "library" ? "Library"
+      : screen === "handoff" ? "Handoffs"
+      : screen === "library" ? "Repos"
       : screen === "settings" ? "Settings"
       : screen === "trending" ? "Trending"
       : screen === "packs" ? "Prompt Packs"
@@ -5378,12 +5281,8 @@ export function ForkFirstRedesignApp() {
               ) : null}
               {screen === "library" ? (
                 <LibraryScreen
-                  savedBuildPacks={savedBuildPacks}
                   savedRepos={savedRepos}
                   savedRepoBoards={savedRepoBoards}
-                  onOpenBuildPack={openBuildPack}
-                  onDeleteBuildPack={deleteBuildPack}
-                  onDownloadBuildPack={downloadBuildPack}
                   onOpen={(repo) => {
                     trackForkFirstEvent("repo_details_opened", {
                       category: repo.category,
