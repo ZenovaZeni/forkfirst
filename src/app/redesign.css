@@ -2459,6 +2459,10 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: clamp(32px, 4vw, 52px); letter-spacing: -0.04em;
   margin: 0 0 24px;
 }
+.library h2 .accent-word,
+.handoff-library-hero h2 .accent-word {
+  color: var(--accent);
+}
 .library-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

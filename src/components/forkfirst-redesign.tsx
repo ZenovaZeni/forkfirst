@@ -3676,7 +3676,7 @@ function HandoffSavedPacksScreen({
       <div className="handoff-library-hero">
         <div>
           <span className="eyebrow">Builder handoffs</span>
-          <h2>Saved handoffs</h2>
+          <h2>Saved <span className="accent-word">Handoffs</span></h2>
           <p>
             Your generated handoffs live here as local drafts. Open one to preview, edit,
             export, or restore the full package.
