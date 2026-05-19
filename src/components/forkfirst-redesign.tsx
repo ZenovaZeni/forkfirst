@@ -3695,7 +3695,7 @@ function HandoffSavedPacksScreen({
         </div>
       </div>
       <div className="smart-search">
-        <Search size={16} aria-hidden="true" />
+        <span aria-hidden="true">Search</span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -3769,7 +3769,7 @@ function LibraryScreen({
         Repos you saved from results and trending. None of this is on a server - it lives in your browser.
       </p>
       <div className="smart-search">
-        <Search size={16} aria-hidden="true" />
+        <span aria-hidden="true">Search</span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -4149,7 +4149,7 @@ function LiveTrendingScreen({
           ))}
         </div>
         <div className="smart-search trending-search">
-          <Search size={16} aria-hidden="true" />
+          <span aria-hidden="true">Search</span>
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
