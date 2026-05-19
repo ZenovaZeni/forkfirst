@@ -392,10 +392,20 @@ input, textarea, select { font: inherit; color: inherit; }
   flex: 0 0 auto;
   stroke: currentColor;
 }
+.github-star-pill svg:first-child {
+  color: #bf8700;
+  fill: #bf8700;
+  stroke: #bf8700;
+}
 .github-star-pill:hover {
   border-color: color-mix(in srgb, var(--accent) 46%, var(--landing-line));
   background: color-mix(in srgb, var(--accent) 12%, var(--landing-panel));
   color: var(--accent);
+}
+.github-star-pill:hover svg:first-child {
+  color: #d4a72c;
+  fill: #d4a72c;
+  stroke: #d4a72c;
 }
 .github-star-pill:hover svg:last-child {
   transform: translateX(3px);
