@@ -3767,13 +3767,6 @@ function LibraryScreen({
         />
         {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
       </div>
-      <div className="library-section-head repo-head">
-        <div>
-          <span className="eyebrow">Repos</span>
-          <h3>Saved repos</h3>
-        </div>
-        <span>{query ? `${filteredRepos.length} of ${savedRepos.length}` : `${savedRepos.length} saved`}</span>
-      </div>
       <div className="lib-grid">
         {filteredRepos.length ? filteredRepos.map((repo) => (
           <article key={repo.fullName} className="lib-card">

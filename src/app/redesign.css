@@ -2659,6 +2659,7 @@ input, textarea, select { font: inherit; color: inherit; }
   align-content: center;
 }
 .lib-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.library .smart-search + .lib-grid { margin-top: 20px; }
 .lib-card {
   background: var(--paper-2);
   border: 1px solid var(--line);
