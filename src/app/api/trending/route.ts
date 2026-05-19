@@ -7,6 +7,8 @@ import { readJsonRequest } from "@/lib/security/request-json";
 
 export const runtime = "nodejs";
 
+type NonAllTrendingCategoryId = Exclude<TrendingCategoryId, "all">;
+
 const RequestSchema = z.object({
   categoryId: z.enum(TRENDING_CATEGORY_IDS),
   githubToken: z.string().max(300).optional()
@@ -23,6 +25,11 @@ export type TrendingRepo = {
   updatedAt: string | null;
   createdAt: string | null;
   topics: string[];
+  sourceCategoryId?: NonAllTrendingCategoryId;
+  sourceCategoryLabel?: string;
+  sourceCategoryBlurb?: string;
+  matchedCategoryIds?: NonAllTrendingCategoryId[];
+  matchedCategoryLabels?: string[];
 };
 
 type GitHubSearchItem = {
@@ -307,11 +314,38 @@ const fallbackTrendingRepos: Partial<Record<TrendingCategoryId, TrendingRepo[]>>
   ]
 };
 
+function categoryMeta(categoryId: NonAllTrendingCategoryId) {
+  const category = TRENDING_CATEGORIES.find((item) => item.id === categoryId);
+  return {
+    sourceCategoryId: categoryId,
+    sourceCategoryLabel: category?.label ?? categoryId,
+    sourceCategoryBlurb: category?.blurb ?? "",
+    matchedCategoryIds: [categoryId],
+    matchedCategoryLabels: [category?.label ?? categoryId]
+  };
+}
+
+function withCategoryMeta(repo: TrendingRepo, categoryId: NonAllTrendingCategoryId, matchedCategoryIds: NonAllTrendingCategoryId[] = [categoryId]): TrendingRepo {
+  const source = TRENDING_CATEGORIES.find((item) => item.id === categoryId);
+  const matchedLabels = matchedCategoryIds
+    .map((id) => TRENDING_CATEGORIES.find((item) => item.id === id)?.label ?? id);
+  return {
+    ...repo,
+    sourceCategoryId: categoryId,
+    sourceCategoryLabel: source?.label ?? categoryId,
+    sourceCategoryBlurb: source?.blurb ?? "",
+    matchedCategoryIds,
+    matchedCategoryLabels: matchedLabels
+  };
+}
+
 function fallbackForCategory(categoryId: TrendingCategoryId) {
-  if (categoryId !== "all" && fallbackTrendingRepos[categoryId]?.length) return fallbackTrendingRepos[categoryId]!;
+  if (categoryId !== "all" && fallbackTrendingRepos[categoryId]?.length) {
+    return fallbackTrendingRepos[categoryId]!.map((repo) => withCategoryMeta(repo, categoryId));
+  }
   const seen = new Set<string>();
-  return Object.values(fallbackTrendingRepos)
-    .flat()
+  return Object.entries(fallbackTrendingRepos)
+    .flatMap(([id, repos]) => (repos ?? []).map((repo) => withCategoryMeta(repo, id as NonAllTrendingCategoryId)))
     .filter((repo) => {
       if (seen.has(repo.fullName)) return false;
       seen.add(repo.fullName);
@@ -401,7 +435,7 @@ export async function POST(request: Request) {
     return { query, ok: true, status: res.status, items: Array.isArray(data.items) ? data.items : [] };
   }
 
-  const allCategories = TRENDING_CATEGORIES.filter((item) => item.id !== "all");
+  const allCategories = TRENDING_CATEGORIES.filter((item): item is typeof item & { id: NonAllTrendingCategoryId } => item.id !== "all");
   const queryGroups = body.data.categoryId === "all"
     ? allCategories.map((item) => ({
       categoryId: item.id,
@@ -460,10 +494,18 @@ export async function POST(request: Request) {
 
   const orderedItems = body.data.categoryId === "all"
     ? balancedTrendingItems(successfulResults, allCategories.map((item) => item.id), 36)
-    : topTrendingItems(successfulResults.flatMap((result) => result.items), 12);
+    : topTrendingItems(successfulResults.flatMap((result) => result.items), 12).map((item) => ({
+      item,
+      ...categoryMeta(category.id as NonAllTrendingCategoryId)
+    }));
 
   const repos: TrendingRepo[] = orderedItems
-    .map((item) => ({
+    .map((entry) => {
+      const item = entry.item;
+      const sourceCategory = TRENDING_CATEGORIES.find((cat) => cat.id === entry.sourceCategoryId);
+      const matchedCategoryLabels = entry.matchedCategoryIds
+        .map((id) => TRENDING_CATEGORIES.find((cat) => cat.id === id)?.label ?? id);
+      return {
       fullName: item.full_name,
       description: item.description ?? "",
       stars: item.stargazers_count,
@@ -473,8 +515,14 @@ export async function POST(request: Request) {
       license: item.license?.spdx_id ?? null,
       updatedAt: item.updated_at,
       createdAt: item.created_at,
-      topics: Array.isArray(item.topics) ? item.topics.slice(0, 6) : []
-    }));
+      topics: Array.isArray(item.topics) ? item.topics.slice(0, 6) : [],
+      sourceCategoryId: entry.sourceCategoryId,
+      sourceCategoryLabel: sourceCategory?.label ?? entry.sourceCategoryId,
+      sourceCategoryBlurb: sourceCategory?.blurb ?? "",
+      matchedCategoryIds: entry.matchedCategoryIds,
+      matchedCategoryLabels
+    };
+    });
 
   trendingCache.set(cacheKey, {
     repos,

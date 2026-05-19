@@ -862,6 +862,18 @@ function classifiedFromTrendingRepo(repo: TrendingRepo, category?: TrendingCateg
   };
 }
 
+function trendingCategoryLabels(repo: TrendingRepo, fallback?: TrendingCategory) {
+  const labels = repo.matchedCategoryLabels?.length
+    ? repo.matchedCategoryLabels
+    : (repo.sourceCategoryLabel ? [repo.sourceCategoryLabel] : []);
+  if (labels.length) return Array.from(new Set(labels));
+  return fallback && fallback.id !== "all" ? [fallback.label] : [];
+}
+
+function categoryForTrendingRepo(repo: TrendingRepo, fallback?: TrendingCategory) {
+  return TRENDING_CATEGORIES.find((item) => item.id === repo.sourceCategoryId) ?? fallback;
+}
+
 function trendingRepoWhat(repo: TrendingRepo) {
   const desc = repo.description?.trim();
   if (desc) return desc.replace(/\s+/g, " ");
@@ -3893,17 +3905,6 @@ function HandoffView({
               </div>
             </div>
           </div>
-          <div className="card version-card compact-version-card">
-            <h3>Recent versions</h3>
-            <div className="version-list">
-              {(pack.versions ?? []).length ? (pack.versions ?? []).slice(0, 2).map((version) => (
-                <button key={version.id} type="button" onClick={() => restoreVersion(version)}>
-                  <strong>{version.label}</strong>
-                  <span>{new Date(version.createdAt).toLocaleString()} - ~{formatTokensShort(version.tokenEstimate)}</span>
-                </button>
-              )) : <span className="empty-note">No manual versions yet.</span>}
-            </div>
-          </div>
         </div>
         <div className="handoff-doc">
           <div className="tabs">
@@ -3917,16 +3918,34 @@ function HandoffView({
               <span>{formatByteSize(activeDoc)}</span>
               <span>Autosaved locally - copy and download use your latest edits.</span>
             </div>
-            <button
-              className="doc-copy-btn"
-              type="button"
-              onClick={() => onCopy(activeDoc)}
-              aria-label={`Copy ${tab}`}
-              title={`Copy ${tab}`}
-            >
-              <Copy size={14} />
-              <span>Copy file</span>
-            </button>
+            <div className="doc-meta-actions">
+              {(pack.versions ?? []).length ? (
+                <details className="handoff-version-menu">
+                  <summary title="Restore a previous handoff version">
+                    Versions
+                    <span>{Math.min((pack.versions ?? []).length, 12)}</span>
+                  </summary>
+                  <div className="handoff-version-popover">
+                    {(pack.versions ?? []).slice(0, 6).map((version) => (
+                      <button key={version.id} type="button" onClick={() => restoreVersion(version)}>
+                        <strong>{version.label}</strong>
+                        <span>{new Date(version.createdAt).toLocaleString()} - ~{formatTokensShort(version.tokenEstimate)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+              <button
+                className="doc-copy-btn"
+                type="button"
+                onClick={() => onCopy(activeDoc)}
+                aria-label={`Copy ${tab}`}
+                title={`Copy ${tab}`}
+              >
+                <Copy size={14} />
+                <span>Copy file</span>
+              </button>
+            </div>
           </div>
           <div className="doc-body" data-clarity-mask="true">
             <textarea
@@ -4465,6 +4484,7 @@ function LiveTrendingScreen({
     repo.description,
     repo.language ?? "",
     repo.license ?? "",
+    trendingCategoryLabels(repo, activeCategory).join(" "),
     repo.topics.join(" ")
   ].join(" "), query));
 
@@ -4514,10 +4534,17 @@ function LiveTrendingScreen({
             </article>
           ) : null}
           {trending.status === "ok" ? visibleTrendingRepos.map((repo) => {
-            const asSavedRepo = classifiedFromTrendingRepo(repo, activeCategory);
+            const repoCategory = categoryForTrendingRepo(repo, activeCategory);
+            const asSavedRepo = classifiedFromTrendingRepo(repo, repoCategory);
             const saved = isSavedRepo(asSavedRepo, savedRepos);
+            const categoryLabels = trendingCategoryLabels(repo, repoCategory);
             return (
             <article key={repo.fullName} className="trend-card">
+              {cat === "all" && categoryLabels.length ? (
+                <div className="trend-category-row">
+                  {categoryLabels.slice(0, 2).map((label) => <span key={label}>{label}</span>)}
+                </div>
+              ) : null}
               <button className="nm" type="button" onClick={() => setDetailsRepo(repo)}>
                 {repo.fullName}
               </button>
@@ -4555,10 +4582,10 @@ function LiveTrendingScreen({
       </section>
       <TrendingRepoDrawer
         repo={detailsRepo}
-        category={activeCategory}
-        saved={detailsRepo ? isSavedRepo(classifiedFromTrendingRepo(detailsRepo, activeCategory), savedRepos) : false}
+        category={detailsRepo ? categoryForTrendingRepo(detailsRepo, activeCategory) : activeCategory}
+        saved={detailsRepo ? isSavedRepo(classifiedFromTrendingRepo(detailsRepo, categoryForTrendingRepo(detailsRepo, activeCategory)), savedRepos) : false}
         onClose={() => setDetailsRepo(null)}
-        onSave={(repo) => onSaveRepo(classifiedFromTrendingRepo(repo, activeCategory))}
+        onSave={(repo) => onSaveRepo(classifiedFromTrendingRepo(repo, categoryForTrendingRepo(repo, activeCategory)))}
         onUse={(repo) => {
           setDetailsRepo(null);
           onSelectFoundation(foundationFromTrendingRepo(repo));
@@ -4585,6 +4612,7 @@ function TrendingRepoDrawer({
 }) {
   const swipeDown = useSwipeDownDismiss(onClose);
   if (!repo) return null;
+  const alsoInLabels = (repo.matchedCategoryLabels ?? []).filter((label) => label !== repo.sourceCategoryLabel);
   return (
     <>
       <div className="overlay" onClick={onClose} />
@@ -4618,6 +4646,7 @@ function TrendingRepoDrawer({
           <div className="repo-section">
             <h3>Why this showed up</h3>
             <p>ForkFirst pulled this from live GitHub Search for {category?.label ?? "this category"}, filtered to recently pushed projects and sorted by stars. This is a lead, not proof it is the right foundation.</p>
+            {alsoInLabels.length ? <p>Also matched: {alsoInLabels.join(", ")}.</p> : null}
           </div>
           <div className="repo-section">
             <h3>Watch out for</h3>

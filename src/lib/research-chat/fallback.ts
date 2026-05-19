@@ -49,17 +49,9 @@ export function buildConversationalRepoFallback(
     ? ` ${second.fullName}${third ? ` and ${third.fullName}` : ""} are worth comparing, but I would not make the user read the whole repo report again just to get advice.`
     : "";
 
-  const bullets = options.repeated
-    ? [
-        `Pressure-test ${best.fullName}: does it save the hard part of the build, or only give inspiration?`,
-        "Add one decision moment: clone it, study it, or keep searching.",
-        "Keep the next handoff focused on what to keep, replace, and verify."
-      ]
-    : [
-        `Start with one concrete user outcome, then check whether ${best.fullName} actually supports it.`,
-        "Inspect README, setup, license, and recent issues before telling an AI builder to build on it.",
-        "Ask for more options only if the top repo does not cover the hard technical part."
-      ];
+  if (options.repeated) {
+    return `${opener}${evidence}${compare}\n\nMy next move would be to pressure-test whether ${best.fullName} saves the hard part of the build or only gives inspiration. Then I would make the handoff say exactly what to keep, replace, and verify.`;
+  }
 
-  return `${opener}${evidence}${compare}\n\n${bullets.map((item) => `- ${item}`).join("\n")}`;
+  return `${opener}${evidence}${compare}\n\nI would start with one concrete user outcome, then check whether ${best.fullName} actually supports it. If the README, setup, license, or recent issues look weak, that is when I would search again instead of forcing this repo to fit.`;
 }

@@ -435,8 +435,7 @@ body {
   .app-shell .handoff-side .card:nth-child(1),
   .app-shell .handoff-side .card:nth-child(2),
   .app-shell .handoff-side .quality-card,
-  .app-shell .handoff-side .launch-card,
-  .app-shell .handoff-side .version-card {
+  .app-shell .handoff-side .launch-card {
     grid-column: auto;
   }
 
@@ -1193,6 +1192,9 @@ body {
   display: grid;
   gap: 8px;
   overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 0 2px 2px;
 }
 

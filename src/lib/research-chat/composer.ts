@@ -61,7 +61,7 @@ function conversationalAnswer(plan: ResearchChatPlan, context: ResearchChatConte
   const description = repoDescription(best);
   const secondLine = second ? ` I would compare it against ${second.fullName}, but I would not make you reread the whole report just to get to the next move.` : "";
 
-  return `Yes. I would keep ${best.fullName} in the center${idea} because it looks like ${repoUseLabel(best)}.${description ? ` GitHub describes it as ${description}.` : ""}${secondLine}\n\nThe practical move is to inspect setup, license, and recent issues, then decide what your builder should keep, replace, and ignore.`;
+  return `Yes. I would keep ${best.fullName} in the center${idea} because it looks like ${repoUseLabel(best)}.${description ? ` GitHub describes it as ${description}.` : ""}${secondLine}\n\nThe practical move is not to copy it blindly. Inspect setup, license, and recent issues, then decide what your builder should keep, replace, and ignore.`;
 }
 
 function searchReply(plan: ResearchChatPlan, context: ResearchChatContext) {
@@ -81,7 +81,8 @@ function compareReply(plan: ResearchChatPlan, context: ResearchChatContext) {
 function explainReply(plan: ResearchChatPlan, context: ResearchChatContext) {
   const [best] = reposForPlan(plan, context);
   if (!best) return "I can explain the repo once there is a repo in the current research context.";
-  return `${best.fullName} looks like ${repoUseLabel(best)}. In plain English, it is useful if it already solves part of the workflow you need; it is risky if the README, license, or setup path does not hold up when you inspect it.`;
+  const description = repoDescription(best);
+  return `${best.fullName} looks like ${repoUseLabel(best)}.${description ? ` The short version: ${description}.` : ""}\n\nI would treat it as useful if it already solves part of the workflow you need. I would slow down if the README, license, or setup path does not hold up when you inspect it.`;
 }
 
 function gapReply(plan: ResearchChatPlan, context: ResearchChatContext) {
@@ -124,20 +125,21 @@ function replyForPlan(plan: ResearchChatPlan, context: ResearchChatContext) {
 function actionsForPlan(plan: ResearchChatPlan, context: ResearchChatContext): ChatUiAction[] {
   const repos = reposForPlan(plan, context);
   const prompts = plan.suggestedPrompts.length ? plan.suggestedPrompts : suggestedPromptsForIdea(context.idea);
+  const suggestions = suggestedPromptsAction(prompts);
 
   if (plan.intent === "refine_search" || plan.intent === "new_search") {
     return actionList([
       plan.searchPrompt ? { type: "search_query", query: plan.searchPrompt, label: "Search GitHub" } : null,
-      suggestedPromptsAction(prompts)
+      suggestions
     ]);
   }
 
   if (plan.intent === "compare_repos") {
-    return actionList([compareTableAction(repos), repoCardsAction(repos, "Repos to compare"), suggestedPromptsAction(prompts)]);
+    return actionList([compareTableAction(repos), repoCardsAction(repos, "Repos to compare"), suggestions]);
   }
 
   if (plan.intent === "show_project_sites") {
-    return actionList([projectLinksAction(context), suggestedPromptsAction(prompts)]);
+    return actionList([projectLinksAction(context), suggestions]);
   }
 
   if (plan.intent === "start_handoff") {
@@ -155,7 +157,11 @@ function actionsForPlan(plan: ResearchChatPlan, context: ResearchChatContext): C
     return actionList([{ type: "save_repo", repoFullName: repos[0].fullName }, repoCardsAction(repos.slice(0, 1), "Repo to save")]);
   }
 
-  return actionList([repoCardsAction(repos, "Relevant repos"), suggestedPromptsAction(prompts)]);
+  if (plan.replyStrategy === "conversational" || plan.intent === "answer_from_context" || plan.intent === "explain_repo" || plan.intent === "opportunity_gap") {
+    return actionList([suggestions]);
+  }
+
+  return actionList([repoCardsAction(repos, "Relevant repos"), suggestions]);
 }
 
 export function composeResearchChatResponse(plan: ResearchChatPlan, context: ResearchChatContext): ResearchChatResponseV2 {

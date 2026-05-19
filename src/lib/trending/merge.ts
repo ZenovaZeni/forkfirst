@@ -10,6 +10,12 @@ export type CategorizedTrendingResult<T extends TrendingMergeItem> = {
   items: T[];
 };
 
+export type BalancedTrendingItem<T extends TrendingMergeItem> = {
+  item: T;
+  sourceCategoryId: Exclude<TrendingCategoryId, "all">;
+  matchedCategoryIds: Array<Exclude<TrendingCategoryId, "all">>;
+};
+
 export function topTrendingItems<T extends TrendingMergeItem>(items: T[], limit: number) {
   const deduped = new Map<string, T>();
   for (const item of items) {
@@ -25,11 +31,20 @@ export function topTrendingItems<T extends TrendingMergeItem>(items: T[], limit:
 
 export function balancedTrendingItems<T extends TrendingMergeItem>(
   results: Array<CategorizedTrendingResult<T>>,
-  categoryIds: TrendingCategoryId[],
+  categoryIds: Array<Exclude<TrendingCategoryId, "all">>,
   limit: number
 ) {
   const buckets = new Map<TrendingCategoryId, T[]>();
-  const seen = new Set<string>();
+  const matchedByRepo = new Map<string, Set<Exclude<TrendingCategoryId, "all">>>();
+
+  for (const result of results) {
+    if (result.categoryId === "all") continue;
+    for (const item of result.items) {
+      const matched = matchedByRepo.get(item.full_name) ?? new Set<Exclude<TrendingCategoryId, "all">>();
+      matched.add(result.categoryId);
+      matchedByRepo.set(item.full_name, matched);
+    }
+  }
 
   for (const categoryId of categoryIds) {
     const items = results
@@ -38,14 +53,19 @@ export function balancedTrendingItems<T extends TrendingMergeItem>(
     buckets.set(categoryId, topTrendingItems(items, 4));
   }
 
-  const merged: T[] = [];
+  const merged: Array<BalancedTrendingItem<T>> = [];
+  const seen = new Set<string>();
   for (let index = 0; merged.length < limit; index += 1) {
     let addedThisRound = false;
     for (const categoryId of categoryIds) {
       const item = buckets.get(categoryId)?.[index];
       if (!item || seen.has(item.full_name)) continue;
       seen.add(item.full_name);
-      merged.push(item);
+      merged.push({
+        item,
+        sourceCategoryId: categoryId,
+        matchedCategoryIds: Array.from(matchedByRepo.get(item.full_name) ?? [categoryId])
+      });
       addedThisRound = true;
       if (merged.length >= limit) break;
     }

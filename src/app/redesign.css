@@ -2599,6 +2599,14 @@ input, textarea, select { font: inherit; color: inherit; }
   gap: 8px 14px;
   min-width: 0;
 }
+.doc-meta-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
 .doc-copy-btn {
   min-width: 0;
   min-height: 30px;
@@ -2629,6 +2637,77 @@ input, textarea, select { font: inherit; color: inherit; }
   border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
   background: var(--accent-soft);
   outline: 0;
+}
+.handoff-version-menu {
+  position: relative;
+}
+.handoff-version-menu summary {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+.handoff-version-menu summary::-webkit-details-marker {
+  display: none;
+}
+.handoff-version-menu summary span {
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+.handoff-version-menu summary:hover,
+.handoff-version-menu[open] summary {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.handoff-version-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: min(300px, calc(100vw - 32px));
+  max-height: 260px;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: var(--shadow-1);
+}
+.handoff-version-popover button {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  border-radius: 10px;
+  padding: 9px 10px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.handoff-version-popover button:hover {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
+  background: var(--accent-soft);
+}
+.handoff-version-popover strong,
+.handoff-version-popover span {
+  display: block;
+}
+.handoff-version-popover strong {
+  font-size: 12.5px;
+  margin-bottom: 2px;
+}
+.handoff-version-popover span {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 
 .handoff-side {
@@ -2755,42 +2834,6 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 12px;
   font-weight: 700;
 }
-.compact-version-card .version-list {
-  max-height: 132px;
-  overflow: auto;
-}
-.version-list {
-  display: grid;
-  gap: 8px;
-}
-.version-list button {
-  text-align: left;
-  border: 1px solid var(--line);
-  background: var(--paper-2);
-  border-radius: 12px;
-  padding: 10px 12px;
-  color: var(--ink);
-  cursor: pointer;
-}
-.version-list button:hover {
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--line));
-  background: var(--accent-soft);
-}
-.version-list strong,
-.version-list span {
-  display: block;
-}
-.version-list strong {
-  font-size: 13px;
-  margin-bottom: 3px;
-}
-.version-list span,
-.version-list .empty-note {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
 .quality-card .quality-top {
   display: flex;
   justify-content: space-between;
@@ -5301,6 +5344,23 @@ input, textarea, select { font: inherit; color: inherit; }
   position: relative;
 }
 .trend-card:hover { border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); transform: translateY(-2px); box-shadow: var(--shadow-1); }
+.trend-category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.trend-category-row span {
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 4px 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+}
 .trend-card .nm {
   appearance: none;
   border: 0;

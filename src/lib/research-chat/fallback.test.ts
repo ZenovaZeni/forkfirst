@@ -58,6 +58,6 @@ describe("research chat conversational fallback", () => {
     expect(reply).not.toContain("## Short answer");
     expect(reply).not.toContain("### Current repo context");
     expect(reply).not.toContain("- 1.");
-    expect(reply.split("\n").filter((line) => line.trim().startsWith("- "))).toHaveLength(3);
+    expect(reply.split("\n").filter((line) => line.trim().startsWith("- "))).toHaveLength(0);
   });
 });

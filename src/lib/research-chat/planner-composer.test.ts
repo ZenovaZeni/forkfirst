@@ -65,6 +65,8 @@ describe("research chat planner and composer", () => {
     expect(response.reply).toContain("vteams/open-source-billing");
     expect(response.reply).not.toContain("## Short answer");
     expect(response.reply).not.toContain("### Current repo context");
+    expect(response.reply.split("\n").filter((line) => line.trim().startsWith("- "))).toHaveLength(0);
+    expect(response.actions.some((action) => action.type === "repo_cards")).toBe(false);
     expect(response.actions.some((action) => action.type === "suggested_prompts")).toBe(true);
   });
 

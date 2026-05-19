@@ -21,7 +21,7 @@ describe("trending all merge", () => {
       { categoryId: mobile, items: [item("mobile/one", 300), item("mobile/two", 200)] }
     ], [ai, ui, mobile], 6);
 
-    expect(merged.map((repo) => repo.full_name)).toEqual([
+    expect(merged.map((repo) => repo.item.full_name)).toEqual([
       "ai/one",
       "ui/one",
       "mobile/one",
@@ -40,6 +40,8 @@ describe("trending all merge", () => {
       { categoryId: web, items: [item("shared/repo", 1000), item("web/only", 800)] }
     ], [ai, web], 4);
 
-    expect(merged.map((repo) => repo.full_name)).toEqual(["shared/repo", "ai/only", "web/only"]);
+    expect(merged.map((repo) => repo.item.full_name)).toEqual(["shared/repo", "ai/only", "web/only"]);
+    expect(merged[0].sourceCategoryId).toBe(ai);
+    expect(merged[0].matchedCategoryIds).toEqual([ai, web]);
   });
 });
