@@ -441,6 +441,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .token-cell,
 .builder-logo-card,
 .builder-fineprint,
+.testimonial-card,
 .packet-copy,
 .packet-window,
 .product-mock,
@@ -822,6 +823,99 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: 0 0 8px;
 }
 .token-cell.lead p { margin: 0; color: var(--ink-2); font-size: 14.5px; max-width: 320px; }
+
+.testimonials-section {
+  max-width: 1320px;
+  overflow: hidden;
+}
+.testimonials-section .section-head {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.testimonials-section .section-head p {
+  margin-left: auto;
+  margin-right: auto;
+}
+.testimonials-columns {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  max-height: 720px;
+  overflow: hidden;
+  padding: 6px 0;
+  mask-image: linear-gradient(to bottom, black 0%, black 84%, transparent);
+}
+.testimonials-columns::before,
+.testimonials-columns::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 96px;
+  pointer-events: none;
+}
+.testimonials-columns::before {
+  display: none;
+}
+.testimonials-columns::after {
+  bottom: 0;
+  background: linear-gradient(to top, var(--landing-page), transparent);
+}
+.testimonials-column-track {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 18px;
+}
+.testimonial-card {
+  width: min(352px, calc(100vw - 40px));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--landing-line));
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--landing-panel) 94%, var(--accent-soft));
+  padding: 24px;
+  box-shadow: 0 22px 50px -40px color-mix(in srgb, var(--accent) 48%, transparent);
+}
+.testimonial-card p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.testimonial-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.testimonial-person img {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--landing-line));
+}
+.testimonial-person strong,
+.testimonial-person span {
+  display: block;
+  line-height: 1.25;
+}
+.testimonial-person strong {
+  color: var(--landing-ink);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+.testimonial-person span {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+[data-theme="dark"] .testimonial-card {
+  background: color-mix(in srgb, var(--landing-panel) 92%, var(--accent-soft));
+}
 
 /* ── Trust strip ──────────────────────────────────────────────────────── */
 .trust {
@@ -5890,6 +5984,8 @@ input, textarea, select { font: inherit; color: inherit; }
   .flow-lineup::before { display: none; }
   .flow-step { min-height: 0; }
   .flow-step span { margin-bottom: 20px; }
+  .testimonials-columns { gap: 14px; }
+  .testimonials-column-last { display: none; }
   .builder-logo-cloud { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .packet-showcase { grid-template-columns: 1fr; }
   .packet-window { grid-template-columns: 1fr; }
@@ -5914,6 +6010,8 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 @media (max-width: 560px) {
+  .testimonials-columns { max-height: 620px; }
+  .testimonials-column-mid { display: none; }
   .packet-files {
     grid-template-columns: 1fr;
   }

@@ -25,6 +25,7 @@ import {
 import { KeySettings, type UserKeys } from "@/components/key-settings";
 import { PromptPacksPanel } from "@/components/prompt-packs-panel";
 import { SavedRepoModal } from "@/components/saved-repo-modal";
+import { TestimonialsColumn, type TestimonialItem } from "@/components/ui/testimonials-columns-1";
 import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
@@ -85,6 +86,69 @@ const ACTIVE_CHAT_SESSION_KEY = "forkfirst:active-chat";
 const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "https://github.com/ZenovaZeni/forkfirst#support-forkfirst";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
+
+const LANDING_TESTIMONIALS: TestimonialItem[] = [
+  {
+    text: "This made the starting point obvious. ForkFirst helped me find a working foundation instead of asking AI to build everything from scratch. I still made the app my own, but I started with something real instead of a blank screen.",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Marcus Reed",
+    role: "Indie Builder"
+  },
+  {
+    text: "Saved me hours of repo hunting. I usually waste a ton of time searching GitHub, comparing repos, and figuring out what's usable. ForkFirst narrowed it down and gave me a clean handoff I could actually use in Cursor.",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Talia Morgan",
+    role: "No-Code Founder"
+  },
+  {
+    text: "It helped me think like a builder, not just a prompter. The biggest win wasn't just finding a repo. It helped me understand what parts of the foundation I could keep, what to remove, and how to refocus it into my own product.",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Derrick Lane",
+    role: "AI Automation Consultant"
+  },
+  {
+    text: "Perfect for AI-assisted app builds. ForkFirst gave me a better way to start. Instead of generating auth, dashboards, and basic app structure from zero, I found a foundation and used AI to redesign and customize it.",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Sofia Bennett",
+    role: "Product Designer"
+  },
+  {
+    text: "This is exactly how people should be building with AI. AI builders are powerful, but starting from a blank prompt can get messy fast. ForkFirst gives you a stronger foundation before you ever open Claude Code or Cursor.",
+    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Evan Brooks",
+    role: "Full-Stack Developer"
+  },
+  {
+    text: "It turned open source into a launch shortcut. I found a project that already had several pieces I needed, then used the handoff to rebrand, redesign, and shape it into something new. That workflow just makes sense.",
+    image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Nina Patel",
+    role: "SaaS Builder"
+  },
+  {
+    text: "Great for validating app ideas faster. ForkFirst helped me see what already exists before committing to a build. That alone saved me from overbuilding and gave me a clearer path for my MVP.",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Caleb Wright",
+    role: "Startup Founder"
+  },
+  {
+    text: "The handoff is the underrated part. Finding repos is helpful, but the real value is the builder-ready handoff. It gave me a much cleaner starting prompt for what to keep, change, remove, and improve.",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Amara Collins",
+    role: "AI Tools Creator"
+  },
+  {
+    text: "It makes GitHub less overwhelming. I'm not a senior developer, so open-source repos can feel intimidating. ForkFirst made it easier to understand which foundation actually matched my app idea.",
+    image: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Jordan Miles",
+    role: "Solo Founder"
+  },
+  {
+    text: "A smarter way to fork first and build second. ForkFirst helped me avoid rebuilding common features from scratch. I could start with a working base, then focus my energy on the actual product idea.",
+    image: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=96&h=96&q=80",
+    name: "Leo Hartman",
+    role: "Indie Hacker"
+  }
+];
 
 function isScreen(value: unknown): value is Screen {
   return typeof value === "string" && SCREENS.includes(value as Screen);
@@ -1551,6 +1615,22 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
             <span className="big">3</span>
             <span className="lbl">Real starting points, ranked. Not 50 links to skim.</span>
           </div>
+        </div>
+      </section>
+
+      <section className="section testimonials-section" aria-labelledby="testimonials-title">
+        <div className="section-head">
+          <span className="eyebrow">Builder proof</span>
+          <h2 id="testimonials-title">People start faster when they <span className="accent-word">fork first.</span></h2>
+          <p>
+            Builders use ForkFirst to make GitHub less overwhelming, find useful foundations, and give their AI builder
+            clearer instructions before code starts changing.
+          </p>
+        </div>
+        <div className="testimonials-columns" aria-label="ForkFirst testimonials">
+          <TestimonialsColumn testimonials={LANDING_TESTIMONIALS.slice(0, 4)} duration={24} />
+          <TestimonialsColumn testimonials={LANDING_TESTIMONIALS.slice(4, 7)} className="testimonials-column-mid" duration={29} />
+          <TestimonialsColumn testimonials={LANDING_TESTIMONIALS.slice(7, 10)} className="testimonials-column-last" duration={26} />
         </div>
       </section>
 
