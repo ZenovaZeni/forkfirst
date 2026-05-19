@@ -1,75 +1,148 @@
-# ForkFirst — Logo & Favicon Swap
+# ForkFirst — "The Y" Logo & Favicon Swap
 
-> **Hand this to your AI coder.** It's the only file they need to swap the
-> old logo and favicon for the new ones. Whole job in one paste.
-
----
-
-## What you're swapping in
-
-A refined **fork-tile** mark — a dark rounded square containing a paper
-git-fork glyph with a **cobalt commit dot** — paired with a **two-tone
-wordmark**: `Fork` in ink, `First` in cobalt.
-
-Replaces any previous logo, favicon, app icon, and OG image.
+> **Hand this to your AI coder.** It's the only file they need to swap
+> the old fork-tile mark for the new **Y mark** while keeping the existing
+> **ForkFirst** wordmark intact. Whole job in one paste.
 
 ---
 
-## Step 1 — Drop the `brand/` folder into your project
+## What you're swapping
 
-Copy the entire **`brand/`** folder from this design package into your
-app's public/static directory. Final layout in the deployed site:
+**OUT:** the old fork-glyph tile (dark square with a paper git-fork +
+cobalt commit dot).
+
+**IN:** a new mark called **"The Y"** — a confident two-stroke letter Y
+on a dark rounded tile. **Left arm + trunk are paper; right arm is
+cobalt-bright.** The wordmark **ForkFirst** stays exactly as is —
+Geist 700, two-tone ("Fork" in ink / "First" in cobalt).
+
+Same brand palette (ink / paper / cobalt). Same typography (Geist).
+Same tagline. Only the icon changes, plus every file that depended on
+it (favicons, app icons, OG image, lockups).
+
+---
+
+## TL;DR prompt — paste this into your AI coder
 
 ```
-public/                            (or static/, or wherever your host serves /)
+Please swap the ForkFirst logo to the new "Y" mark.
+
+1. Copy the entire `brand-y/` folder I'm including into the project's
+   public/static directory. The final layout should be /brand/...
+   (note: the source folder is `brand-y/` but it should land as
+   `brand/` in the deployed site — rename it on copy).
+
+2. Replace the favicon / OG / icon <link> and <meta> tags in every
+   page's <head> with the block from /brand/html/head-snippet.html.
+   Fully replace — don't merge — so no stale fork-tile references
+   remain anywhere in the HTML.
+
+3. Move /brand/html/site.webmanifest to the site root (/site.webmanifest).
+
+4. In every place the old mark appeared inline (nav, footer, mobile
+   menu, marketing pages), use the new lockup:
+     - Default:  /brand/logo/lockup-horizontal.svg     (32px tall)
+     - Dark:     /brand/logo/lockup-horizontal-on-ink.svg
+     - Square:   /brand/logo/lockup-stacked.svg        (avatars, mobile)
+   The wordmark file path is unchanged — wordmark.svg still works.
+
+5. Find-and-replace: any inline <svg> of the OLD fork-tile mark must be
+   deleted and replaced with the new mark (the rounded ink tile with
+   the two-stroke Y). The old mark had: two circles at top, a curved
+   stroke between them, a vertical stem, and a cobalt commit dot.
+   The new mark has: two strokes forming a Y — paper left+trunk, cobalt
+   right arm. Use <img src="/brand/logo/mark.svg"/> as the cleanest
+   replacement, or paste the SVG from /brand/logo/mark.svg inline.
+
+6. Delete the old assets to avoid drift: anything in /brand/logo/ that
+   isn't in /brand-y/logo/, and any old favicon files (favicon.ico,
+   favicon-old.png, the old apple-touch-icon, the old maskable, etc.)
+
+7. The colour tokens, the wordmark itself (wordmark.svg), the Geist
+   font stack, and the tagline ("Idea check, before you build.") are
+   unchanged. Don't touch them.
+
+After deploying, verify in a real browser:
+  - Browser tab favicon shows the Y on a dark tile (not the old fork)
+  - iOS "Add to Home Screen" shows the Y
+  - Sharing the URL to Slack / iMessage / Twitter shows the new OG
+    card (you may need to pass the URL through each platform's debugger
+    to invalidate their cache)
+  - Navbar shows the new lockup
+  - No 404s in DevTools → Network for /brand/* URLs
+
+Don't add a drop shadow, glow, gradient, or container around the new
+mark. The tile already has its own rounded corners (rx=14 on a 64-grid)
+— don't double-round it.
+```
+
+---
+
+## What's in `brand-y/`
+
+```
+brand-y/                            ← rename to `brand/` on copy
+├── HANDOFF.md                      ← this file
+├── logo/
+│   ├── mark.svg                    ← THE Y — primary mark (dark tile)
+│   ├── mark-on-ink.svg             ← Y stroked, no tile (for placement
+│   │                                  on existing dark surfaces)
+│   ├── mark-inverted.svg           ← paper tile + ink/cobalt Y (light
+│   │                                  contexts, business cards, print)
+│   ├── mark-cobalt-tile.svg        ← cobalt tile + paper/ink Y (bold)
+│   ├── wordmark.svg                ← UNCHANGED — same ForkFirst as before
+│   ├── wordmark-on-ink.svg         ← UNCHANGED
+│   ├── lockup-horizontal.svg       ← DEFAULT for nav / footer
+│   ├── lockup-horizontal-on-ink.svg
+│   ├── lockup-stacked.svg          ← square contexts, avatars, mobile
+│   └── lockup-stacked-on-ink.svg
+├── favicon/
+│   ├── favicon.svg                 ← modern browsers
+│   ├── favicon-16.png
+│   ├── favicon-32.png
+│   ├── favicon-48.png
+│   ├── apple-touch-icon.png        ← 180×180, iOS
+│   ├── icon-192.png                ← PWA
+│   ├── icon-512.png                ← PWA
+│   ├── icon-maskable-512.png       ← PWA, safe-zone padding
+│   ├── icon-192-light.png          ← paper-tile PWA (light-mode systems)
+│   └── icon-512-light.png
+├── html/
+│   ├── head-snippet.html           ← the <head> block from step 2
+│   └── site.webmanifest            ← PWA manifest → site root
+└── social/
+    ├── og-image.png                ← 1200×630, ink background (default)
+    └── og-image-paper.png          ← 1200×630, paper background (alt)
+```
+
+---
+
+## Step 1 — Drop in the folder
+
+Copy the entire `brand-y/` folder into your project's static assets
+**and rename it to `brand/`**. Final paths in the deployed site:
+
+```
+public/                       (or static/ — wherever / is served from)
 ├── brand/
-│   ├── README.md                  ← full brand brief (read once)
-│   ├── tokens/tokens.css          ← CSS variables (--ff-*)
-│   ├── tokens/tokens.json
-│   ├── html/head-snippet.html     ← the <head> block from step 2
-│   ├── html/site.webmanifest      ← PWA manifest
-│   ├── logo/
-│   │   ├── mark.svg               ← the mark, scalable; use this everywhere
-│   │   ├── mark-on-ink.svg        ← dark-context variant
-│   │   ├── mark-cobalt-tile.svg   ← cobalt-tile variant (bold)
-│   │   ├── mark-inverted.svg      ← paper-tile, ink fork (light context)
-│   │   ├── wordmark.svg           ← two-tone ForkFirst wordmark
-│   │   ├── wordmark-on-ink.svg
-│   │   ├── wordmark.png           ← 1× PNG fallback
-│   │   ├── wordmark-2x.png        ← 2× PNG
-│   │   ├── lockup-horizontal.svg  ← DEFAULT for navs / footers
-│   │   ├── lockup-horizontal-on-ink.svg
-│   │   ├── lockup-horizontal.png  / -2x.png  / -on-ink.png
-│   │   ├── lockup-stacked.svg     ← for square / portrait contexts
-│   │   └── lockup-stacked-on-ink.svg
-│   ├── favicon/
-│   │   ├── favicon.svg            ← modern browsers
-│   │   ├── favicon-16.png
-│   │   ├── favicon-32.png
-│   │   ├── favicon-48.png
-│   │   ├── apple-touch-icon.png   ← iOS — 180×180
-│   │   ├── icon-192.png           ← PWA
-│   │   ├── icon-512.png           ← PWA
-│   │   ├── icon-maskable-512.png  ← PWA maskable (extra safe-zone padding)
-│   │   ├── icon-192-light.png     ← optional, for light-bg systems
-│   │   └── icon-512-light.png
-│   └── social/
-│       ├── og-image.png           ← 1200×630 (paper)
-│       └── og-image-dark.png      ← 1200×630 (ink)
-└── site.webmanifest               ← copy `brand/html/site.webmanifest` here
+│   ├── logo/...
+│   ├── favicon/...
+│   ├── html/...
+│   └── social/...
+└── site.webmanifest          (copy of brand/html/site.webmanifest)
 ```
 
-If you're hosting from a different root, fix the paths in step 2.
+If your project already has a `brand/` folder, replace it wholesale or
+diff-merge — the old mark/favicon files should not remain.
 
 ---
 
-## Step 2 — Replace the `<head>` block on every page
+## Step 2 — Replace the `<head>` block
 
-Open your site's main HTML / layout file (root `index.html`,
-`_document.tsx` for Next.js, `<svelte:head>` for SvelteKit, etc) and
-**replace** any existing favicon / OG / icon `<link>` and `<meta>` tags
-with the block below. Don't merge — fully replace, so no stale references
-remain.
+Open your root layout file (`app/layout.tsx`, `_document.tsx`,
+`index.html`, `<svelte:head>`, etc) and **replace** any existing
+favicon / OG / icon `<link>` and `<meta>` tags with the block from
+`brand/html/head-snippet.html`:
 
 ```html
 <!-- Charset + viewport -->
@@ -96,7 +169,7 @@ remain.
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="ForkFirst"/>
-<meta property="og:url" content="https://forkfirst.vercel.app"/>
+<meta property="og:url" content="https://forkfirst.dev"/>
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image"/>
@@ -110,19 +183,17 @@ remain.
 <link
   href="https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@400..600&display=swap"
   rel="stylesheet"/>
-
-<!-- Design tokens -->
-<link rel="stylesheet" href="/brand/tokens/tokens.css"/>
 ```
+
+Don't merge — fully replace, so no stale fork-tile references remain.
 
 ---
 
 ## Step 3 — Swap the navbar / footer logo
 
-Find the existing logo component in your code (likely `<Logo />`,
-`<Brand />`, a `<header>` `<img>`, or inline SVG) and replace it with the
-new lockup. **One of two approaches** — pick one and use it everywhere
-for consistency.
+Find the existing logo component (`<Logo />`, `<Brand />`, `<header>`
+`<img>`, inline SVG) and use the new lockup. Pick **one** of these two
+patterns and use it everywhere for consistency.
 
 ### Option A — Use the SVG asset (simplest)
 
@@ -138,10 +209,10 @@ for consistency.
 ```
 
 For dark-mode contexts, swap to `lockup-horizontal-on-ink.svg`. For
-square contexts (mobile app, avatar, footer block), use
+square contexts (mobile, avatar, footer block), use
 `lockup-stacked.svg`.
 
-### Option B — Use the mark + inline wordmark (more flexible, recommended)
+### Option B — Mark + inline wordmark (recommended, sharper at small sizes)
 
 ```html
 <a href="/" aria-label="ForkFirst home" style="
@@ -152,65 +223,96 @@ square contexts (mobile app, avatar, footer block), use
 ">
   <img src="/brand/logo/mark.svg" alt="" width="28" height="28"/>
   <span style="
-    font-family: var(--ff-font-display);
+    font-family: var(--ff-font-display, 'Geist', system-ui, sans-serif);
     font-weight: 700;
     font-size: 17px;
     letter-spacing: -0.035em;
     line-height: 1;
   ">
-    <span style="color: var(--ff-ink)">Fork</span><span style="color: var(--ff-accent)">First</span>
+    <span style="color: var(--ff-ink, #0A0B0E)">Fork</span><span style="color: var(--ff-accent, #2647F0)">First</span>
   </span>
 </a>
 ```
 
-This keeps the text rasterised by the browser (sharper at small sizes)
-and gives you control over the tone split via CSS variables.
+The wordmark colours are unchanged from the previous brand — same
+`Fork` in ink + `First` in cobalt split.
 
 ---
 
-## Step 4 — Find-and-replace stale references
+## Step 4 — Delete the old assets
 
-Search the codebase for these strings and **delete or update** every
-match:
+Search the codebase and **delete** every reference to the old mark.
+Anything matching these patterns is the old fork-tile mark — kill it.
 
-| Find                                                  | Replace with                                       |
-|-------------------------------------------------------|----------------------------------------------------|
-| Old favicon paths (`favicon.ico`, `favicon-old.png`)  | The new `brand/favicon/...` paths from step 2.     |
-| Any inline SVG of the old logo                        | The new lockup component from step 3.              |
-| `#FF5555` or any coral / red commit-dot colour        | `var(--ff-cobalt)` / `#2647F0`                     |
-| `"Fork First"` (two words, in display copy)           | `ForkFirst` (one word) — *only* in display copy    |
-| Hardcoded blue (`#3b82f6`, `#0066cc`, etc) as accent  | `var(--ff-cobalt)` / `#2647F0`                     |
+| What to look for                                                | What to do                                       |
+|-----------------------------------------------------------------|--------------------------------------------------|
+| Inline SVG containing `Q 18 32 32 32 Q 46 32 46 21`             | Delete the SVG block; use `mark.svg` instead.    |
+| Any inline `<circle cx="32" cy="45" r="6.5" fill="#2647F0">`    | That's the old commit dot. Replace the parent.   |
+| `favicon.ico` references                                        | Delete — modern setup uses `favicon.svg` + PNGs. |
+| Old `apple-touch-icon` (the fork-tile one)                      | Replaced by the new one in `/brand/favicon/`.    |
+| Old maskable PWA icon                                           | Replaced by `icon-maskable-512.png`.             |
 
-> ⚠️ **Note on the wordmark casing.** In running prose / body copy, write
-> **ForkFirst** as one camelCase word. The two-tone split only applies to
-> the *display wordmark* (logo, hero, social cards) — not to every
-> sentence that mentions the brand.
+Run the dev server, open DevTools → Network, hard-refresh, and look
+for any `/brand/...` 404s. Each one tells you a stale reference is
+still around.
 
 ---
 
 ## Step 5 — Test
 
-After deploying, verify:
+After deploying, verify each of these visually:
 
-- [ ] Browser tab favicon shows the dark fork-tile with cobalt commit dot
-- [ ] iOS Safari "Add to Home Screen" picks up the apple-touch-icon
-- [ ] Navbar shows the new lockup at app-bar scale (32 px tall ish)
+- [ ] Browser tab favicon shows **the Y** on a dark tile (not the old fork)
+- [ ] iOS Safari "Add to Home Screen" picks up the new apple-touch-icon
+- [ ] Android "Add to Home Screen" picks up the maskable icon and the Y
+      survives the device's mask shape (test on a circle-mask launcher)
+- [ ] Navbar shows the new lockup, app-bar scale (~32 px tall)
 - [ ] No 404s for `/brand/...` URLs in DevTools → Network
-- [ ] Sharing the URL to Slack / iMessage / Twitter shows the new OG card
-      (the social platforms cache these — pass through their debugger to
-      force a re-fetch if needed)
-- [ ] Dark-mode pages use the cobalt-bright accent
-      (`var(--ff-cobalt-bright)`, `#5577FF`) instead of cobalt
+- [ ] Sharing the URL to Slack / iMessage / Twitter shows the new OG
+      card (social platforms cache OG images aggressively — pass through
+      each platform's debugger to force re-fetch:
+      <https://www.opengraph.xyz/>, Twitter Card Validator, etc)
+- [ ] Dark-mode pages: the cobalt arm uses **cobalt-bright** (`#5577FF`)
+      — built into `mark.svg` and `mark-on-ink.svg`. Light-mode pages
+      using `mark-inverted.svg` use regular cobalt (`#2647F0`).
 
 ---
 
 ## What didn't change
 
-- **Colour tokens.** The cobalt / ink / paper palette is unchanged. If
-  you've already wired `tokens.css` you don't need to re-do anything.
-- **Fonts.** Still Geist + Geist Mono. Already in the head snippet.
-- **The full BRAND.md** at `brand/README.md` — read it once for the
-  voice, rules, and full guideline set.
+- **Colour tokens.** Same ink / paper / cobalt / cobalt-bright. If you
+  already wired `tokens.css`, you don't need to re-do anything.
+- **Fonts.** Still Geist + Geist Mono. Already in the head snippet above.
+- **Wordmark.** `wordmark.svg` is byte-identical to the previous brand.
+- **Tagline / voice.** *Idea check, before you build.* Unchanged.
+- **`brand/README.md`** — keep using the long-form brand guide for
+  voice/copy/component rules. Only §5 (Logo) is superseded by this
+  file.
 
-If you hit anything weird, look at **`brand/README.md`** — it's the long
-form. This file is the short form.
+---
+
+## Geometry notes (for the curious or for re-rendering)
+
+The Y is built on the same 64×64 grid as the old fork-tile mark, so
+existing 28-px and 32-px slots in the UI still fit perfectly.
+
+```
+viewBox 0 0 64 64
+tile:        rect 0,0,64,64  rx=14  fill #0A0B0E
+left+trunk:  M14,12 L32,36 L32,54   stroke #F6F4EF  width 9   round cap+join
+right arm:   M50,12 L33,35          stroke #5577FF  width 9   round cap
+```
+
+The right arm intentionally ends at `(33, 35)` — one unit above and
+right of the joint — so the cobalt stroke tucks against the paper
+trunk with a 1-px gap that reveals the ink tile underneath. **Don't
+"clean this up"** — that gap is the join.
+
+For dark surfaces use `#5577FF` on the right arm; for paper surfaces
+(`mark-inverted.svg`) use `#2647F0`. This matches the existing
+brand-token convention.
+
+---
+
+*Same brand. Same wordmark. Sharper mark. If something on screen
+doesn't match this file, fix the surface — not the rules.*

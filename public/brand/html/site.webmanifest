@@ -1,14 +1,15 @@
 {
   "name": "ForkFirst",
   "short_name": "ForkFirst",
-  "description": "Find the best repo to fork — then hand the plan to your AI.",
+  "description": "Chat through your app idea, find a working GitHub foundation, and give your AI builder the repo, prompt, and files it needs.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F6F4EF",
-  "theme_color": "#F6F4EF",
+  "background_color": "#0A0B0E",
+  "theme_color": "#0A0B0E",
   "icons": [
-    { "src": "/brand/favicon/icon-192.png",          "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/brand/favicon/icon-512.png",          "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/favicon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/favicon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/brand/favicon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

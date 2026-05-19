@@ -208,19 +208,14 @@ input, textarea, select { font: inherit; color: inherit; }
 .forkfirst-logo path {
   fill: none;
   stroke: var(--logo-fork);
-  stroke-width: 4;
-}
-.forkfirst-logo path:first-of-type {
-  stroke-linecap: butt;
-}
-.forkfirst-logo path:last-of-type {
+  stroke-width: 9;
   stroke-linecap: round;
-}
-.forkfirst-logo circle {
-  fill: var(--logo-fork);
+  stroke-linejoin: round;
 }
 .forkfirst-logo .forkfirst-logo-accent {
-  fill: var(--accent);
+  fill: none;
+  stroke: var(--accent);
+  stroke-linejoin: round;
 }
 .forkfirst-logo.is-big {
   width: 44px;
@@ -3576,8 +3571,6 @@ input, textarea, select { font: inherit; color: inherit; }
   margin-bottom: 8px;
 }
 .t-assist .who .mark { width: 22px; height: 22px; border-radius: 6px; }
-.t-assist .who .mark::before { width: 8px; height: 1.5px; top: 7px; left: 4px; box-shadow: 0 3px 0 var(--paper), 0 6px 0 var(--paper); border-radius: 1px; }
-.t-assist .who .mark::after { width: 5px; height: 5px; right: 4px; bottom: 3.5px; }
 .t-assist .who strong { color: var(--ink); font-weight: 600; }
 .t-assist .who time { color: var(--muted); }
 

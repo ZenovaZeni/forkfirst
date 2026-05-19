@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 200" width="560" height="400" role="img" aria-label="ForkFirst stacked lockup">
   <title>ForkFirst stacked lockup</title>
-  <defs>
-    
-  </defs>
+  
   <g transform="translate(108 0)">
     <rect width="64" height="64" rx="14" fill="#0A0B0E"></rect>
-    <path d="M18 21 Q 18 32 32 32 Q 46 32 46 21" fill="none" stroke="#F6F4EF" stroke-width="4"></path><path d="M32 32 L 32 39" stroke="#F6F4EF" stroke-width="4" stroke-linecap="round"></path><circle cx="18" cy="18" r="5.5" fill="#F6F4EF"></circle><circle cx="46" cy="18" r="5.5" fill="#F6F4EF"></circle>
-    <circle cx="32" cy="45" r="6.5" fill="#5577FF"></circle>
+    <path d="M14 12 L 32 36 L 32 54" fill="none" stroke="#F6F4EF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M50 12 L 33 35" fill="none" stroke="#5577FF" stroke-width="9" stroke-linecap="round"></path>
   </g>
-  <text class="ff-wm" x="140" y="122" text-anchor="middle"><tspan fill="#F6F4EF">Fork</tspan><tspan fill="#5577FF">First</tspan></text>
+  <text class="ff-wm" x="140" y="125" text-anchor="middle"><tspan fill="#F6F4EF">Fork</tspan><tspan fill="#5577FF">First</tspan></text>
 </svg>

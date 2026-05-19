@@ -921,11 +921,8 @@ function Logo({ big = false }: { big?: boolean }) {
     >
       <svg viewBox="0 0 64 64" focusable="false">
         <rect width="64" height="64" rx="14" />
-        <path d="M18 21 Q18 32 32 32 Q46 32 46 21" />
-        <path d="M32 32 L32 39" />
-        <circle cx="18" cy="18" r="5.5" />
-        <circle cx="46" cy="18" r="5.5" />
-        <circle className="forkfirst-logo-accent" cx="32" cy="45" r="6.5" />
+        <path d="M14 12 L32 36 L32 54" />
+        <path className="forkfirst-logo-accent" d="M50 12 L33 35" />
       </svg>
     </span>
   );
@@ -2517,7 +2514,13 @@ function LoadingView({ prompt }: { prompt: string }) {
 
 function Mark() {
   return (
-    <span aria-hidden="true" className="mark" style={{ width: 22, height: 22, borderRadius: 6 }} />
+    <span aria-hidden="true" className="forkfirst-logo mark">
+      <svg viewBox="0 0 64 64" focusable="false">
+        <rect width="64" height="64" rx="14" />
+        <path d="M14 12 L32 36 L32 54" />
+        <path className="forkfirst-logo-accent" d="M50 12 L33 35" />
+      </svg>
+    </span>
   );
 }
 
