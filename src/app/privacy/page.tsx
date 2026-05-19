@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ForkFirstLogo } from "@/components/forkfirst-logo";
 
 export const metadata: Metadata = {
   title: "ForkFirst Privacy",
@@ -35,6 +36,7 @@ const privacyCards = [
 function ForkFirstWordmark() {
   return (
     <span className="legal-page__wordmark" aria-label="ForkFirst">
+      <ForkFirstLogo />
       <span>Fork</span>
       <span>First</span>
     </span>

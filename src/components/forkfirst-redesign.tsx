@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
+import { ForkFirstLogo } from "@/components/forkfirst-logo";
 import {
   ArrowRight,
   Bookmark,
@@ -960,18 +961,7 @@ function useTrendingRepos(categoryId: TrendingCategory["id"]) {
 }
 
 function Logo({ big = false }: { big?: boolean }) {
-  return (
-    <span
-      className={`forkfirst-logo ${big ? "is-big" : ""}`}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 64 64" focusable="false">
-        <rect width="64" height="64" rx="14" />
-        <path d="M14 12 L32 36 L32 54" />
-        <path className="forkfirst-logo-accent" d="M50 12 L33 35" />
-      </svg>
-    </span>
-  );
+  return <ForkFirstLogo big={big} />;
 }
 
 function Wordmark() {

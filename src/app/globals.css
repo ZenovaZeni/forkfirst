@@ -6840,7 +6840,8 @@ body,
 
 .legal-page__wordmark {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 800;
