@@ -1820,20 +1820,19 @@ function Landing({
       </section>
 
       <section className="section support-section" id="support">
-        <div className="section-head">
+        <div className="section-head support-head">
           <span className="eyebrow">Support</span>
-          <h2>Keep ForkFirst <span className="accent-word">free and open-source.</span></h2>
+          <h2>ForkFirst is free and open-source.</h2>
         </div>
         <div className="support-panel">
           <div>
-            <p>ForkFirst is free and open-source.</p>
             <p>
               If it saves you time, tokens, or helps you avoid starting from scratch, you can support future
               development here.
             </p>
             <p className="support-note">No pressure — stars, feedback, issues, and shares help too.</p>
           </div>
-          <a className="btn accent lg" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+          <a className="btn ghost support-button" href={SUPPORT_URL} target="_blank" rel="noreferrer">
             Support development <ExternalLink size={14} />
           </a>
         </div>
