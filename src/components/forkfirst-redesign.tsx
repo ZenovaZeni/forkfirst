@@ -849,7 +849,7 @@ function trendingRepoWatch(repo: TrendingRepo) {
 }
 
 function trendingRepoNext(repo: TrendingRepo) {
-  return `If this looks close, click Use as foundation. ForkFirst will attach ${repo.fullName} to a new chat and ask what you want to build from it before generating the handoff.`;
+  return `If this looks close, click Use. ForkFirst will attach ${repo.fullName} to a new chat and ask what you want to build from it before generating the handoff.`;
 }
 
 function foundationFromRepoPath(fullName: string): FoundationDraft {
@@ -2388,7 +2388,7 @@ function EmptyApp({
               setPasteUrl("");
             }}
           >
-            Use repo
+            Use
           </button>
         </div>
         {showRepoHint ? <p className="paste-hint">Use owner/repo or github.com/owner/repo.</p> : null}
@@ -2459,7 +2459,7 @@ function EmptyApp({
                       onSelectFoundation(foundationFromTrendingRepo(repo));
                     }}
                   >
-                    Use as foundation
+                    Use
                   </button>
                 </div>
               </article>
@@ -2582,7 +2582,7 @@ function FeaturedRepo({
 
       <div className="rc-actions">
         <button className="btn accent" type="button" onClick={() => onUse(repo)}>
-          {cautious ? "Create handoff carefully" : "Use as my starting point"}
+          Use
         </button>
         <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>
           Details
@@ -2668,7 +2668,7 @@ function CompactRepo({
         </div>
         <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
         <RepoSiteLink url={repo.homepage} />
-        <button className="btn ghost" type="button" onClick={() => onUse(repo)}>Use this one</button>
+        <button className="btn ghost" type="button" onClick={() => onUse(repo)}>Use</button>
       </div>
     </article>
   );
@@ -3331,7 +3331,7 @@ function RepoDrawer({
           ) : null}
         </div>
         <div className="drawer-foot">
-          <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use as my starting point</button>
+          <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use</button>
           <RepoSiteLink url={repo.homepage} />
           <a className="btn ghost" href={repo.url} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open on GitHub</a>
           <button className="btn ghost" type="button" onClick={() => onSave(repo)}>{saved ? <Check size={14} /> : <Bookmark size={14} />} {saved ? "Saved" : "Save"}</button>
@@ -3780,7 +3780,7 @@ function LibraryScreen({
               <span>{repo.license ?? "Inspect"}</span>
             </div>
             <div className="lib-actions">
-              <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use as foundation</button>
+              <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use</button>
               <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
               <RepoSiteLink url={repo.homepage} />
               <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
@@ -4293,7 +4293,7 @@ function TrendingRepoDrawer({
           ) : null}
         </div>
         <div className="drawer-foot">
-          <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use as foundation</button>
+          <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use</button>
           <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSave(repo)}>
             <Bookmark size={14} /> {saved ? "Saved in library" : "Save to library"}
           </button>

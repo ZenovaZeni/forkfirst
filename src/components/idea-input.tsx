@@ -76,7 +76,7 @@ export function IdeaInput({ prompt, loading, submitLabel = "Check Idea", compact
             placeholder="paste a github.com/owner/repo URL - skip the search"
           />
           <button className="go-btn" type="button" disabled={!canUseRepo} onClick={handleUseRepo}>
-            Use repo
+            Use
           </button>
         </div>
       )}
