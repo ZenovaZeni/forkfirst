@@ -451,13 +451,12 @@ export async function POST(request: Request) {
   let results: CategorizedGitHubSearchResult[];
 
   try {
-    results = [];
-    for (const group of queryGroups) {
-      for (const query of group.queries) {
-        const result = await fetchTrendingQuery(query, group.perPage);
-        results.push({ ...result, categoryId: group.categoryId });
-      }
-    }
+    results = await Promise.all(queryGroups.flatMap((group) =>
+      group.queries.map(async (query) => ({
+        ...(await fetchTrendingQuery(query, group.perPage)),
+        categoryId: group.categoryId
+      }))
+    ));
   } catch {
     console.error("[trending] fetch failed");
     if (cached) {

@@ -3551,6 +3551,10 @@ input, textarea, select { font: inherit; color: inherit; }
   cursor: default;
   opacity: 0.58;
 }
+.settings-backup-grid {
+  display: grid;
+  gap: 14px;
+}
 .install-settings-row {
   display: flex;
   align-items: center;
@@ -5370,6 +5374,45 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .trending-drawer .drawer-topics {
   margin-top: 10px;
+}
+@media (max-width: 560px) {
+  .trending-drawer .drawer-head {
+    padding: 12px 14px;
+  }
+  .trending-drawer .drawer-body {
+    padding: 18px 18px 22px;
+  }
+  .trending-drawer .repo-hero {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+  .trending-drawer .repo-hero h2,
+  .trending-drawer .repo-hero .score-big,
+  .trending-drawer .repo-hero .score-lbl {
+    display: none;
+  }
+  .trending-drawer .repo-section {
+    margin-bottom: 18px;
+  }
+  .trending-drawer .repo-section p {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .trending-drawer .drawer-foot {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 10px 14px 12px;
+  }
+  .trending-drawer .drawer-foot .btn {
+    min-width: 0;
+    min-height: 42px;
+    padding-inline: 8px;
+  }
+  .trending-drawer .drawer-foot .btn.accent {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────

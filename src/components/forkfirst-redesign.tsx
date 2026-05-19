@@ -21,6 +21,7 @@ import {
   Settings as SettingsIcon,
   Star,
   Sun,
+  Upload,
   X
 } from "lucide-react";
 import { KeySettings, type UserKeys } from "@/components/key-settings";
@@ -46,6 +47,7 @@ import {
   readJsonValue,
   REDESIGN_STORAGE_KEYS,
   type RedesignAccent,
+  type RedesignFeatureStorage,
   type SavedBuildPack,
   type SavedBuildPackVersion,
   type SavedBuildPackWorkspaceSnapshot,
@@ -81,7 +83,7 @@ type Screen = "landing" | "app" | "loading" | "results" | "more" | "branding" | 
 type GoOptions = { scroll?: "top" | "preserve" };
 type Theme = "light" | "dark";
 type ChatTurn = { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent };
-type SettingsTab = "appearance" | "keys" | "usage" | "install";
+type SettingsTab = "appearance" | "keys" | "usage" | "backup" | "install";
 const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
@@ -883,7 +885,7 @@ function trendingRepoWhat(repo: TrendingRepo) {
 
 function trendingRepoUse(repo: TrendingRepo, category?: TrendingCategory) {
   const categoryText = category ? ` It appeared under ${category.label}, so treat it as a live lead for ${category.blurb.toLowerCase()}` : "";
-  return `${repo.fullName} may be useful as a foundation, reference, or pattern source.${categoryText} Start by checking the README, setup steps, license, and whether its product direction matches what you want to build.`;
+  return `This may be useful as a foundation, reference, or pattern source.${categoryText} Start by checking the README, setup steps, license, and whether its product direction matches what you want to build.`;
 }
 
 function trendingRepoWatch(repo: TrendingRepo) {
@@ -1198,6 +1200,63 @@ function downloadBlobFile(filename: string, blob: Blob) {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
+}
+
+const BACKUP_KEYS = [
+  "chats",
+  "savedRepos",
+  "savedRepoBoards",
+  "savedBuildPacks",
+  "usageEntries",
+  "promptPackState",
+  "savingsLog",
+  "accent"
+] as const satisfies ReadonlyArray<keyof RedesignFeatureStorage>;
+
+type BackupKey = (typeof BACKUP_KEYS)[number];
+type ForkFirstBackupPayload = {
+  app: "ForkFirst";
+  version: 1;
+  exportedAt: string;
+  note: string;
+  data: Pick<RedesignFeatureStorage, BackupKey>;
+};
+
+function backupFilename() {
+  return `forkfirst-backup-${new Date().toISOString().slice(0, 10)}.json`;
+}
+
+function backupPayloadFromStorage(storage: RedesignFeatureStorage): ForkFirstBackupPayload {
+  return {
+    app: "ForkFirst",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    note: "Local ForkFirst backup. API keys are intentionally not included.",
+    data: {
+      chats: storage.chats,
+      savedRepos: storage.savedRepos,
+      savedRepoBoards: storage.savedRepoBoards,
+      savedBuildPacks: storage.savedBuildPacks,
+      usageEntries: storage.usageEntries,
+      promptPackState: storage.promptPackState,
+      savingsLog: storage.savingsLog,
+      accent: storage.accent
+    }
+  };
+}
+
+function normalizeBackupPatch(input: unknown): Partial<RedesignFeatureStorage> | null {
+  if (!input || typeof input !== "object") return null;
+  const source = "data" in input && input.data && typeof input.data === "object"
+    ? input.data as Partial<RedesignFeatureStorage>
+    : input as Partial<RedesignFeatureStorage>;
+  const patch: Partial<RedesignFeatureStorage> = {};
+  for (const key of BACKUP_KEYS) {
+    if (source[key] !== undefined) {
+      (patch as Record<BackupKey, unknown>)[key] = source[key];
+    }
+  }
+  return Object.keys(patch).length ? patch : null;
 }
 
 const CRC_TABLE = new Uint32Array(256).map((_, index) => {
@@ -4292,7 +4351,12 @@ function SettingsScreen({
   onRememberKeysChange,
   onClearAllData,
   onShowWelcome,
-  onResetUsage
+  onResetUsage,
+  onExportBackup,
+  onImportBackup,
+  savedRepoCount,
+  savedBuildPackCount,
+  chatCount
 }: {
   keys: UserKeys;
   accent: RedesignAccent;
@@ -4308,14 +4372,22 @@ function SettingsScreen({
   onClearAllData: () => void;
   onShowWelcome: () => void;
   onResetUsage: () => void;
+  onExportBackup: () => void;
+  onImportBackup: (file: File) => Promise<void>;
+  savedRepoCount: number;
+  savedBuildPackCount: number;
+  chatCount: number;
 }) {
   const [installStatus, setInstallStatus] = useState<"installed" | "ready" | "ios" | "unavailable">("unavailable");
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("appearance");
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
   const usageSummary = summarizeUsage(usageEntries);
+  const backupItemCount = savedRepoCount + savedBuildPackCount + chatCount;
   const settingsTabs: Array<{ id: SettingsTab; label: string; description: string; meta: string }> = [
     { id: "appearance", label: "Appearance", description: "Theme accent and brand color.", meta: ACCENT_OPTIONS.find((option) => option.id === accent)?.label ?? "Accent" },
     { id: "keys", label: "Keys & privacy", description: "BYOK providers and local storage.", meta: verification.github === "verified" || verification.ai === "verified" ? "Verified" : keys.githubToken || keys.aiApiKey ? "Saved" : "Optional" },
     { id: "usage", label: "Usage", description: "API calls, tokens, and cost estimates.", meta: `${usageSummary.entries.toLocaleString()} calls` },
+    { id: "backup", label: "Backup", description: "Move local data between browsers.", meta: `${backupItemCount.toLocaleString()} items` },
     { id: "install", label: "Install", description: "Optional device shortcut.", meta: installStatus === "installed" ? "Installed" : "Optional" }
   ];
 
@@ -4418,6 +4490,45 @@ function SettingsScreen({
           ) : null}
           {settingsTab === "usage" ? (
             <UsageSettingsPanel usageEntries={usageEntries} savingsLog={savingsLog} onResetUsage={onResetUsage} />
+          ) : null}
+          {settingsTab === "backup" ? (
+            <div className="settings-backup-grid">
+              <section className="settings-utility" aria-label="Export local backup">
+                <div>
+                  <span className="eyebrow">Local backup</span>
+                  <strong>Export saved work</strong>
+                  <p>
+                    Downloads saved repos, handoffs, chats, boards, prompt packs, usage estimates, and appearance settings as JSON. API keys are not included.
+                  </p>
+                </div>
+                <button className="btn ghost" type="button" onClick={onExportBackup}>
+                  <Download size={14} /> Export
+                </button>
+              </section>
+              <section className="settings-utility" aria-label="Import local backup">
+                <div>
+                  <span className="eyebrow">Restore</span>
+                  <strong>Import backup file</strong>
+                  <p>
+                    Restores a ForkFirst backup into this browser. This replaces local saved repos, handoffs, chats, prompt packs, usage estimates, and accent.
+                  </p>
+                </div>
+                <input
+                  ref={backupInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    event.currentTarget.value = "";
+                    if (file) void onImportBackup(file);
+                  }}
+                />
+                <button className="btn ghost" type="button" onClick={() => backupInputRef.current?.click()}>
+                  <Upload size={14} /> Import
+                </button>
+              </section>
+            </div>
           ) : null}
           {settingsTab === "install" ? (
             <section className="settings-utility" aria-label="Device shortcut">
@@ -4599,7 +4710,7 @@ function TrendingRepoDrawer({
           </button>
           <div className="title">
             <div className="name">{repo.fullName}</div>
-            <div className="sub">{category?.label ?? "Trending"} / {repo.license ?? "Inspect license"} / {repo.language ?? "Mixed"}</div>
+            <div className="sub">{category?.label ?? "Trending"} / {repo.license ?? "Inspect license"} / {repo.language ?? "Mixed"} / {formatStars(repo.stars)} stars</div>
           </div>
         </div>
         <div className="drawer-body">
@@ -4652,10 +4763,10 @@ function TrendingRepoDrawer({
         <div className="drawer-foot">
           <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use</button>
           <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSave(repo)}>
-            <Bookmark size={14} /> {saved ? "Saved in library" : "Save to library"}
+            <Bookmark size={14} /> {saved ? "Saved" : "Save"}
           </button>
           <RepoSiteLink url={repo.homepage} />
-          <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open on GitHub</a>
+          <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> GitHub</a>
         </div>
       </aside>
     </>
@@ -5068,6 +5179,55 @@ export function ForkFirstRedesignApp() {
     setUsageEntries([]);
     writeFeatureStorage(window.localStorage, { usageEntries: [] });
     setToast("Usage estimate reset");
+  }, []);
+
+  const exportLocalBackup = useCallback(() => {
+    const backup = backupPayloadFromStorage(readFeatureStorage(window.localStorage));
+    downloadBlobFile(
+      backupFilename(),
+      new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" })
+    );
+    setToast("Local backup exported");
+  }, []);
+
+  const importLocalBackup = useCallback(async (file: File) => {
+    try {
+      const parsed = JSON.parse(await file.text()) as unknown;
+      const patch = normalizeBackupPatch(parsed);
+      if (!patch) throw new Error("No restorable ForkFirst data found.");
+
+      const importStorage = new Map<string, string>();
+      for (const key of BACKUP_KEYS) {
+        if (patch[key] !== undefined) {
+          importStorage.set(REDESIGN_STORAGE_KEYS[key], JSON.stringify(patch[key]));
+        }
+      }
+      const normalized = readFeatureStorage({
+        getItem: (key) => importStorage.get(key) ?? null,
+        setItem: (key, value) => { importStorage.set(key, value); },
+        removeItem: (key) => { importStorage.delete(key); }
+      });
+      const nextPatch: Partial<RedesignFeatureStorage> = {};
+      for (const key of BACKUP_KEYS) {
+        if (patch[key] !== undefined) {
+          (nextPatch as Record<BackupKey, unknown>)[key] = normalized[key];
+        }
+      }
+
+      writeFeatureStorage(window.localStorage, nextPatch);
+      if (nextPatch.chats) setChats(nextPatch.chats);
+      if (nextPatch.savedRepos) setSavedRepos(nextPatch.savedRepos);
+      if (nextPatch.savedRepoBoards) setSavedRepoBoards(nextPatch.savedRepoBoards);
+      if (nextPatch.savedBuildPacks) setSavedBuildPacks(nextPatch.savedBuildPacks);
+      if (nextPatch.usageEntries) setUsageEntries(nextPatch.usageEntries);
+      if (nextPatch.promptPackState) setPromptPackState(nextPatch.promptPackState);
+      if (nextPatch.savingsLog) setSavingsLog(nextPatch.savingsLog);
+      if (nextPatch.accent) setAccent(nextPatch.accent);
+      setActiveBuildPack(null);
+      setToast("Local backup imported");
+    } catch {
+      setToast("Backup import failed");
+    }
   }, []);
 
   const saveRepo = useCallback((repo: ClassifiedRepo) => {
@@ -5707,6 +5867,11 @@ export function ForkFirstRedesignApp() {
                   onClearAllData={clearAllData}
                   onShowWelcome={() => go("landing")}
                   onResetUsage={resetUsage}
+                  onExportBackup={exportLocalBackup}
+                  onImportBackup={importLocalBackup}
+                  savedRepoCount={savedRepos.length}
+                  savedBuildPackCount={savedBuildPacks.length}
+                  chatCount={chats.length}
                 />
               ) : null}
               {screen === "trending" ? (
