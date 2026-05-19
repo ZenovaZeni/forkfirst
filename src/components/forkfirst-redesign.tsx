@@ -3772,7 +3772,6 @@ function LibraryScreen({
           <article key={repo.fullName} className="lib-card">
             <div className="top">
               <button className="nm" type="button" onClick={() => onOpen(repo)}>{repo.fullName}</button>
-              <span className={`tag ${repoTagClass(repo)}`}>{repoCategoryLabel(repo)} / {repo.score.total}%</span>
             </div>
             <div className="d">{repoSummary(repo)}</div>
             <div className="row">
