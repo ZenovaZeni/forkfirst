@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { TRENDING_CATEGORIES, buildTrendingQueries } from "@/lib/trending/categories";
+import { TRENDING_CATEGORIES, TRENDING_CATEGORY_IDS, buildTrendingQueries, type TrendingCategoryId } from "@/lib/trending/categories";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
 
 export const runtime = "nodejs";
 
 const RequestSchema = z.object({
-  categoryId: z.enum([
-    "ai-agents",
-    "claude-skills",
-    "cursor-mcp",
-    "dev-tools",
-    "saas-starters",
-    "indie-apps"
-  ]),
+  categoryId: z.enum(TRENDING_CATEGORY_IDS),
   githubToken: z.string().max(300).optional()
 });
 
@@ -57,10 +50,10 @@ type GitHubSearchResult = {
 };
 
 const trendingRateLimit = new Map<string, { count: number; windowStart: number }>();
-const TRENDING_CACHE_MS = 12 * 60 * 60 * 1000;
+const TRENDING_CACHE_MS = 24 * 60 * 60 * 1000;
 const trendingCache = new Map<string, { repos: TrendingRepo[]; generatedAt: string; expiresAt: number }>();
 
-const fallbackTrendingRepos: Record<z.infer<typeof RequestSchema>["categoryId"], TrendingRepo[]> = {
+const fallbackTrendingRepos: Partial<Record<TrendingCategoryId, TrendingRepo[]>> = {
   "ai-agents": [
     {
       fullName: "microsoft/autogen",
@@ -97,44 +90,6 @@ const fallbackTrendingRepos: Record<z.infer<typeof RequestSchema>["categoryId"],
       updatedAt: null,
       createdAt: null,
       topics: ["agents", "llm", "graphs"]
-    }
-  ],
-  "claude-skills": [
-    {
-      fullName: "VoltAgent/awesome-openclaw-skills",
-      description: "Curated examples and skills for Claude-style coding workflows.",
-      stars: 1200,
-      language: "Markdown",
-      htmlUrl: "https://github.com/VoltAgent/awesome-openclaw-skills",
-      homepage: null,
-      license: "MIT",
-      updatedAt: null,
-      createdAt: null,
-      topics: ["claude-code", "skills", "agents"]
-    },
-    {
-      fullName: "contains-studio/agents",
-      description: "A collection of agent prompts and workflow patterns.",
-      stars: 6500,
-      language: "Markdown",
-      htmlUrl: "https://github.com/contains-studio/agents",
-      homepage: null,
-      license: "MIT",
-      updatedAt: null,
-      createdAt: null,
-      topics: ["agents", "prompts", "claude"]
-    },
-    {
-      fullName: "hesreallyhim/awesome-claude-code",
-      description: "A curated list of Claude Code resources and workflows.",
-      stars: 3000,
-      language: "Markdown",
-      htmlUrl: "https://github.com/hesreallyhim/awesome-claude-code",
-      homepage: null,
-      license: "CC0-1.0",
-      updatedAt: null,
-      createdAt: null,
-      topics: ["claude-code", "awesome-list", "tools"]
     }
   ],
   "cursor-mcp": [
@@ -175,18 +130,30 @@ const fallbackTrendingRepos: Record<z.infer<typeof RequestSchema>["categoryId"],
       topics: ["mcp", "documentation", "cursor"]
     }
   ],
-  "dev-tools": [
+  "web-apps": [
     {
-      fullName: "shadcn-ui/ui",
-      description: "Beautifully designed components that you can copy and paste into your apps.",
-      stars: 90000,
+      fullName: "vercel/next.js",
+      description: "The React Framework.",
+      stars: 130000,
       language: "TypeScript",
-      htmlUrl: "https://github.com/shadcn-ui/ui",
-      homepage: "https://ui.shadcn.com/",
+      htmlUrl: "https://github.com/vercel/next.js",
+      homepage: "https://nextjs.org/",
       license: "MIT",
       updatedAt: null,
       createdAt: null,
-      topics: ["developer-tools", "react", "components"]
+      topics: ["nextjs", "react", "web-app"]
+    },
+    {
+      fullName: "remix-run/remix",
+      description: "Build better websites.",
+      stars: 32000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/remix-run/remix",
+      homepage: "https://remix.run/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["web-app", "react", "fullstack"]
     },
     {
       fullName: "supabase/supabase",
@@ -198,19 +165,7 @@ const fallbackTrendingRepos: Record<z.infer<typeof RequestSchema>["categoryId"],
       license: "Apache-2.0",
       updatedAt: null,
       createdAt: null,
-      topics: ["developer-tools", "database", "backend"]
-    },
-    {
-      fullName: "microsoft/playwright",
-      description: "Framework for Web Testing and Automation.",
-      stars: 75000,
-      language: "TypeScript",
-      htmlUrl: "https://github.com/microsoft/playwright",
-      homepage: "https://playwright.dev/",
-      license: "Apache-2.0",
-      updatedAt: null,
-      createdAt: null,
-      topics: ["developer-tools", "testing", "automation"]
+      topics: ["backend", "database", "fullstack"]
     }
   ],
   "saas-starters": [
@@ -288,10 +243,80 @@ const fallbackTrendingRepos: Record<z.infer<typeof RequestSchema>["categoryId"],
       createdAt: null,
       topics: ["open-source-app", "tasks", "notes"]
     }
+  ],
+  dashboards: [
+    {
+      fullName: "tremorlabs/tremor",
+      description: "React components to build charts and dashboards.",
+      stars: 16000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/tremorlabs/tremor",
+      homepage: "https://tremor.so/",
+      license: "Apache-2.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["dashboard", "charts", "react"]
+    }
+  ],
+  "mobile-pwa": [
+    {
+      fullName: "ionic-team/ionic-framework",
+      description: "A powerful cross-platform app runtime and UI toolkit.",
+      stars: 51000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/ionic-team/ionic-framework",
+      homepage: "https://ionicframework.com/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["mobile-app", "pwa", "cross-platform"]
+    }
+  ],
+  "scrapers-apis": [
+    {
+      fullName: "apify/crawlee",
+      description: "A web scraping and browser automation library.",
+      stars: 17000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/apify/crawlee",
+      homepage: "https://crawlee.dev/",
+      license: "Apache-2.0",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["web-scraping", "automation", "api"]
+    }
+  ],
+  "ui-kits": [
+    {
+      fullName: "shadcn-ui/ui",
+      description: "Beautifully designed components that you can copy and paste into your apps.",
+      stars: 90000,
+      language: "TypeScript",
+      htmlUrl: "https://github.com/shadcn-ui/ui",
+      homepage: "https://ui.shadcn.com/",
+      license: "MIT",
+      updatedAt: null,
+      createdAt: null,
+      topics: ["ui-components", "react", "tailwindcss"]
+    }
   ]
 };
 
-function trendingResponse(categoryId: z.infer<typeof RequestSchema>["categoryId"], repos: TrendingRepo[], meta: Record<string, unknown>) {
+function fallbackForCategory(categoryId: TrendingCategoryId) {
+  if (categoryId !== "all" && fallbackTrendingRepos[categoryId]?.length) return fallbackTrendingRepos[categoryId]!;
+  const seen = new Set<string>();
+  return Object.values(fallbackTrendingRepos)
+    .flat()
+    .filter((repo) => {
+      if (seen.has(repo.fullName)) return false;
+      seen.add(repo.fullName);
+      return true;
+    })
+    .sort((a, b) => b.stars - a.stars)
+    .slice(0, 12);
+}
+
+function trendingResponse(categoryId: TrendingCategoryId, repos: TrendingRepo[], meta: Record<string, unknown>) {
   return NextResponse.json({
     repos,
     meta: {
@@ -388,7 +413,7 @@ export async function POST(request: Request) {
         stale: true
       });
     }
-    return trendingResponse(cacheKey, fallbackTrendingRepos[cacheKey], {
+    return trendingResponse(cacheKey, fallbackForCategory(cacheKey), {
       source: "ForkFirst fallback",
       stale: true,
       warning: "Could not reach GitHub, so ForkFirst is showing a curated starter set."
@@ -406,7 +431,7 @@ export async function POST(request: Request) {
         warning: `GitHub returned ${firstStatus}.`
       });
     }
-    return trendingResponse(cacheKey, fallbackTrendingRepos[cacheKey], {
+    return trendingResponse(cacheKey, fallbackForCategory(cacheKey), {
       source: "ForkFirst fallback",
       stale: true,
       warning: `GitHub returned ${firstStatus}. Showing a curated starter set instead.`

@@ -4275,7 +4275,7 @@ function LiveTrendingScreen({
   onSaveRepo: (repo: ClassifiedRepo) => void;
   onSelectFoundation: (repo: FoundationDraft) => void;
 }) {
-  const [cat, setCat] = useState<TrendingCategory["id"]>("ai-agents");
+  const [cat, setCat] = useState<TrendingCategory["id"]>("all");
   const [detailsRepo, setDetailsRepo] = useState<TrendingRepo | null>(null);
   const [query, setQuery] = useState("");
   const trending = useTrendingRepos(cat);
@@ -4294,9 +4294,9 @@ function LiveTrendingScreen({
         <div className="trending-hero">
           <div>
             <h2>Pick a repo <span className="accent-word">foundation.</span></h2>
-            <p>These are live GitHub repos by category. Choose one to attach it to a new ForkFirst chat, then tell us what you want to build from it.</p>
+            <p>Fresh GitHub repos updated daily. Browse what builders are starring now, then use one as the starting point for a new ForkFirst chat.</p>
           </div>
-          <div className="right"><span className="pulse" /> GitHub Search API</div>
+          <div className="right"><span className="pulse" /> Daily GitHub Search</div>
         </div>
         <div className="cat-row">
           {TRENDING_CATEGORIES.map((item) => (
@@ -4315,7 +4315,9 @@ function LiveTrendingScreen({
           />
           {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
         </div>
-        <p style={{ color: "var(--muted)", fontSize: 14, margin: "-10px 0 20px" }}>{activeCategory?.blurb}</p>
+        <p style={{ color: "var(--muted)", fontSize: 14, margin: "-10px 0 20px" }}>
+          {activeCategory?.blurb} Results come from recently pushed public repos, sorted by stars, and cached for about 24 hours.
+        </p>
         <div className="trending-grid">
           {trending.status === "loading" ? [1, 2, 3].map((item) => (
             <article key={item} className="trend-card">

@@ -43,7 +43,7 @@ describe("trending categories", () => {
   });
 
   it("every category uses the recent activity window", () => {
-    const cat = findCategory("claude-skills")!;
+    const cat = findCategory("all")!;
     const results = buildTrendingQueries(cat);
     for (const result of results) {
       expect(result).not.toContain("{since}");
