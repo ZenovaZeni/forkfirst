@@ -915,6 +915,10 @@ body {
     margin-left: 0;
   }
 
+  .starters-trending .row-label .row-label-more {
+    display: none;
+  }
+
   .starter-rich {
     padding: 18px 14px;
     min-height: 0;

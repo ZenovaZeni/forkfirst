@@ -5526,6 +5526,24 @@ input, textarea, select { font: inherit; color: inherit; }
   text-transform: none;
   font-weight: 500;
 }
+.starters-trending .row-label .row-label-more {
+  margin-left: auto;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: color-mix(in srgb, var(--accent) 9%, var(--paper));
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.starters-trending .row-label .row-label-more:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background: color-mix(in srgb, var(--accent) 14%, var(--paper));
+}
 .starter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

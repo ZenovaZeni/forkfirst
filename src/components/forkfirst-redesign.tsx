@@ -2456,7 +2456,8 @@ function EmptyApp({
   onSelectFoundation,
   onSaveRepo,
   onClearFoundation,
-  onSubmit
+  onSubmit,
+  onViewTrending
 }: {
   prompt: string;
   loading: boolean;
@@ -2467,6 +2468,7 @@ function EmptyApp({
   onSaveRepo: (repo: ClassifiedRepo) => void;
   onClearFoundation: () => void;
   onSubmit: (promptOverride?: string) => void;
+  onViewTrending: () => void;
 }) {
   const [pasteUrl, setPasteUrl] = useState("");
   const [detailsRepo, setDetailsRepo] = useState<TrendingRepo | null>(null);
@@ -2545,8 +2547,10 @@ function EmptyApp({
         <div className="starters-trending">
           <div className="row-label">
             <span className="pulse" />
-            <span>Trending repos for inspiration</span>
-            <span className="row-label-right">Popular picks from the Trending tab</span>
+            <span>Fresh GitHub starting points</span>
+            <button className="row-label-more" type="button" onClick={onViewTrending}>
+              View more
+            </button>
           </div>
           <div className="starter-grid">
             {trending.status === "loading" ? [1, 2, 3].map((item) => (
@@ -5385,6 +5389,7 @@ export function ForkFirstRedesignApp() {
                     onSaveRepo={saveRepo}
                     onClearFoundation={() => setFoundationDraft(null)}
                     onSubmit={runSearch}
+                    onViewTrending={() => go("trending")}
                   />
                   {error ? <p className="error-text">{error}</p> : null}
                 </>
