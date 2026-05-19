@@ -1773,7 +1773,7 @@ function Sidebar({
           <Star size={16} /><span className="ttl">Trending</span>
         </button>
         <button className={`rail-item ${active === "packs" ? "active" : ""}`} type="button" onClick={() => go("packs")}>
-          <Copy size={16} /><span className="ttl">Prompt packs</span>
+          <Copy size={16} /><span className="ttl">Prompt Packs</span>
         </button>
         <button className={`rail-item ${active === "library" ? "active" : ""}`} type="button" onClick={() => go("library")}>
           <Bookmark size={16} /><span className="ttl">Library</span>
@@ -2022,7 +2022,7 @@ function MobileNav({
     { screen: "library", label: "Library", icon: <Bookmark size={15} /> }
   ];
   const secondary: Array<{ screen: Screen; label: string; icon: ReactNode }> = [
-    { screen: "packs", label: "Prompt packs", icon: <Copy size={15} /> },
+    { screen: "packs", label: "Prompt Packs", icon: <Copy size={15} /> },
     { screen: "settings", label: "Settings", icon: <SettingsIcon size={15} /> }
   ];
   const moreIsActive = secondary.some((item) => item.screen === active);
@@ -5254,7 +5254,7 @@ export function ForkFirstRedesignApp() {
       : screen === "library" ? "Library"
       : screen === "settings" ? "Settings"
       : screen === "trending" ? "Trending"
-      : screen === "packs" ? "Prompt packs"
+      : screen === "packs" ? "Prompt Packs"
       : "GitHub idea validator";
 
   if (screen === "landing") {
