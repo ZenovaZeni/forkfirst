@@ -46,16 +46,16 @@ const sectionStyle = {
 
 export default function SecurityPage() {
   return (
-    <div style={{ minHeight: "100vh", background: "#0d1016" }}>
-      <main style={{ maxWidth: 1040, margin: "0 auto", padding: "56px 20px 80px", lineHeight: 1.6, color: pageInk }}>
-      <Link href="/" style={{ color: accent, fontWeight: 750, textDecoration: "none" }}>ForkFirst</Link>
-      <p style={{ margin: "48px 0 10px", color: accent, fontSize: 12, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+    <div className="legal-page legal-page--security" style={{ minHeight: "100vh", background: "#0d1016" }}>
+      <main className="legal-page__shell" style={{ maxWidth: 1040, margin: "0 auto", padding: "56px 20px 80px", lineHeight: 1.6, color: pageInk }}>
+      <Link className="legal-page__brand" href="/" style={{ color: accent, fontWeight: 750, textDecoration: "none" }}>ForkFirst</Link>
+      <p className="legal-page__eyebrow" style={{ margin: "48px 0 10px", color: accent, fontSize: 12, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase" }}>
         Open source and BYOK first
       </p>
-      <h1 style={{ fontSize: "clamp(42px, 7vw, 82px)", lineHeight: 0.92, letterSpacing: 0, margin: "0 0 20px" }}>
+      <h1 className="legal-page__title" style={{ fontSize: "clamp(42px, 7vw, 82px)", lineHeight: 0.92, letterSpacing: 0, margin: "0 0 20px" }}>
         Your keys stay under your control.
       </h1>
-      <p style={{ fontSize: 19, color: mutedInk, maxWidth: 720, margin: 0 }}>
+      <p className="legal-page__lede" style={{ fontSize: 19, color: mutedInk, maxWidth: 720, margin: 0 }}>
         ForkFirst is open source, BYOK, and session-only by default. We do not use accounts, do not store API keys
         server-side, and only forward keys to GitHub or your selected AI provider when you trigger a request.
       </p>
@@ -65,16 +65,16 @@ export default function SecurityPage() {
         </a>
       </p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginTop: 42 }}>
+      <div className="legal-page__trust-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginTop: 42 }}>
         {trustCards.map((card) => (
-          <article key={card.title} style={{ border: `1px solid ${cardBorder}`, borderRadius: 18, padding: 20, background: cardBg, color: "#08090d" }}>
+          <article className="legal-page__trust-card" key={card.title} style={{ border: `1px solid ${cardBorder}`, borderRadius: 18, padding: 20, background: cardBg, color: "#08090d" }}>
             <h2 style={{ fontSize: 19, lineHeight: 1.15, margin: "0 0 10px", color: "#08090d" }}>{card.title}</h2>
             <p style={{ margin: 0, color: "#68707d", fontSize: 14 }}>{card.body}</p>
           </article>
         ))}
       </div>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Hosted website</h2>
         <p>
           On the public hosted site, keys you enter in the browser are sent to ForkFirst API routes only for actions you
@@ -92,7 +92,7 @@ export default function SecurityPage() {
         </p>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Rate limits and abuse controls</h2>
         <p>
           ForkFirst includes per-IP rate limits on key verification, repo research, chat, trending, and idea refinement.
@@ -105,7 +105,7 @@ export default function SecurityPage() {
         </p>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Privacy-safe analytics</h2>
         <p>
           ForkFirst may use Vercel Web Analytics for basic production traffic numbers and Microsoft Clarity for masked
@@ -119,7 +119,7 @@ export default function SecurityPage() {
         </p>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Downloaded repo / local run</h2>
         <p>
           If you clone the repo and run ForkFirst locally, the browser still sends keys to the Next.js API route, but
@@ -128,7 +128,7 @@ export default function SecurityPage() {
         </p>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Works with your AI builder</h2>
         <p style={{ color: mutedInk, maxWidth: 720 }}>
           ForkFirst exports Markdown handoffs instead of locking you into one coding tool. The same repo-first packet can
@@ -143,7 +143,7 @@ export default function SecurityPage() {
         </div>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>What we do not claim</h2>
         <ul>
           <li>We do not say keys never leave your browser on hosted usage.</li>
@@ -153,7 +153,7 @@ export default function SecurityPage() {
         </ul>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Recommended key setup</h2>
         <ul>
           <li>Use a GitHub fine-grained token with the minimum public-repo access needed for search metadata.</li>
@@ -163,7 +163,7 @@ export default function SecurityPage() {
         </ul>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Known dependency advisory</h2>
         <p>
           `npm audit` currently reports a moderate PostCSS advisory through Next.js&apos;s bundled dependency. The suggested
@@ -172,7 +172,7 @@ export default function SecurityPage() {
         </p>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Remaining risks</h2>
         <p>
           A hosted BYOK app can reduce risk, but it cannot eliminate it. Risks include malicious browser extensions,
@@ -181,7 +181,7 @@ export default function SecurityPage() {
         </p>
       </section>
 
-      <section style={sectionStyle}>
+      <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Report a vulnerability</h2>
         <p>
           Please do not open a public issue with secrets or exploit details. Use a private GitHub Security Advisory so

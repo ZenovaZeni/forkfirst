@@ -1801,7 +1801,7 @@ function Landing({ go }: { go: (screen: Screen) => void }) {
           <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
           <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a>
           <a href="/security">Security</a>
-          <a href="/security">Privacy</a>
+          <a href="/privacy">Privacy</a>
           <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
           <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
         </div>
