@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Content-Security-Policy", csp);
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(self), geolocation=(), payment=()");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
 

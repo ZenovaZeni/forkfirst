@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   browserVoiceInputCopy,
   getBrowserSpeechRecognition,
+  getSpeechRecognitionErrorMessage,
   mergeSpeechTranscript
 } from "./voice-input";
 
@@ -30,7 +31,14 @@ describe("browser voice input", () => {
 
   test("uses honest support and privacy copy", () => {
     expect(browserVoiceInputCopy.unsupported).toContain("Voice input is not supported");
+    expect(browserVoiceInputCopy.permissionBlocked).toContain("Microphone permission was blocked");
     expect(browserVoiceInputCopy.privacy).toContain("Browser/device speech service");
     expect(browserVoiceInputCopy.privacy).toContain("ForkFirst does not store audio");
+  });
+
+  test("maps browser speech recognition errors to useful user copy", () => {
+    expect(getSpeechRecognitionErrorMessage("not-allowed")).toBe(browserVoiceInputCopy.permissionBlocked);
+    expect(getSpeechRecognitionErrorMessage("service-not-allowed")).toBe(browserVoiceInputCopy.permissionBlocked);
+    expect(getSpeechRecognitionErrorMessage("no-speech")).toBe(browserVoiceInputCopy.stoppedNoTranscript);
   });
 });

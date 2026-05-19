@@ -68,6 +68,7 @@ import { createUsageEntry, formatEstimatedCost, summarizeUsage, type UsageEntry 
 import { estimateHandoffTokens, formatTokensShort, loadSavings, logHandoffGenerated, type SavingsLog } from "@/lib/usage/savings";
 import {
   browserVoiceInputCopy,
+  getSpeechRecognitionErrorMessage,
   getBrowserSpeechRecognition,
   mergeSpeechTranscript,
   type BrowserSpeechRecognitionConstructor,
@@ -2381,6 +2382,7 @@ function useBrowserVoiceInput(value: string, onChange: (value: string) => void, 
   const valueRef = useRef(value);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const constructorRef = useRef<BrowserSpeechRecognitionConstructor | null>(null);
+  const errorMessageRef = useRef<string | null>(null);
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const [message, setMessage] = useState<string>(browserVoiceInputCopy.privacy);
@@ -2416,6 +2418,7 @@ function useBrowserVoiceInput(value: string, onChange: (value: string) => void, 
     }
 
     const recognition = new SpeechRecognition();
+    errorMessageRef.current = null;
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = navigator.language || "en-US";
@@ -2432,14 +2435,19 @@ function useBrowserVoiceInput(value: string, onChange: (value: string) => void, 
       }
     };
     recognition.onerror = (event) => {
-      setMessage(event.error === "not-allowed"
-        ? "Microphone permission was blocked. You can still type your idea."
-        : "Voice input stopped before a transcript was captured. You can try again or type.");
+      const message = getSpeechRecognitionErrorMessage(event.error);
+      errorMessageRef.current = message;
+      setMessage(message);
       setListening(false);
     };
     recognition.onend = () => {
       setListening(false);
       recognitionRef.current = null;
+      if (errorMessageRef.current) {
+        setMessage(errorMessageRef.current);
+        errorMessageRef.current = null;
+        return;
+      }
       setMessage(browserVoiceInputCopy.privacy);
     };
 
@@ -2451,8 +2459,7 @@ function useBrowserVoiceInput(value: string, onChange: (value: string) => void, 
     } catch {
       recognitionRef.current = null;
       setListening(false);
-      setMessage(browserVoiceInputCopy.unsupported);
-      onUnsupported?.();
+      setMessage(browserVoiceInputCopy.startFailed);
     }
   }, [listening, onChange, onUnsupported]);
 

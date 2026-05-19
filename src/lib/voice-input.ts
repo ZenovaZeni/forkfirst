@@ -28,6 +28,9 @@ export const browserVoiceInputCopy = {
   listening: "Listening...",
   idle: "Browser voice input",
   unsupported: "Voice input is not supported here. Type your idea instead.",
+  permissionBlocked: "Microphone permission was blocked. You can still type your idea.",
+  startFailed: "Voice input could not start. Check microphone permission, then try again or type.",
+  stoppedNoTranscript: "Voice input stopped before a transcript was captured. You can try again or type.",
   privacy: "Browser/device speech service. ForkFirst does not store audio."
 } as const;
 
@@ -40,4 +43,11 @@ export function mergeSpeechTranscript(current: string, transcript: string) {
   if (!cleanTranscript) return current;
   if (!current.trim()) return cleanTranscript;
   return `${current.replace(/\s+$/g, "")} ${cleanTranscript}`;
+}
+
+export function getSpeechRecognitionErrorMessage(error?: string) {
+  if (error === "not-allowed" || error === "service-not-allowed") {
+    return browserVoiceInputCopy.permissionBlocked;
+  }
+  return browserVoiceInputCopy.stoppedNoTranscript;
 }
