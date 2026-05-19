@@ -1,27 +1,19 @@
 # Security Advisories
 
-## Current audit note: Next.js bundled PostCSS
+## Current Status
 
-`npm audit --audit-level=moderate` currently reports:
+`npm audit --omit=dev` is expected to pass before public launch.
 
-- Package: `postcss <8.5.10`
-- Path: bundled under `next`
-- Advisory: XSS via unescaped `</style>` in CSS stringify output
-- Severity: moderate
+ForkFirst keeps a project-level `postcss` override so npm installs a patched PostCSS line instead of using a vulnerable nested version. Do not run `npm audit fix --force` without reviewing the full dependency diff; forced audit fixes can downgrade framework packages or otherwise change the runtime in unsafe ways.
 
-ForkFirst pins the project-level `postcss` package to a patched line, but the installed Next.js release still bundles its own `postcss@8.4.31`. The npm auto-fix suggests a breaking downgrade to `next@9.3.3`, which is not acceptable.
+## Release Checklist
 
-Status:
+- Run `npm audit --omit=dev`.
+- Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
+- Review Next.js, React, Vercel, GitHub, and provider advisories before major launches.
+- Confirm screenshots, docs, and examples do not contain real tokens, API keys, or private repo data.
+- Report security questions or concerns to support@zenovaai.com or via the GitHub private security advisory flow.
 
-- Do not run `npm audit fix --force` for this advisory.
-- Recheck when a stable Next release ships with patched bundled PostCSS.
-- Re-test `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build` before accepting a Next upgrade.
+## BYOK Reminder
 
-Mitigations already in the app:
-
-- Strict CSP blocks broad third-party script execution.
-- User-provided text is rendered as React text, not raw HTML.
-- Repo README content is treated as untrusted prompt data before LLM use.
-- API responses use `Cache-Control: no-store`.
-
-This note should be reviewed before every public release.
+ForkFirst is a browser-hosted BYOK app. A clean dependency audit does not remove browser risks such as malicious extensions, compromised devices, XSS, overly powerful provider keys, or hosted-route trust while requests are in flight.

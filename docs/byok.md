@@ -62,3 +62,9 @@ Before launch, check:
 - `FORKFIRST_ALLOW_SERVER_KEYS=false` on public hosted deployments.
 - Logs do not print request bodies.
 - README and screenshots do not reveal real tokens.
+
+## Support and Contact
+
+ForkFirst is free and open-source. If it saves time or tokens, users can support future development at https://ko-fi.com/zenovaai.
+
+For support, feedback, or security-related questions, email support@zenovaai.com.

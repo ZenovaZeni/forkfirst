@@ -88,7 +88,8 @@ const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
 const ACTIVE_CHAT_SESSION_KEY = "forkfirst:active-chat";
-const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "https://github.com/ZenovaZeni/forkfirst#support-forkfirst";
+const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "https://ko-fi.com/zenovaai";
+const SUPPORT_EMAIL = "support@zenovaai.com";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
 
@@ -1415,10 +1416,10 @@ function AboutModal({ onClose }: { onClose: () => void }) {
             <X size={18} />
           </button>
         </div>
+        <p>ForkFirst is a free open-source tool by Josh Douglas, powered by Zenova AI.</p>
         <p>
-          ForkFirst is a free open-source tool by Josh Douglas, powered by Zenova AI. It helps AI builders find a
-          working open-source foundation for an app idea, then turn it into a clean handoff for Cursor, Claude Code,
-          Codex, Replit, v0, Lovable, Gemini CLI, Antigravity, and other AI builders.
+          It helps AI builders find a working open-source foundation for their app idea, then turn it into a clean
+          handoff for Cursor, Claude Code, Codex, Replit, v0, and other AI builders.
         </p>
         <div className="about-grid">
           <div>
@@ -1431,7 +1432,11 @@ function AboutModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <p className="about-note">
-          The goal is to rebrand, redesign, refocus, and build your own product faster with real code as context.
+          ForkFirst is not about cloning apps. It is about starting from a working foundation, then rebranding,
+          redesigning, refocusing, and building it into your own product.
+        </p>
+        <p className="about-note">
+          For support, contact <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
         </p>
         <div className="about-actions">
           <a className="btn accent" href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">
@@ -1814,27 +1819,23 @@ function Landing({
         </div>
       </section>
 
-      <section className="section service-section" id="audit">
+      <section className="section support-section" id="support">
         <div className="section-head">
-          <span className="eyebrow">Done-for-you option</span>
-          <h2>Want a human-reviewed <span className="accent-word">AI Builder Handoff?</span></h2>
-          <p>
-            ForkFirst is the public tool. For founders who want a sharper decision, Zenova can turn your idea into a
-            working-foundation audit, reuse-risk notes, and a Cursor/Codex/Claude-ready build packet.
-          </p>
+          <span className="eyebrow">Support</span>
+          <h2>Keep ForkFirst <span className="accent-word">free and open-source.</span></h2>
         </div>
-        <div className="service-grid" aria-label="AI Builder Handoff Audit options">
-          {[
-            ["Quick Handoff", "$297", "Best for one idea, one recommended foundation, and a clear first build prompt."],
-            ["Deep Repo Audit", "$497", "Best for comparing several working foundations, risks, docs, activity, and first milestones."],
-            ["Build Plan + Setup", "$997+", "Best when you want the handoff plus initial repo setup direction for your AI builder."]
-          ].map(([title, price, body]) => (
-            <article className="service-card" key={title}>
-              <strong>{title}</strong>
-              <span>{price}</span>
-              <p>{body}</p>
-            </article>
-          ))}
+        <div className="support-panel">
+          <div>
+            <p>ForkFirst is free and open-source.</p>
+            <p>
+              If it saves you time, tokens, or helps you avoid starting from scratch, you can support future
+              development here.
+            </p>
+            <p className="support-note">No pressure — stars, feedback, issues, and shares help too.</p>
+          </div>
+          <a className="btn accent lg" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+            Support development <ExternalLink size={14} />
+          </a>
         </div>
       </section>
 
@@ -1864,6 +1865,7 @@ function Landing({
             <button type="button" onClick={() => setShowAbout(true)}>About</button>
             <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
             <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a>
+            <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a>
           </div>
           <div className="footer-link-group">
             <a href="/security">Security</a>

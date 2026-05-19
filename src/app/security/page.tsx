@@ -33,6 +33,7 @@ const trustCards = [
 
 const builderCards = ["Claude Code", "Codex", "Cursor", "Replit", "Lovable", "v0", "Gemini CLI", "Markdown"];
 const securityAdvisoryUrl = "https://github.com/ZenovaZeni/forkfirst/security/advisories/new";
+const supportEmail = "support@zenovaai.com";
 
 const sectionStyle = {
   borderTop: "1px solid var(--line)",
@@ -77,6 +78,8 @@ export default function SecurityPage() {
         <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">
           Report a security issue privately
         </a>
+        <span> · </span>
+        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
       </p>
 
       <div className="legal-page__trust-grid">
@@ -87,6 +90,18 @@ export default function SecurityPage() {
           </article>
         ))}
       </div>
+
+      <section className="legal-page__section" style={sectionStyle}>
+        <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Demo mode and optional keys</h2>
+        <ul>
+          <li><Highlight>Demo mode works without keys</Highlight>, so users can try ForkFirst before pasting secrets.</li>
+          <li>A <Highlight>GitHub token is optional</Highlight> and improves repo search limits and metadata.</li>
+          <li>An <Highlight>AI provider key is optional</Highlight> and improves summaries, verdicts, follow-up chat, and handoffs.</li>
+          <li>Keys are <Highlight>session-only by default</Highlight>; persistent local storage is opt-in.</li>
+          <li>Use <Highlight>dedicated, revocable keys with usage limits</Highlight>.</li>
+          <li>Hosted mode requires trusting the ForkFirst deployment while requests are in flight. For maximum control, clone and run ForkFirst locally.</li>
+        </ul>
+      </section>
 
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Hosted website</h2>
@@ -178,11 +193,10 @@ export default function SecurityPage() {
       </section>
 
       <section className="legal-page__section" style={sectionStyle}>
-        <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Known dependency advisory</h2>
+        <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Dependency audit</h2>
         <p>
-          `npm audit` currently reports a <Highlight>moderate PostCSS advisory</Highlight> through Next.js&apos;s bundled dependency. The suggested
-          forced audit fix downgrades Next to an old major version, so ForkFirst tracks this in `docs/security-advisories.md`
-          and should <Highlight>upgrade Next when a stable patched path is available</Highlight>.
+          <Highlight>`npm audit --omit=dev` is expected to pass before launch.</Highlight> ForkFirst tracks dependency security notes in
+          `docs/security-advisories.md` and should avoid forced audit fixes that downgrade core framework packages without review.
         </p>
       </section>
 
@@ -199,7 +213,7 @@ export default function SecurityPage() {
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Report a vulnerability</h2>
         <p>
           Please <Highlight>do not open a public issue with secrets or exploit details</Highlight>. Use a private GitHub Security Advisory so
-          the maintainer can fix and disclose responsibly.
+          the maintainer can fix and disclose responsibly, or email <Highlight>{supportEmail}</Highlight>.
         </p>
         <p>
           <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">

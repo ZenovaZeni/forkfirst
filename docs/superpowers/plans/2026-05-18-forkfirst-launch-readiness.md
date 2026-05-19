@@ -87,7 +87,7 @@ Focus the first viewport on the promise: find the best open-source starting poin
 
 - [ ] **Step 2: Add service bridge**
 
-Add a concise AI Builder Handoff Audit section with `$297`, `$497`, and `$997+` options so ForkFirst supports Zenova lead generation without becoming a rushed SaaS.
+Superseded before launch: keep support subtle with the Ko-fi link and contact email instead of publishing service tiers inside the free app.
 
 - [ ] **Step 3: Keep visual language flat**
 

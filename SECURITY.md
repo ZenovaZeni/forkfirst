@@ -4,6 +4,9 @@ ForkFirst is designed as a local-first builder tool that can also run as a publi
 
 ## Data Flow
 
+- Demo mode works without keys.
+- GitHub tokens are optional and improve repo search limits and metadata.
+- AI provider keys are optional and improve summaries, verdicts, follow-up chat, and builder handoffs.
 - Keys pasted in the app are session-only by default. Persistent browser `localStorage` is opt-in with "Remember keys".
 - Keys are sent to the running Next.js API only when you verify a key, run repo research, use chat, or request live trending with a GitHub token.
 - The API forwards your request to GitHub or the chosen AI provider for that single call. Keys are not persisted server-side.
@@ -39,14 +42,14 @@ Without Upstash Redis REST env vars, ForkFirst falls back to in-memory rate limi
 
 ## Known Dependency Advisory
 
-`npm audit --audit-level=moderate` currently reports a moderate PostCSS advisory through Next.js's bundled dependency. The forced npm audit fix downgrades Next to an old major version and should not be used. Track this in `docs/security-advisories.md` and upgrade Next when a stable patched path is available.
+`npm audit --omit=dev` is expected to pass before launch. Track dependency security notes in `docs/security-advisories.md`, and do not use forced audit fixes that downgrade core framework packages without review.
 
 ## Reporting Vulnerabilities
 
 If you find a vulnerability, **do not** open a public issue.
 
 - Open a private security advisory in this GitHub repo, **or**
-- Contact the maintainer privately via the email listed in `package.json`.
+- Email support@zenovaai.com.
 
 Do not post working secrets, tokens, or exploit details in public issues or pull requests.
 

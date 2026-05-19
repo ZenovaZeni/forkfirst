@@ -13,6 +13,7 @@ const sectionStyle = {
   paddingTop: 34,
   marginTop: 42
 };
+const supportEmail = "support@zenovaai.com";
 
 const privacyCards = [
   {
@@ -127,6 +128,13 @@ export default function PrivacyPage() {
           </p>
           <p>
             <Link href="/security">Read the ForkFirst security model</Link>
+          </p>
+        </section>
+
+        <section className="legal-page__section" style={sectionStyle}>
+          <h2>Contact</h2>
+          <p>
+            For privacy, support, feedback, or security-related questions, email <Highlight>{supportEmail}</Highlight>.
           </p>
         </section>
       </main>

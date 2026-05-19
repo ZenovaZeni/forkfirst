@@ -6,7 +6,9 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-111111.svg)](https://nextjs.org/)
 [![BYOK](https://img.shields.io/badge/BYOK-demo_mode_ready-2647F0.svg)](#security-model)
 
-ForkFirst helps you find a working open-source foundation for your app idea, then turn it into a clean handoff for Cursor, Claude Code, Codex, Replit, v0, Lovable, Gemini CLI, Antigravity, and other AI builders.
+ForkFirst helps you find a working open-source foundation for your app idea, then turn it into a clean handoff for Cursor, Claude Code, Codex, Replit, v0, and other AI builders.
+
+A free open-source tool by Josh Douglas, powered by Zenova AI.
 
 > Start with a working foundation. Build your own product faster.
 
@@ -71,29 +73,15 @@ These are example output packets checked against live GitHub Search API results 
 
 Always inspect setup, license, docs, recent activity, and architecture before building from a repo.
 
-## AI Builder Handoff Audit
+## Support
 
-ForkFirst is also the workflow behind a done-for-you Zenova service:
+ForkFirst is free and open-source.
 
-> Send your app idea. We find the best working repo foundation, inspect reuse risks, and deliver a Cursor/Codex/Claude-ready build handoff.
+If it saves you time, tokens, or helps you build faster from a working foundation, you can support future development here:
 
-Suggested service tiers:
+[Support development on Ko-fi](https://ko-fi.com/zenovaai)
 
-- **Quick Handoff:** one idea, starter repo recommendation, and first build plan.
-- **Deep Repo Audit:** compare several foundations, docs, activity, license signals, and reuse risks.
-- **Build Plan + Setup:** handoff plus initial repo setup direction for an AI builder.
-
-## Support ForkFirst
-
-ForkFirst is a free open-source tool by Josh Douglas, powered by Zenova AI.
-
-If it saves you time, the best support right now is simple:
-
-- Star the repo.
-- Share it with someone who builds with AI.
-- Open a clear issue with feedback or a repo result that felt wrong.
-
-A GitHub Sponsors, Ko-fi, or Buy Me a Coffee link can be added later without changing the free tool.
+No pressure — stars, issues, feedback, and shares help too.
 
 ## Security model
 
@@ -129,9 +117,9 @@ FORKFIRST_ALLOW_PRIVATE_BASE_URLS=false
 
 Server-side fallback keys are dangerous on a public no-login site because visitors could spend your quota. Server-side research persistence needs auth, tenant isolation, deletion/export controls, and a privacy policy.
 
-## Known audit note
+## Dependency audit
 
-`npm audit --audit-level=moderate` currently reports a moderate PostCSS advisory through Next.js's bundled dependency. The forced audit fix suggests downgrading Next to `9.3.3`, which is not acceptable. Track this in [docs/security-advisories.md](./docs/security-advisories.md) and upgrade Next when a stable patched path is available.
+`npm audit --omit=dev` is expected to pass before launch. See [docs/security-advisories.md](./docs/security-advisories.md) for dependency advisory notes.
 
 ## Run locally
 
@@ -165,9 +153,15 @@ npm run build
 
 ## Report a security issue
 
-Do not open public issues with secrets, tokens, or exploit details. Use a private GitHub Security Advisory:
+Do not open public issues with secrets, tokens, or exploit details. Use a private GitHub Security Advisory or email support@zenovaai.com:
 
 [Report a vulnerability privately](https://github.com/ZenovaZeni/forkfirst/security/advisories/new)
+
+## Contact
+
+For support, feedback, or security-related questions, email:
+
+support@zenovaai.com
 
 ## Docs
 
