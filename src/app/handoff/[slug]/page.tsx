@@ -262,7 +262,11 @@ export default function HandoffSharePage({ params }: PageProps) {
             }}
           >
             Made with{" "}
-            <strong style={{ color: "#c0522a" }}>ForkFirst</strong> — Find what&apos;s already out there.
+            <strong style={{ fontWeight: 800, letterSpacing: "-0.04em" }}>
+              <span style={{ color: isDark ? "#f7f3ea" : "#111111" }}>Fork</span>
+              <span style={{ color: "#5577ff" }}>First</span>
+            </strong>{" "}
+            — Find what&apos;s already out there.
           </p>
           <Link
             href="/"

@@ -2472,7 +2472,7 @@ input, textarea, select { font: inherit; color: inherit; }
   display: grid;
   grid-template-columns: minmax(0, calc(40% - 7px)) minmax(0, calc(60% - 7px));
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
 }
 .handoff-utility,
 .handoff-doc {
@@ -2492,6 +2492,9 @@ input, textarea, select { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 .handoff-doc .tabs {
   display: grid;
@@ -2525,7 +2528,8 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--ink-2);
-  height: clamp(560px, calc(100dvh - 250px), 760px);
+  flex: 1 1 auto;
+  min-height: clamp(560px, calc(100dvh - 250px), 760px);
   overflow: hidden;
 }
 .handoff-doc .doc-body textarea {
@@ -2580,13 +2584,51 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .handoff-doc .doc-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   border-bottom: 1px solid var(--line);
-  padding: 10px 16px;
+  padding: 8px 10px 8px 16px;
   font-family: var(--font-mono); font-size: 11.5px;
   color: var(--muted);
   margin: 0;
+}
+.doc-meta-copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  min-width: 0;
+}
+.doc-copy-btn {
+  min-width: 0;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 6px 9px;
+  cursor: pointer;
+  opacity: 0.72;
+  transition: opacity 0.16s ease, color 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+.handoff-doc:hover .doc-copy-btn,
+.doc-copy-btn:focus-visible {
+  opacity: 1;
+}
+.doc-copy-btn:hover,
+.doc-copy-btn:focus-visible {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: var(--accent-soft);
+  outline: 0;
 }
 
 .handoff-side {

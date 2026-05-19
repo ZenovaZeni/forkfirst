@@ -3912,9 +3912,21 @@ function HandoffView({
             ))}
           </div>
           <div className="doc-meta">
-            <span>{tab}</span>
-            <span>{formatByteSize(activeDoc)}</span>
-            <span>Autosaved locally - copy and download use your latest edits.</span>
+            <div className="doc-meta-copy">
+              <span>{tab}</span>
+              <span>{formatByteSize(activeDoc)}</span>
+              <span>Autosaved locally - copy and download use your latest edits.</span>
+            </div>
+            <button
+              className="doc-copy-btn"
+              type="button"
+              onClick={() => onCopy(activeDoc)}
+              aria-label={`Copy ${tab}`}
+              title={`Copy ${tab}`}
+            >
+              <Copy size={14} />
+              <span>Copy file</span>
+            </button>
           </div>
           <div className="doc-body" data-clarity-mask="true">
             <textarea

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "ForkFirst Privacy",
@@ -31,19 +32,32 @@ const privacyCards = [
   }
 ];
 
+function ForkFirstWordmark() {
+  return (
+    <span className="legal-page__wordmark" aria-label="ForkFirst">
+      <span>Fork</span>
+      <span>First</span>
+    </span>
+  );
+}
+
+function Highlight({ children }: { children: ReactNode }) {
+  return <span className="legal-page__highlight">{children}</span>;
+}
+
 export default function PrivacyPage() {
   return (
     <div className="legal-page legal-page--privacy">
       <main className="legal-page__shell">
         <Link className="legal-page__brand" href="/">
-          ForkFirst
+          <ForkFirstWordmark />
         </Link>
         <p className="legal-page__eyebrow">Privacy and local-first storage</p>
         <h1 className="legal-page__title">Your ideas stay yours.</h1>
         <p className="legal-page__lede">
-          ForkFirst helps you research public GitHub repos and generate AI-builder handoffs without creating an account.
+          ForkFirst helps you research public GitHub repos and generate AI-builder handoffs <Highlight>without creating an account</Highlight>.
           The app is designed to keep user-entered ideas, saved repos, and handoff drafts local to the browser unless a
-          specific request needs to be sent to GitHub or your selected AI provider.
+          <Highlight>specific request needs to be sent to GitHub or your selected AI provider</Highlight>.
         </p>
 
         <div className="legal-page__trust-grid">
@@ -59,7 +73,7 @@ export default function PrivacyPage() {
           <h2>What stays in your browser</h2>
           <p>
             Saved chats, saved repos, saved handoffs, prompt pack choices, accent/theme settings, and usage counters are
-            stored in browser storage by default. ForkFirst does not attach that information to a hosted user account.
+            stored in browser storage by default. <Highlight>ForkFirst does not attach that information to a hosted user account.</Highlight>
           </p>
           <p>
             If you use a shared machine, clear browser data after use. Browser storage can be read by someone with access
@@ -70,12 +84,12 @@ export default function PrivacyPage() {
         <section className="legal-page__section" style={sectionStyle}>
           <h2>What gets sent when you use the hosted app</h2>
           <p>
-            When you trigger repo search, key verification, chat, idea refinement, or trending requests, ForkFirst sends
+            When you trigger repo search, key verification, chat, idea refinement, or trending requests, <Highlight>ForkFirst sends
             the minimum needed request to its API route. That route may forward your GitHub token to GitHub or your AI key
-            to the selected AI provider for that action.
+            to the selected AI provider for that action.</Highlight>
           </p>
           <p>
-            ForkFirst should not intentionally log raw API keys, raw prompts, README text, or full handoff contents. The
+            <Highlight>ForkFirst should not intentionally log raw API keys, raw prompts, README text, or full handoff contents.</Highlight> The
             practical privacy model is transparent BYOK routing, not a claim that hosted usage is fully local.
           </p>
         </section>
@@ -84,12 +98,12 @@ export default function PrivacyPage() {
           <h2>Analytics</h2>
           <p>
             ForkFirst may use Vercel Web Analytics and strictly masked Microsoft Clarity to understand traffic, device
-            layout problems, and where users get stuck. Analytics should describe product actions like starting a check,
+            layout problems, and where users get stuck. <Highlight>Analytics should describe product actions</Highlight> like starting a check,
             opening repo details, or downloading a handoff.
           </p>
           <p>
-            Analytics should not include raw idea text, API keys, full chat transcripts, README excerpts, or handoff
-            files. Sensitive app surfaces are marked for masking.
+            <Highlight>Analytics should not include raw idea text, API keys, full chat transcripts, README excerpts, or handoff
+            files.</Highlight> Sensitive app surfaces are marked for masking.
           </p>
         </section>
 

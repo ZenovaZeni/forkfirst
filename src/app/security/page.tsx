@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "ForkFirst Security Model",
@@ -38,11 +39,26 @@ const sectionStyle = {
   marginTop: 42
 };
 
+function ForkFirstWordmark() {
+  return (
+    <span className="legal-page__wordmark" aria-label="ForkFirst">
+      <span>Fork</span>
+      <span>First</span>
+    </span>
+  );
+}
+
+function Highlight({ children }: { children: ReactNode }) {
+  return <span className="legal-page__highlight">{children}</span>;
+}
+
 export default function SecurityPage() {
   return (
     <div className="legal-page legal-page--security">
       <main className="legal-page__shell">
-      <Link className="legal-page__brand" href="/">ForkFirst</Link>
+      <Link className="legal-page__brand" href="/">
+        <ForkFirstWordmark />
+      </Link>
       <p className="legal-page__eyebrow">
         Open source and BYOK first
       </p>
@@ -50,8 +66,8 @@ export default function SecurityPage() {
         Your keys stay under your control.
       </h1>
       <p className="legal-page__lede">
-        ForkFirst is open source, BYOK, and session-only by default. We do not use accounts, do not store API keys
-        server-side, and only forward keys to GitHub or your selected AI provider when you trigger a request.
+        ForkFirst is open source, BYOK, and <Highlight>session-only by default</Highlight>. We <Highlight>do not use accounts</Highlight>, <Highlight>do not store API keys
+        server-side</Highlight>, and <Highlight>only forward keys to GitHub or your selected AI provider when you trigger a request</Highlight>.
       </p>
       <p style={{ margin: "22px 0 0" }}>
         <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">
@@ -71,18 +87,18 @@ export default function SecurityPage() {
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Hosted website</h2>
         <p>
-          On the public hosted site, keys you enter in the browser are sent to ForkFirst API routes only for actions you
-          trigger, such as verification, repo research, chat, or live trending with a GitHub token. The route forwards
-          the key to GitHub or your selected AI provider. Keys are not intentionally logged or stored server-side.
+          On the public hosted site, <Highlight>keys you enter in the browser are sent to ForkFirst API routes only for actions you
+          trigger</Highlight>, such as verification, repo research, chat, or live trending with a GitHub token. The route forwards
+          the key to GitHub or your selected AI provider. <Highlight>Keys are not intentionally logged or stored server-side.</Highlight>
         </p>
         <p>
-          Default key storage is session-only. Remember keys is opt-in and stores keys in this browser&apos;s localStorage.
+          <Highlight>Default key storage is session-only.</Highlight> Remember keys is opt-in and stores keys in this browser&apos;s localStorage.
           Browser extensions, malware, someone with your unlocked device, or any future XSS bug could read browser
           storage, so use scoped, revocable keys with spend limits.
         </p>
         <p>
           Saved chats, saved repos, saved Build Packs, prompt packs, and usage entries are stored in browser
-          localStorage by default. ForkFirst does not attach that data to a hosted user account.
+          localStorage by default. <Highlight>ForkFirst does not attach that data to a hosted user account.</Highlight>
         </p>
       </section>
 
@@ -104,11 +120,11 @@ export default function SecurityPage() {
         <p>
           ForkFirst may use Vercel Web Analytics for basic production traffic numbers and Microsoft Clarity for masked
           heatmaps/session diagnostics. Analytics events describe product actions, such as starting a check or
-          downloading a handoff, but should not include raw idea text, API keys, README text, or handoff contents.
+          downloading a handoff, but <Highlight>should not include raw idea text, API keys, README text, or handoff contents.</Highlight>
         </p>
         <p>
           Sensitive app surfaces such as chat transcripts, repo details, README excerpts, handoff files, and key settings
-          are marked for Clarity masking. If you run your own deployment, keep Clarity masking strict and do not add
+          are <Highlight>marked for Clarity masking</Highlight>. If you run your own deployment, keep Clarity masking strict and do not add
           analytics that captures user-entered prompts or secrets.
         </p>
       </section>
@@ -117,8 +133,8 @@ export default function SecurityPage() {
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Downloaded repo / local run</h2>
         <p>
           If you clone the repo and run ForkFirst locally, the browser still sends keys to the Next.js API route, but
-          that route is running on your own machine. Your keys are then forwarded directly from your machine to GitHub
-          or your selected AI provider.
+          that route is running on your own machine. <Highlight>Your keys are then forwarded directly from your machine to GitHub
+          or your selected AI provider.</Highlight>
         </p>
       </section>
 
