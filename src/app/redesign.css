@@ -2816,7 +2816,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .build-pack-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 14px;
 }
 .build-pack-card {
@@ -2826,11 +2826,13 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 18px;
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 .saved-handoff-card {
   min-height: 398px;
   grid-template-rows: 72px 44px 74px 72px 46px;
   align-content: stretch;
+  container-type: inline-size;
 }
 .build-pack-card.empty {
   grid-column: 1 / -1;
@@ -2903,7 +2905,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .pack-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 84px 96px;
+  grid-template-columns: minmax(116px, 1fr) minmax(78px, 0.72fr) minmax(88px, 0.78fr);
   align-items: stretch;
 }
 .pack-meta span {
@@ -2950,6 +2952,20 @@ input, textarea, select { font: inherit; color: inherit; }
   min-width: 0;
   min-height: 46px;
   padding-inline: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@container (max-width: 360px) {
+  .saved-handoff-card {
+    min-height: 444px;
+    grid-template-rows: 72px 44px 74px 72px auto;
+  }
+  .saved-handoff-card .pack-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .saved-handoff-card .pack-actions .btn.accent {
+    grid-column: 1 / -1;
+  }
 }
 .btn.danger {
   color: var(--signal-bad);
@@ -2980,7 +2996,7 @@ input, textarea, select { font: inherit; color: inherit; }
   line-height: 1.55;
 }
 .handoff-pack-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
 }
 .handoff-empty-pack {
   min-height: 180px;

@@ -59,6 +59,7 @@ body {
   background: transparent;
   background-color: transparent;
   padding: 0;
+  min-width: 0;
 }
 
 .right-rail .saved-card {
@@ -418,9 +419,9 @@ body {
   display: block;
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1180px) {
   .app-shell .handoff {
-    max-width: 900px;
+    max-width: min(900px, calc(100vw - 34px));
   }
 
   .app-shell .handoff-grid {
