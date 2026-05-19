@@ -1362,7 +1362,15 @@ function repoNext(repo: ClassifiedRepo, idea = "") {
   return `${next} Focus the first inspection on ${formatTerms(terms)} so the handoff explains exactly what to keep, replace, or ignore.`;
 }
 
-function TopNav({ go }: { go: (screen: Screen) => void }) {
+function TopNav({
+  go,
+  theme,
+  onToggleTheme
+}: {
+  go: (screen: Screen) => void;
+  theme: Theme;
+  onToggleTheme: () => void;
+}) {
   return (
     <header className="top-nav" data-screen-label="00 Landing nav">
       <button className="brand-row brand-home" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
@@ -1375,6 +1383,15 @@ function TopNav({ go }: { go: (screen: Screen) => void }) {
           <a href="#builders">Builders</a>
           <a href="#trust">Your keys, your data</a>
         </nav>
+      <button
+        className="landing-theme-toggle"
+        type="button"
+        onClick={onToggleTheme}
+        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
       <button className="nav-cta" type="button" onClick={() => {
         trackForkFirstEvent("landing_try_free_clicked", { source: "nav" });
         go("app");
@@ -1429,7 +1446,17 @@ function AboutModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onStartWithPrompt: (prompt: string) => void }) {
+function Landing({
+  go,
+  theme,
+  onToggleTheme,
+  onStartWithPrompt
+}: {
+  go: (screen: Screen) => void;
+  theme: Theme;
+  onToggleTheme: () => void;
+  onStartWithPrompt: (prompt: string) => void;
+}) {
   const [showAbout, setShowAbout] = useState(false);
 
   function startApp(source: string) {
@@ -1514,7 +1541,7 @@ function Landing({ go, onStartWithPrompt }: { go: (screen: Screen) => void; onSt
 
   return (
     <div className="landing" data-screen-label="01 Landing">
-      <TopNav go={go} />
+      <TopNav go={go} theme={theme} onToggleTheme={onToggleTheme} />
 
       <section className="hero">
         <p className="hero-eyebrow">Chat first. Build from something real.</p>
@@ -5710,6 +5737,8 @@ export function ForkFirstRedesignApp() {
       <main className="root" data-theme={theme} data-accent={accent}>
         <Landing
           go={go}
+          theme={theme}
+          onToggleTheme={toggleTheme}
           onStartWithPrompt={(value) => {
             setPrompt(value);
             setResult(null);
