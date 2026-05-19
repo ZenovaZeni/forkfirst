@@ -399,9 +399,10 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  const tokenBackedFetch = Boolean(body.data.githubToken);
   const cacheKey = body.data.categoryId;
   const cached = trendingCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
+  if (!tokenBackedFetch && cached && cached.expiresAt > Date.now()) {
     return trendingResponse(cacheKey, cached.repos, {
       source: "ForkFirst cache",
       generatedAt: cached.generatedAt,
@@ -423,7 +424,7 @@ export async function POST(request: Request) {
     const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=${perPage}`;
     const res = await fetch(url, {
       headers,
-      next: { revalidate: TRENDING_CACHE_MS / 1000 }
+      ...(tokenBackedFetch ? { cache: "no-store" as const } : { next: { revalidate: TRENDING_CACHE_MS / 1000 } })
     });
 
     if (!res.ok) {
@@ -523,11 +524,13 @@ export async function POST(request: Request) {
     };
     });
 
-  trendingCache.set(cacheKey, {
-    repos,
-    generatedAt: new Date().toISOString(),
-    expiresAt: Date.now() + TRENDING_CACHE_MS
-  });
+  if (!tokenBackedFetch) {
+    trendingCache.set(cacheKey, {
+      repos,
+      generatedAt: new Date().toISOString(),
+      expiresAt: Date.now() + TRENDING_CACHE_MS
+    });
+  }
   return trendingResponse(cacheKey, repos, {
     queries,
     successfulQueries: successfulResults.map((result) => result.query)

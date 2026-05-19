@@ -2479,9 +2479,10 @@ function Composer({
   }, []);
   const voice = useBrowserVoiceInput(value, onChange, focusIdeaInput);
   return (
-    <div className="composer">
+    <div className="composer" data-clarity-mask="true">
       <textarea
         ref={inputRef}
+        data-clarity-mask="true"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onFocus={() => {
@@ -4383,9 +4384,14 @@ function SettingsScreen({
   const backupInputRef = useRef<HTMLInputElement | null>(null);
   const usageSummary = summarizeUsage(usageEntries);
   const backupItemCount = savedRepoCount + savedBuildPackCount + chatCount;
+  const keyStorageMeta = keys.githubToken || keys.aiApiKey
+    ? rememberKeys
+      ? "Saved locally"
+      : "Session only"
+    : "Optional";
   const settingsTabs: Array<{ id: SettingsTab; label: string; description: string; meta: string }> = [
     { id: "appearance", label: "Appearance", description: "Theme accent and brand color.", meta: ACCENT_OPTIONS.find((option) => option.id === accent)?.label ?? "Accent" },
-    { id: "keys", label: "Keys & privacy", description: "BYOK providers and local storage.", meta: verification.github === "verified" || verification.ai === "verified" ? "Verified" : keys.githubToken || keys.aiApiKey ? "Saved" : "Optional" },
+    { id: "keys", label: "Keys & privacy", description: "BYOK providers and local storage.", meta: keyStorageMeta },
     { id: "usage", label: "Usage", description: "API calls, tokens, and cost estimates.", meta: `${usageSummary.entries.toLocaleString()} calls` },
     { id: "backup", label: "Backup", description: "Move local data between browsers.", meta: `${backupItemCount.toLocaleString()} items` },
     { id: "install", label: "Install", description: "Optional device shortcut.", meta: installStatus === "installed" ? "Installed" : "Optional" }
@@ -4831,10 +4837,11 @@ function ChatComposerBar({
   }, []);
   const voice = useBrowserVoiceInput(value, setValue, focusChatInput);
   return (
-    <div className="chat-composer-bar">
+    <div className="chat-composer-bar" data-clarity-mask="true">
       <div className="composer-inner">
         <textarea
           ref={inputRef}
+          data-clarity-mask="true"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           rows={1}

@@ -3675,6 +3675,7 @@ input, textarea, select { font: inherit; color: inherit; }
   grid-template-columns: minmax(0, 1fr);
 }
 .settings .key-links a,
+.settings .key-links button,
 .settings .save-keys-button,
 .settings .verify-keys-button,
 .settings .show-welcome-button {

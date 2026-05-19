@@ -32,6 +32,11 @@ describe("classifyBaseUrl", () => {
     expect(classifyBaseUrl("http://192.168.1.5/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
     expect(classifyBaseUrl("http://172.20.0.5/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
     expect(classifyBaseUrl("http://169.254.169.254/latest/meta-data")).toMatchObject({ ok: true, trusted: false, privateHost: true });
+    expect(classifyBaseUrl("http://[::]/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
+    expect(classifyBaseUrl("http://[fc00::1]/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
+    expect(classifyBaseUrl("http://[fd12:3456::1]/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
+    expect(classifyBaseUrl("http://[fe80::1]/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
+    expect(classifyBaseUrl("http://[::ffff:192.168.1.5]/v1")).toMatchObject({ ok: true, trusted: false, privateHost: true });
   });
 
   it("returns untrusted for unknown public hosts", () => {

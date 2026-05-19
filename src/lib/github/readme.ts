@@ -73,7 +73,7 @@ async function fetchReadme(repo: NormalizedRepo, token?: string): Promise<Readme
         "X-GitHub-Api-Version": "2022-11-28",
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      next: { revalidate: 900 }
+      ...(token ? { cache: "no-store" as const } : { next: { revalidate: 900 } })
     });
 
     if (!response.ok) return undefined;

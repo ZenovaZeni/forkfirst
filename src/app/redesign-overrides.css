@@ -252,6 +252,7 @@ body {
 }
 
 .app-shell .key-links a,
+.app-shell .key-links button,
 .app-shell .save-keys-button {
   border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
   color: var(--accent);
@@ -262,7 +263,8 @@ body {
 }
 
 .app-shell .save-keys-button:hover:not(:disabled),
-.app-shell .key-links a:hover {
+.app-shell .key-links a:hover,
+.app-shell .key-links button:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
   background: var(--accent-soft);
 }

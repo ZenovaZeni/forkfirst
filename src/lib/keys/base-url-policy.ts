@@ -18,9 +18,11 @@ function privateBaseUrlsEnabled(): boolean {
 
 function isPrivateHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  if (host === "localhost" || host === "::1") return true;
+  if (host === "localhost" || host === "::" || host === "::1") return true;
   if (host === "0.0.0.0" || host.startsWith("127.")) return true;
   if (host.startsWith("10.") || host.startsWith("192.168.") || host.startsWith("169.254.")) return true;
+  if (host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80:")) return true;
+  if (host.startsWith("::ffff:")) return true;
 
   const match = host.match(/^172\.(\d{1,2})\./);
   if (match) {

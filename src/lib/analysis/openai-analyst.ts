@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { analyzeWithDemo } from "./demo-analyst";
+import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
 import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
 import type { AnalysisResult, ClassifiedRepo } from "./types";
 
@@ -30,9 +31,17 @@ export async function analyzeWithOpenAI(
 
   const provider = options.apiKey ? options.provider ?? "groq" : serverAi?.provider ?? options.provider ?? "groq";
   const defaults = providerDefaults[provider];
+  const baseURL = options.apiKey ? options.baseUrl || defaults.baseUrl : serverAi?.baseUrl || options.baseUrl || defaults.baseUrl;
+  if (provider === "custom" && baseURL) {
+    try {
+      requireSafeBaseUrl(baseURL, { allowUntrusted: true });
+    } catch {
+      return analyzeWithDemo(prompt, repos);
+    }
+  }
   const client = new OpenAI({
     apiKey,
-    baseURL: options.apiKey ? options.baseUrl || defaults.baseUrl : serverAi?.baseUrl || options.baseUrl || defaults.baseUrl
+    baseURL
   });
   const compactRepos = repos.slice(0, 12).map((repo) => ({
     fullName: repo.fullName,

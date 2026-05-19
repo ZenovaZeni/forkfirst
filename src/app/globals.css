@@ -1129,6 +1129,7 @@ a {
 }
 
 .key-links a,
+.key-links button,
 .save-keys-button {
   display: inline-flex;
   align-items: center;
@@ -1141,6 +1142,11 @@ a {
   font-size: 0.72rem;
   font-weight: 850;
   text-decoration: none;
+}
+
+.key-links button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .save-keys-button {

@@ -73,13 +73,27 @@ export function KeySettings({
   const customUrlIsInvalid = customUrlClassification && customUrlClassification.ok === false;
   const needsAcknowledgement = customUrlIsUntrusted && !draftKeys.aiBaseUrlAcknowledged;
   const canSave = !needsAcknowledgement && !customUrlIsInvalid;
+  const storageStatus = keys.githubToken || keys.aiApiKey
+    ? rememberKeys
+      ? "saved locally"
+      : "session only"
+    : "optional";
+
+  function updateDraft(next: UserKeys) {
+    setDraftKeys(next);
+  }
+
+  function saveKeys(next: UserKeys) {
+    setDraftKeys(next);
+    onChange(next);
+  }
 
   return (
-    <details className="key-settings" open>
+    <details className="key-settings" open data-clarity-mask="true">
       <summary>
         <KeyRound size={15} />
         Keys and providers
-        <span>{verification.github === "verified" || verification.ai === "verified" ? "verified" : keys.githubToken || keys.aiApiKey ? "configured" : "optional"}</span>
+        <span>{storageStatus}</span>
       </summary>
       <div className="key-verify-strip">
         <span className={verification.github}>{`GitHub ${keyStatusLabel(verification.github)}`}</span>
@@ -104,14 +118,14 @@ export function KeySettings({
         <section className="key-panel">
           <div className="key-panel-heading">
             <strong>GitHub access</strong>
-            <span>Optional. Raises GitHub search limits and improves repo metadata. Read-only public-repo scope is enough.</span>
+            <span>Optional. Improves GitHub search limits and repo metadata. Use a dedicated token with the lowest permissions possible. Public read-only access is enough. Do not use private repo, write, admin, or organization permissions unless you understand the risk.</span>
           </div>
           <div className="key-grid single">
             <label>
               <span>GitHub token</span>
               <input
                 value={draftKeys.githubToken}
-                onChange={(event) => setDraftKeys({ ...draftKeys, githubToken: event.target.value })}
+                onChange={(event) => updateDraft({ ...draftKeys, githubToken: event.target.value })}
                 placeholder="github_pat_..."
                 type="password"
                 autoComplete="off"
@@ -121,6 +135,13 @@ export function KeySettings({
               <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noreferrer">
                 Get GitHub token
               </a>
+              <button
+                type="button"
+                onClick={() => saveKeys({ ...draftKeys, githubToken: "" })}
+                disabled={!draftKeys.githubToken && !keys.githubToken}
+              >
+                Clear GitHub token
+              </button>
             </div>
           </div>
         </section>
@@ -144,7 +165,7 @@ export function KeySettings({
               <span>{providerDefaults[draftKeys.aiProvider].label} API key</span>
               <input
                 value={draftKeys.aiApiKey}
-                onChange={(event) => setDraftKeys({ ...draftKeys, aiApiKey: event.target.value })}
+                onChange={(event) => updateDraft({ ...draftKeys, aiApiKey: event.target.value })}
                 placeholder={draftKeys.aiProvider === "groq" ? "gsk_..." : draftKeys.aiProvider === "deepseek" ? "sk_..." : "sk-proj_..."}
                 type="password"
                 autoComplete="off"
@@ -156,7 +177,7 @@ export function KeySettings({
                 <span>Model</span>
                 <input
                   value={draftKeys.aiModel}
-                  onChange={(event) => setDraftKeys({ ...draftKeys, aiModel: event.target.value })}
+                  onChange={(event) => updateDraft({ ...draftKeys, aiModel: event.target.value })}
                   placeholder={providerDefaults[draftKeys.aiProvider].model}
                   autoComplete="off"
                 />
@@ -168,7 +189,7 @@ export function KeySettings({
                     <input
                       value={draftKeys.aiBaseUrl}
                       onChange={(event) =>
-                        setDraftKeys({ ...draftKeys, aiBaseUrl: event.target.value, aiBaseUrlAcknowledged: false })
+                        updateDraft({ ...draftKeys, aiBaseUrl: event.target.value, aiBaseUrlAcknowledged: false })
                       }
                       placeholder="https://api.example.com/v1"
                       autoComplete="off"
@@ -199,7 +220,7 @@ export function KeySettings({
                             type="checkbox"
                             checked={Boolean(draftKeys.aiBaseUrlAcknowledged)}
                             onChange={(event) =>
-                              setDraftKeys({ ...draftKeys, aiBaseUrlAcknowledged: event.target.checked })
+                              updateDraft({ ...draftKeys, aiBaseUrlAcknowledged: event.target.checked })
                             }
                           />
                           <span>I trust this URL and accept that my API key will be sent to it.</span>
@@ -214,6 +235,13 @@ export function KeySettings({
               <a href={providerKeyLinks[draftKeys.aiProvider].href} target="_blank" rel="noreferrer">
                 {providerKeyLinks[draftKeys.aiProvider].label}
               </a>
+              <button
+                type="button"
+                onClick={() => saveKeys({ ...draftKeys, aiApiKey: "" })}
+                disabled={!draftKeys.aiApiKey && !keys.aiApiKey}
+              >
+                Clear AI key
+              </button>
             </div>
           </div>
         </section>

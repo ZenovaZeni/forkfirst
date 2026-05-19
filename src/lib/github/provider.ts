@@ -62,6 +62,7 @@ function normalizeRepo(item: GitHubRepoItem): NormalizedRepo {
 
 export async function searchGithubRepositories(prompt: string, userToken?: string): Promise<GitHubSearchResult> {
   const token = userToken || optionalServerKey("GITHUB_TOKEN");
+  const tokenBackedFetch = Boolean(token);
   const refinement = planPromptRefinement(prompt);
   const knownRepoSlug = extractKnownRepoSlug(prompt);
   const queries = knownRepoSlug ? [`repo:${knownRepoSlug}`, ...refinement.queries] : refinement.queries;
@@ -91,7 +92,7 @@ export async function searchGithubRepositories(prompt: string, userToken?: strin
           "X-GitHub-Api-Version": "2022-11-28",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        next: { revalidate: 300 }
+        ...(tokenBackedFetch ? { cache: "no-store" as const } : { next: { revalidate: 300 } })
       });
       const data = (await response.json()) as GitHubRepoItem & { message?: string };
       if (response.ok) {
@@ -127,7 +128,7 @@ export async function searchGithubRepositories(prompt: string, userToken?: strin
           "X-GitHub-Api-Version": "2022-11-28",
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
-        next: { revalidate: 300 }
+        ...(tokenBackedFetch ? { cache: "no-store" as const } : { next: { revalidate: 300 } })
       });
 
       data = (await response.json()) as GitHubSearchResponse;
