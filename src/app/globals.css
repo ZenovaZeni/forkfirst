@@ -6900,21 +6900,15 @@ body,
 
 .legal-page__trust-card {
   position: relative;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
   border-radius: 18px;
   padding: 20px;
-  background: var(--paper-2);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 16%, transparent), transparent 58%),
+    var(--paper-2);
   color: var(--ink);
   overflow: hidden;
-}
-
-.legal-page__trust-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: var(--accent);
-  opacity: 0.78;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .legal-page__trust-card h2 {
