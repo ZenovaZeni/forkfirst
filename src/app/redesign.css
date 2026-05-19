@@ -2563,8 +2563,9 @@ input, textarea, select { font: inherit; color: inherit; }
   gap: 12px;
 }
 .saved-handoff-card {
-  grid-template-rows: auto minmax(56px, auto) auto auto auto;
-  align-content: start;
+  min-height: 398px;
+  grid-template-rows: 72px 44px 74px 72px 46px;
+  align-content: stretch;
 }
 .build-pack-card.empty {
   grid-column: 1 / -1;
@@ -2580,6 +2581,19 @@ input, textarea, select { font: inherit; color: inherit; }
   display: grid;
   gap: 4px;
   min-width: 0;
+}
+.saved-handoff-card .top strong,
+.saved-handoff-card .top span:not(.status),
+.saved-handoff-card > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.saved-handoff-card .top strong {
+  -webkit-line-clamp: 1;
+}
+.saved-handoff-card .top span:not(.status) {
+  -webkit-line-clamp: 2;
 }
 .build-pack-card strong {
   font-family: var(--font-display);
@@ -2615,20 +2629,33 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .pack-meta,
 .pack-actions {
-  display: flex;
-  flex-wrap: wrap;
   gap: 8px;
 }
+.pack-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+.pack-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 96px;
+  align-items: stretch;
+}
 .pack-meta span {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 5px 8px;
   color: var(--ink-2);
   font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pack-next {
   display: grid;
   gap: 4px;
+  align-content: center;
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
   border-radius: 12px;
   background: color-mix(in srgb, var(--accent) 7%, var(--paper));
@@ -2649,6 +2676,15 @@ input, textarea, select { font: inherit; color: inherit; }
   font-weight: 650;
   letter-spacing: -0.01em;
   line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pack-actions .btn {
+  min-width: 0;
+  min-height: 46px;
+  padding-inline: 12px;
 }
 .btn.danger {
   color: var(--signal-bad);
