@@ -564,7 +564,12 @@ function preferenceLines(preferences?: BuildPackPreferences): string[] {
   const labels: Record<string, string> = {
     productName: "Product name",
     name: "Product name",
+    productGoal: "Product goal",
     audience: "Audience",
+    firstMilestone: "First working milestone",
+    keepFromRepo: "Keep from repo",
+    replaceFromRepo: "Replace from repo",
+    addToRepo: "Add on top",
     vibe: "Brand vibe",
     accentColor: "Accent color",
     designNotes: "Design notes",
@@ -584,6 +589,20 @@ function preferenceSkipList(preferences?: BuildPackPreferences): string[] {
   if (Array.isArray(raw)) return raw.filter(Boolean);
   if (typeof raw === "string" && raw.trim()) return raw.split(",").map((item) => item.trim()).filter(Boolean);
   return [];
+}
+
+function stringPreference(preferences: BuildPackPreferences | undefined, key: string): string | null {
+  const value = preferences?.[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function profileWithPreferences(profile: ProductProfile, preferences?: BuildPackPreferences): ProductProfile {
+  return {
+    ...profile,
+    goal: stringPreference(preferences, "productGoal") ?? profile.goal,
+    primaryUser: stringPreference(preferences, "audience") ?? profile.primaryUser,
+    firstMilestone: stringPreference(preferences, "firstMilestone") ?? profile.firstMilestone
+  };
 }
 
 function foundationMode(repo: BuildPackRepo | undefined): "clone" | "inspect" | "none" {
@@ -615,15 +634,18 @@ function foundationCommands(repo: BuildPackRepo | undefined, projectName: string
 
 function adaptationMap(repo: BuildPackRepo | undefined, profile: ProductProfile, preferences?: BuildPackPreferences): string[] {
   if (!repo) return ["- No repo foundation selected yet."];
+  const keep = stringPreference(preferences, "keepFromRepo");
+  const replace = stringPreference(preferences, "replaceFromRepo");
+  const add = stringPreference(preferences, "addToRepo");
   const designLine = [
     preferences?.vibe ? `brand vibe: ${preferences.vibe}` : null,
     preferences?.accentColor ? `accent: ${preferences.accentColor}` : null,
     preferences?.audience ? `audience: ${preferences.audience}` : null
   ].filter(Boolean).join("; ");
   return [
-    `- Keep: working setup, app shell, routing, persistence/data patterns, tests, and components that directly support: ${profile.coreWorkflow[0]}`,
-    "- Replace: product copy, brand, sample data, navigation labels, onboarding, and any domain assumptions that do not match this idea.",
-    "- Add: the smallest product loop from the PRD, plus save/export behavior if it is not already present.",
+    `- Keep: ${keep || `working setup, app shell, routing, persistence/data patterns, tests, and components that directly support: ${profile.coreWorkflow[0]}`}`,
+    `- Replace: ${replace || "product copy, brand, sample data, navigation labels, onboarding, and any domain assumptions that do not match this idea."}`,
+    `- Add: ${add || "the smallest product loop from the PRD, plus save/export behavior if it is not already present."}`,
     `- Remove or defer: anything listed in Skip In v1, paid/team/admin surfaces, and unrelated demo features from ${repo.fullName}.`,
     `- Design direction: ${designLine || "derive a clear design pass from the Product Promise and Primary User before polishing UI."}`
   ];
@@ -851,7 +873,8 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const bestNarrative = bestRepo ? buildRepoNarrative(bestRepo) : null;
   // When a focusRepo is provided, show the other top repos as "also worth checking"
   const alsoWorthChecking = focusRepo ? topRepos.filter((repo) => repo.fullName !== focusRepo.fullName).slice(0, 2) : [];
-  const profile = productProfileFor(originalIdea);
+  const baseProfile = productProfileFor(originalIdea);
+  const profile = profileWithPreferences(baseProfile, wizardAnswers);
   const projectName = preferredProjectName(originalIdea, wizardAnswers);
   const preferenceBullets = preferenceLines(wizardAnswers);
   const skipPreferences = preferenceSkipList(wizardAnswers);
