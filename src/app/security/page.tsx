@@ -109,13 +109,13 @@ export default function SecurityPage() {
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Rate limits and abuse controls</h2>
         <p>
-          ForkFirst includes per-IP rate limits on key verification, repo research, chat, trending, and idea refinement.
+          ForkFirst includes <Highlight>per-IP rate limits on key verification, repo research, chat, trending, and idea refinement</Highlight>.
           Local development uses in-memory limits. Hosted deployments should set `UPSTASH_REDIS_REST_URL` and
           `UPSTASH_REDIS_REST_TOKEN` so limits are durable across serverless instances and restarts.
         </p>
         <p>
-          Rate limits reduce casual abuse; they do not replace auth, bot protection, WAF rules, provider spend limits, or
-          careful monitoring if you run a high-traffic public deployment.
+          Rate limits reduce casual abuse; they <Highlight>do not replace auth, bot protection, WAF rules, provider spend limits, or
+          careful monitoring</Highlight> if you run a high-traffic public deployment.
         </p>
       </section>
 
@@ -160,45 +160,45 @@ export default function SecurityPage() {
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>What we do not claim</h2>
         <ul>
-          <li>We do not say keys never leave your browser on hosted usage.</li>
-          <li>We do not say everything stays on device.</li>
-          <li>We do not say local AI stays local unless the user is actually using a trusted local provider.</li>
-          <li>We do not say any key-handling system is 100% safe.</li>
+          <li>We do not say <Highlight>keys never leave your browser</Highlight> on hosted usage.</li>
+          <li>We do not say <Highlight>everything stays on device</Highlight>.</li>
+          <li>We do not say local AI stays local unless the user is actually using a <Highlight>trusted local provider</Highlight>.</li>
+          <li>We do not say any key-handling system is <Highlight>100% safe</Highlight>.</li>
         </ul>
       </section>
 
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Recommended key setup</h2>
         <ul>
-          <li>Use a GitHub fine-grained token with the minimum public-repo access needed for search metadata.</li>
-          <li>Use provider keys with spending limits, short rotation windows, and revocation ready.</li>
-          <li>Do not use custom AI base URLs unless you trust the operator; that server receives your AI key.</li>
-          <li>Clear browser data after use on shared machines.</li>
+          <li>Use a GitHub fine-grained token with the <Highlight>minimum public-repo access</Highlight> needed for search metadata.</li>
+          <li>Use provider keys with <Highlight>spending limits, short rotation windows, and revocation ready</Highlight>.</li>
+          <li>Do not use custom AI base URLs unless you trust the operator; <Highlight>that server receives your AI key</Highlight>.</li>
+          <li><Highlight>Clear browser data after use</Highlight> on shared machines.</li>
         </ul>
       </section>
 
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Known dependency advisory</h2>
         <p>
-          `npm audit` currently reports a moderate PostCSS advisory through Next.js&apos;s bundled dependency. The suggested
+          `npm audit` currently reports a <Highlight>moderate PostCSS advisory</Highlight> through Next.js&apos;s bundled dependency. The suggested
           forced audit fix downgrades Next to an old major version, so ForkFirst tracks this in `docs/security-advisories.md`
-          and should upgrade Next when a stable patched path is available.
+          and should <Highlight>upgrade Next when a stable patched path is available</Highlight>.
         </p>
       </section>
 
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Remaining risks</h2>
         <p>
-          A hosted BYOK app can reduce risk, but it cannot eliminate it. Risks include malicious browser extensions,
+          A hosted BYOK app can <Highlight>reduce risk, but it cannot eliminate it</Highlight>. Risks include malicious browser extensions,
           compromised devices, provider-side logging, network or device malware, XSS bugs, supply-chain bugs, phishing
-          lookalikes, and users pasting overly powerful API keys. Treat this page as a living security contract.
+          lookalikes, and users pasting <Highlight>overly powerful API keys</Highlight>. Treat this page as a <Highlight>living security contract</Highlight>.
         </p>
       </section>
 
       <section className="legal-page__section" style={sectionStyle}>
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Report a vulnerability</h2>
         <p>
-          Please do not open a public issue with secrets or exploit details. Use a private GitHub Security Advisory so
+          Please <Highlight>do not open a public issue with secrets or exploit details</Highlight>. Use a private GitHub Security Advisory so
           the maintainer can fix and disclose responsibly.
         </p>
         <p>

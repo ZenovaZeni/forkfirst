@@ -80,7 +80,7 @@ export default function PrivacyPage() {
             stored in browser storage by default. <Highlight>ForkFirst does not attach that information to a hosted user account.</Highlight>
           </p>
           <p>
-            If you use a shared machine, clear browser data after use. Browser storage can be read by someone with access
+            If you use a shared machine, <Highlight>clear browser data after use</Highlight>. Browser storage can be read by someone with access
             to the unlocked device, malicious extensions, malware, or a future browser-side security bug.
           </p>
         </section>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
           <h2>Local runs</h2>
           <p>
             If you clone ForkFirst and run it locally, the same browser-to-API-route flow happens on your own machine.
-            Your keys are then forwarded from your machine to GitHub or your selected AI provider.
+            <Highlight>Your keys are then forwarded from your machine to GitHub or your selected AI provider.</Highlight>
           </p>
         </section>
 
@@ -123,7 +123,7 @@ export default function PrivacyPage() {
           <h2>Security model</h2>
           <p>
             Privacy and security overlap, but they are not the same page. For BYOK risks, key storage, rate limits, and
-            vulnerability reporting, read the security model.
+            vulnerability reporting, <Highlight>read the security model</Highlight>.
           </p>
           <p>
             <Link href="/security">Read the ForkFirst security model</Link>
