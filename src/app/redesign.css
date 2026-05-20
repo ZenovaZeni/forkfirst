@@ -5472,8 +5472,30 @@ input, textarea, select { font: inherit; color: inherit; }
   max-width: min(440px, 100%);
   overflow-wrap: anywhere;
 }
+.trending-drawer .repo-hero {
+  align-items: center;
+}
+.trending-drawer .repo-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.trending-drawer .repo-hero-meta span {
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-soft) 30%, var(--paper));
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 6px 9px;
+}
+.trending-drawer .hero-stars {
+  text-align: right;
+}
 .trending-drawer .repo-hero .score-big {
-  font-size: clamp(30px, 7vw, 52px);
+  font-size: clamp(24px, 5vw, 36px);
   white-space: nowrap;
 }
 .trending-drawer .drawer-topics {
@@ -5496,15 +5518,16 @@ input, textarea, select { font: inherit; color: inherit; }
     padding: 18px 18px 22px;
   }
   .trending-drawer .repo-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     margin-bottom: 14px;
     padding-bottom: 12px;
   }
-  .trending-drawer .repo-hero h2,
-  .trending-drawer .repo-hero .score-big,
+  .trending-drawer .repo-hero .score-big {
+    font-size: 24px;
+  }
   .trending-drawer .repo-hero .score-lbl {
-    display: none;
+    font-size: 9px;
   }
   .trending-drawer .repo-section {
     margin-bottom: 18px;

@@ -1321,6 +1321,22 @@ body {
   flex-basis: 190px;
 }
 
+.trending-drawer .drawer-foot {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.trending-drawer .drawer-foot .btn {
+  flex: none;
+  min-height: 42px;
+  padding-inline: 10px;
+}
+
+.trending-drawer .drawer-foot .btn.accent {
+  grid-column: 1 / -1;
+}
+
 [data-theme="dark"] .trend-card .actions .btn.accent,
 [data-theme="dark"] .trending-drawer .drawer-foot .btn.accent,
 [data-theme="dark"] .starter-rich .foundation-cta {

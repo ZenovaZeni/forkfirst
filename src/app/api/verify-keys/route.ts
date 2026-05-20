@@ -32,7 +32,8 @@ async function verifyGithub(token?: string): Promise<boolean | null> {
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
       Authorization: `Bearer ${token.trim()}`
-    }
+    },
+    cache: "no-store"
   });
   return response.ok;
 }
@@ -46,7 +47,8 @@ async function verifyAi(provider?: string, apiKey?: string, model?: string, base
     headers: {
       Authorization: `Bearer ${apiKey.trim()}`,
       ...(provider === "openai" ? { "OpenAI-Beta": "assistants=v2" } : {})
-    }
+    },
+    cache: "no-store"
   });
 
   if (!response.ok) return false;

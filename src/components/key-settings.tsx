@@ -297,7 +297,7 @@ export function KeySettings({
             className="clear-data-button"
             type="button"
             onClick={() => {
-              if (window.confirm("Clear all saved keys, chats, folders, and saved repos from this browser? This cannot be undone.")) {
+              if (window.confirm("Clear saved keys, chats, saved repos, handoffs, prompt packs, usage estimates, and appearance settings from this browser? This cannot be undone.")) {
                 onClearAllData();
               }
             }}

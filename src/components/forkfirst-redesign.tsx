@@ -4553,7 +4553,7 @@ function SettingsScreen({
                   <span className="eyebrow">Local backup</span>
                   <strong>Export saved work</strong>
                   <p>
-                    Downloads saved repos, handoffs, chats, boards, prompt packs, usage estimates, and appearance settings as JSON. API keys are not included.
+                    Saved repos, handoffs, chats, boards, prompt packs, usage estimates, and appearance settings live in this browser. Export a JSON backup before clearing browser data or switching devices. API keys are not included.
                   </p>
                 </div>
                 <button className="btn ghost" type="button" onClick={onExportBackup}>
@@ -4565,7 +4565,7 @@ function SettingsScreen({
                   <span className="eyebrow">Restore</span>
                   <strong>Import backup file</strong>
                   <p>
-                    Restores a ForkFirst backup into this browser. This replaces local saved repos, handoffs, chats, prompt packs, usage estimates, and accent.
+                    Restores a ForkFirst backup into this browser. This replaces local saved repos, handoffs, chats, prompt packs, usage estimates, and appearance settings.
                   </p>
                 </div>
                 <input
@@ -4770,9 +4770,13 @@ function TrendingRepoDrawer({
           <div className="repo-hero trending-repo-hero">
             <div>
               <span className="tag">Live GitHub lead</span>
-              <h2>{repo.fullName}</h2>
+              <div className="repo-hero-meta" aria-label="Repo metadata">
+                <span>{category?.label ?? "Trending"}</span>
+                <span>{setupFit.label}</span>
+                <span>{repo.language ?? "Mixed"}</span>
+              </div>
             </div>
-            <div>
+            <div className="hero-stars" aria-label={`${formatStars(repo.stars)} stars`}>
               <div className="score-big">{formatStars(repo.stars)}</div>
               <div className="score-lbl">Stars</div>
             </div>
