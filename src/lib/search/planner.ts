@@ -30,6 +30,8 @@ const STOP_WORDS = new Set([
   "make",
   "me",
   "my",
+  "need",
+  "needs",
   "of",
   "on",
   "or",
@@ -104,14 +106,55 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(client portal|customer portal|portal|invoices?|invoicing|billing portal|customer dashboard|client dashboard|messaging)\b/i,
+    label: "client-portal",
+    meaning: "Find open-source client portal, customer dashboard, invoicing, messaging, and file-sharing apps.",
+    queries: [
+      "client portal invoice messaging in:name,description,readme",
+      "customer portal invoicing in:name,description,readme",
+      "client dashboard messaging in:name,description,readme",
+      "invoice client portal in:name,description,readme",
+      "customer portal file sharing in:name,description,readme",
+      "client portal dashboard in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(booking|appointment|appointments|scheduling|scheduler|salon|spa|barber|barbershop)\b/i,
+    label: "appointment-booking",
+    meaning: "Find open-source appointment, booking, scheduling, salon, or service-business apps.",
+    queries: [
+      "appointment booking app in:name,description,readme",
+      "salon booking app in:name,description,readme",
+      "scheduling app in:name,description,readme",
+      "appointment scheduler in:name,description,readme",
+      "service booking app in:name,description,readme",
+      "barbershop booking app in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(restaurant|restaurants|cafe|food truck|hospitality|reservation|reservations)\b/i,
     label: "restaurant",
     meaning: "Find open-source restaurant, hospitality, reservation, or local-service tools that match the user's specific workflow.",
     queries: [
-      "restaurant management tools in:name,description,readme",
-      "restaurant reservation automation in:name,description,readme",
-      "hospitality crm open source in:name,description,readme",
-      "food service workflow automation in:name,description,readme"
+      "restaurant reservation app in:name,description,readme",
+      "table booking app in:name,description,readme",
+      "restaurant booking system in:name,description,readme",
+      "restaurant management system in:name,description,readme",
+      "food ordering app in:name,description,readme",
+      "hospitality booking app in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(recipe|recipes|meal planner|meal planning|cookbook|cooking|pantry)\b/i,
+    label: "recipe-meal-planning",
+    meaning: "Find open-source recipe manager, cookbook, pantry, grocery-list, and meal-planning apps.",
+    queries: [
+      "recipe manager app in:name,description,readme",
+      "meal planner app in:name,description,readme",
+      "self hosted recipe manager in:name,description,readme",
+      "cookbook app in:name,description,readme",
+      "recipe meal planner in:name,description,readme",
+      "pantry recipe app in:name,description,readme"
     ]
   },
   {
@@ -125,6 +168,45 @@ const VERTICAL_SEARCH_PLANS = [
       "grocery inventory app in:name,description,readme",
       "supermarket app template in:name,description,readme",
       "meal planner grocery list in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(job board|job portal|jobs board|careers?|recruitment|recruiting|applicants?|hiring)\b/i,
+    label: "job-board",
+    meaning: "Find open-source job board, job portal, careers, recruitment, or hiring workflow apps.",
+    queries: [
+      "job board app in:name,description,readme",
+      "job portal app in:name,description,readme",
+      "recruitment job board in:name,description,readme",
+      "careers board app in:name,description,readme",
+      "hiring platform app in:name,description,readme",
+      "applicant tracking system in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(personal finance|budget|budgeting|expense tracker|expenses|money manager|finance tracker)\b/i,
+    label: "personal-finance",
+    meaning: "Find open-source personal finance, budget, expense-tracking, and money-management apps.",
+    queries: [
+      "personal finance budget app in:name,description,readme",
+      "expense tracker app in:name,description,readme",
+      "budget planner app in:name,description,readme",
+      "money manager app in:name,description,readme",
+      "personal finance tracker in:name,description,readme",
+      "self hosted budgeting app in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(habit tracker|habit tracking|habits?|goal tracker|routine tracker|streak tracker)\b/i,
+    label: "habit-tracker",
+    meaning: "Find open-source habit, goal, routine, and streak-tracking apps.",
+    queries: [
+      "habit tracker app in:name,description,readme",
+      "habit tracking app in:name,description,readme",
+      "goal tracker app in:name,description,readme",
+      "routine tracker app in:name,description,readme",
+      "streak tracker app in:name,description,readme",
+      "self hosted habit tracker in:name,description,readme"
     ]
   },
   {

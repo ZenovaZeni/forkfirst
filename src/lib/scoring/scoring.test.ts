@@ -277,4 +277,45 @@ describe("repo scoring", () => {
     expect(first.score.fit).toBeGreaterThanOrEqual(70);
     expect(first.score.reasons).toContain("Vertical/domain match");
   });
+
+  test("ranks client portal products above API clients for portal prompts", () => {
+    const [first] = classifyRepositories(
+      [
+        repo({
+          owner: "recurly",
+          name: "recurly-client-php",
+          fullName: "recurly/recurly-client-php",
+          description: "Recurly PHP Client",
+          topics: ["php", "billing", "api-client"],
+          stars: 950,
+          forks: 200,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "PHP SDK client for the Recurly billing API.",
+            qualityScore: 90
+          }
+        }),
+        repo({
+          owner: "acme",
+          name: "client-portal",
+          fullName: "acme/client-portal",
+          description: "Client portal with invoice dashboard, secure messaging, files, and customer account management.",
+          topics: ["client-portal", "invoices", "messaging", "dashboard"],
+          stars: 120,
+          forks: 20,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Self-hosted client portal app with invoices, messaging, file sharing, auth, admin dashboard, and customer profiles.",
+            qualityScore: 80
+          }
+        })
+      ],
+      "I want to build a client portal with invoices and messaging"
+    );
+
+    expect(first.fullName).toBe("acme/client-portal");
+    expect(first.score.fit).toBeGreaterThanOrEqual(70);
+  });
 });

@@ -42,9 +42,9 @@ const NEW_SEARCH_RE = /\b(find|search|look(?:ing)? for|discover|research)\b/;
 const BUILD_IDEA_RE =
   /\b(app|tool|platform|dashboard|tracker|manager|portal|website|repo|github|foundation|starter|collector|album|crm|scraper|workflow|automation)\b/;
 const TERSE_VERTICAL_RE =
-  /\b(pokemon|tcg|trading cards?|cards?|realtors?|real estate|lead gen|crm|booking|invoice|billing|recipe|voice|image|game)\b/;
+  /\b(pokemon|tcg|trading cards?|cards?|realtors?|real estate|lead gen|crm|booking|invoice|billing|recipe|voice|image|game|grocery|restaurant|salon|job|jobs|budget|finance|habit|habits)\b/;
 const TERSE_PRODUCT_SIGNAL_RE =
-  /\b(value|values|price|prices|track|tracker|manager|album|binder|collection|collector|coloter|scraper|portal|dashboard|booking|generator|crm)\b/;
+  /\b(app|value|values|price|prices|track|tracker|manager|album|binder|collection|collector|coloter|scraper|portal|dashboard|booking|generator|crm|board|budget|expense|goal|habit|reservation)\b/;
 
 export function isCasualAdvicePrompt(prompt: string) {
   const lower = cleanChatText(prompt, 500).toLowerCase();
@@ -73,11 +73,18 @@ function searchPrompt(context: ResearchChatContext, prefix: string) {
 }
 
 function looksLikeNoContextRepoHunt(lowerPrompt: string) {
-  return (
+  const naturalBuildPrompt =
     lowerPrompt.length >= 18 &&
-    ((BUILD_IDEA_RE.test(lowerPrompt) &&
-      /\b(i'?m looking for|im looking for|i am looking for|i want|i need|build|make|create|app like|tool for)\b/.test(lowerPrompt)) ||
-      (TERSE_VERTICAL_RE.test(lowerPrompt) && TERSE_PRODUCT_SIGNAL_RE.test(lowerPrompt)))
+    BUILD_IDEA_RE.test(lowerPrompt) &&
+    /\b(i'?m looking for|im looking for|i am looking for|i want|i need|build|make|create|app like|tool for)\b/.test(lowerPrompt);
+  const terseVerticalPrompt =
+    lowerPrompt.length >= 8 &&
+    TERSE_VERTICAL_RE.test(lowerPrompt) &&
+    TERSE_PRODUCT_SIGNAL_RE.test(lowerPrompt);
+
+  return (
+    naturalBuildPrompt ||
+    terseVerticalPrompt
   );
 }
 

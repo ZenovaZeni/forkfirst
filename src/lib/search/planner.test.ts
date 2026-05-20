@@ -112,6 +112,62 @@ describe("search planner", () => {
     expect(refinement.queries.join(" ")).not.toContain("make grocery");
   });
 
+  test("plans recipe and meal-planning searches around recipe managers", () => {
+    const refinement = planPromptRefinement("I need a recipe saving app with meal planning");
+
+    expect(refinement.bestQuery).toBe("recipe manager app in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "recipe manager app in:name,description,readme",
+      "meal planner app in:name,description,readme",
+      "self hosted recipe manager in:name,description,readme",
+      "cookbook app in:name,description,readme"
+    ]);
+    expect(refinement.queries.join(" ")).not.toContain("need recipe");
+  });
+
+  test("plans client portal searches around portals, invoices, and messaging", () => {
+    const refinement = planPromptRefinement("I want to build a client portal with invoices and messaging");
+
+    expect(refinement.bestQuery).toBe("client portal invoice messaging in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "client portal invoice messaging in:name,description,readme",
+      "customer portal invoicing in:name,description,readme",
+      "client dashboard messaging in:name,description,readme",
+      "invoice client portal in:name,description,readme"
+    ]);
+  });
+
+  test("plans common utility app verticals without raw sentence search first", () => {
+    expect(planSearches("I want to make a personal finance budget app").slice(0, 3)).toEqual([
+      "personal finance budget app in:name,description,readme",
+      "expense tracker app in:name,description,readme",
+      "budget planner app in:name,description,readme"
+    ]);
+    expect(planSearches("I want to make a simple habit tracker app").slice(0, 3)).toEqual([
+      "habit tracker app in:name,description,readme",
+      "habit tracking app in:name,description,readme",
+      "goal tracker app in:name,description,readme"
+    ]);
+    expect(planSearches("I want to make a job board app").slice(0, 3)).toEqual([
+      "job board app in:name,description,readme",
+      "job portal app in:name,description,readme",
+      "recruitment job board in:name,description,readme"
+    ]);
+  });
+
+  test("plans booking and restaurant prompts around reservation products", () => {
+    expect(planSearches("I want to build a booking app for a small salon").slice(0, 3)).toEqual([
+      "appointment booking app in:name,description,readme",
+      "salon booking app in:name,description,readme",
+      "scheduling app in:name,description,readme"
+    ]);
+    expect(planSearches("I want to build a restaurant reservation app").slice(0, 3)).toEqual([
+      "restaurant reservation app in:name,description,readme",
+      "table booking app in:name,description,readme",
+      "restaurant booking system in:name,description,readme"
+    ]);
+  });
+
   test("plans Pokemon TCG collector searches before generic prompt searches", () => {
     const queries = planSearches("I want to build a Pokemon collector app for my TCG cards");
 
