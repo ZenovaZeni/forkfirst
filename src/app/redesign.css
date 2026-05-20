@@ -2872,6 +2872,25 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 12.5px;
 }
 .quality-card li.done { color: var(--ink); }
+.quality-card.has-issues {
+  border-color: color-mix(in srgb, var(--signal-warn) 34%, var(--line));
+  background: color-mix(in srgb, var(--signal-warn-soft) 42%, var(--paper));
+}
+.quality-card.has-issues .quality-top strong,
+.quality-card li.issue .dot {
+  color: var(--signal-warn);
+  border-color: var(--signal-warn);
+}
+.quality-card li.issue {
+  align-items: flex-start;
+  color: var(--ink-2);
+  line-height: 1.35;
+}
+.quality-card li.issue strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
 .quality-card li svg {
   color: var(--accent);
   flex: 0 0 auto;

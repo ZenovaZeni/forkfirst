@@ -659,6 +659,12 @@ function cleanRepoContent(text: string | null | undefined): string {
   if (!text) return "";
   return text
     .replace(/<\/?UNTRUSTED_REPO_CONTENT>/gi, "")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/<\/?(?:a|img|picture|source|div|span|h1|h2|p|br)\b[^<>\n|]*/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -911,12 +917,13 @@ function reuseMatrixLines(repo: BuildPackRepo | undefined, blueprint: HandoffBlu
   const firstFeature = cleanEvidenceSnippet(repo?.readme?.evidence?.featureSnippets?.[0]) ?? "Inspect README/app files";
   const firstIntegration = cleanEvidenceSnippet(repo?.readme?.evidence?.integrationSnippets?.[0]) ?? "Inspect models/schemas";
   const firstCommand = cleanEvidenceSnippet(repo?.readme?.evidence?.commandSnippets?.[0]) ?? "Inspect package files";
+  const uiEvidence = cleanEvidenceSnippet(repo?.readme?.excerpt) ?? "Inspect components";
   return [
     "| Area | Keep | Replace | Build Fresh | Avoid | Evidence |",
     "|---|---|---|---|---|---|",
     `| Product workflow | Starter flows that support ${blueprint.primaryWorkflow[0]} | Copy, labels, sample data | Missing steps from the primary workflow | Unrelated starter features | ${firstFeature} |`,
     `| Data model | Entities matching ${blueprint.coreDataObjects.slice(0, 3).join(", ")} | Domain-specific assumptions | Missing product entities | License-unclear data | ${firstIntegration} |`,
-    `| UI | Useful shells, lists, cards, forms | Branding, layout that feels copied | Screens listed in PRD | Protected logos/assets | ${repo?.readme?.excerpt?.slice(0, 120) ?? "Inspect components"} |`,
+    `| UI | Useful shells, lists, cards, forms | Branding, layout that feels copied | Screens listed in PRD | Protected logos/assets | ${uiEvidence} |`,
     `| Setup/tests | Documented commands | Broken scripts | Missing QA for first milestone | Invented commands | ${firstCommand} |`
   ];
 }

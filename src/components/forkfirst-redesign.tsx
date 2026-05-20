@@ -33,6 +33,7 @@ import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import { buildProjectBuildPack, type BuildPackPreferences, type BuildTarget } from "@/lib/build-pack/generator";
+import { auditBuildPackQuality, type BuildPackQualityAudit } from "@/lib/build-pack/quality";
 import { decodeHandoff } from "@/lib/handoff/share-url";
 import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-status";
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
@@ -525,6 +526,18 @@ function qualityItems({
 
 function qualityScore(items: Array<{ done: boolean }>) {
   return Math.round((items.filter((item) => item.done).length / Math.max(1, items.length)) * 100);
+}
+
+function buildPackQualityMessage(audit: BuildPackQualityAudit): string {
+  const lines = audit.issues.slice(0, 4).map((issue) => `- ${issue.title}: ${issue.detail}`);
+  const more = audit.issues.length > 4 ? `\n- ${audit.issues.length - 4} more issue${audit.issues.length - 4 === 1 ? "" : "s"}.` : "";
+  return `ForkFirst found ${audit.issues.length} Build Pack issue${audit.issues.length === 1 ? "" : "s"}:\n\n${lines.join("\n")}${more}\n\nExport anyway?`;
+}
+
+function confirmBuildPackQuality(audit: BuildPackQualityAudit): boolean {
+  if (audit.passed) return true;
+  if (typeof window === "undefined") return false;
+  return window.confirm(buildPackQualityMessage(audit));
 }
 
 function buildPackTargetLabel(pack: SavedBuildPack) {
@@ -3939,6 +3952,10 @@ function HandoffView({
   const starterName = activeBuildPack?.starterRepo || starterRepo?.fullName || "No starter selected";
   const checks = qualityItems({ result, brand, starterRepo, followUps, promptPackState, docs });
   const score = qualityScore(checks);
+  const qualityAudit = useMemo(
+    () => auditBuildPackQuality({ idea: result?.prompt || activeBuildPack?.idea || prompt, markdown }),
+    [activeBuildPack?.idea, markdown, prompt, result?.prompt]
+  );
   const packTitle = buildPackTitle(result, brand, activeBuildPack);
   const pack = useMemo<SavedBuildPack>(() => ({
     id: buildPackId(result, activeBuildPack),
@@ -3998,6 +4015,8 @@ function HandoffView({
             </button>
             <button className="btn accent" type="button" disabled={!canExport || preparing} title={preparing ? "Preparing repo evidence..." : "Download Build Pack zip"} onClick={async () => {
               const preparedMarkdown = onPrepareMarkdown ? await onPrepareMarkdown(target) : markdown;
+              const preparedAudit = auditBuildPackQuality({ idea: result?.prompt || activeBuildPack?.idea || prompt, markdown: preparedMarkdown });
+              if (!confirmBuildPackQuality(preparedAudit)) return;
               const preparedDocs = createHandoffDocuments(preparedMarkdown);
               setDocs(preparedDocs);
               const preparedPack: SavedBuildPack = {
@@ -4070,6 +4089,34 @@ function HandoffView({
                   </button>
                 ))}
               </div>
+            </div>
+            <div className={`card quality-card ${qualityAudit.passed ? "" : "has-issues"}`}>
+              <div className="quality-top">
+                <h3>Handoff check</h3>
+                <strong>{qualityAudit.passed ? `${score}%` : `${qualityAudit.issues.length}`}</strong>
+              </div>
+              <div className="quality-meter">
+                <span style={{ width: `${qualityAudit.passed ? score : Math.max(18, 100 - qualityAudit.issues.length * 22)}%` }} />
+              </div>
+              {qualityAudit.passed ? (
+                <ul>
+                  {checks.slice(0, 5).map((item) => (
+                    <li key={item.label} className={item.done ? "done" : ""}>
+                      {item.done ? <Check size={13} /> : <span className="dot" />}
+                      {item.label}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul>
+                  {qualityAudit.issues.slice(0, 4).map((issue) => (
+                    <li key={issue.id} className="issue">
+                      <span className="dot" />
+                      <span><strong>{issue.title}</strong>{issue.detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -5624,6 +5671,13 @@ export function ForkFirstRedesignApp() {
     );
   }, [brand, followUps, keys.githubToken, promptPackState, result, selectedStarterRepo]);
 
+  const confirmPreparedHandoffQuality = useCallback((markdown: string) => {
+    const audit = auditBuildPackQuality({ idea: result?.prompt || prompt, markdown });
+    if (audit.passed) return true;
+    setToast(`${audit.issues.length} handoff issue${audit.issues.length === 1 ? "" : "s"} found`);
+    return confirmBuildPackQuality(audit);
+  }, [prompt, result?.prompt]);
+
   const promptPackRecommendations = useMemo(() => recommendPromptPacks({
     idea: prompt,
     result,
@@ -5951,7 +6005,9 @@ export function ForkFirstRedesignApp() {
                     trackForkFirstEvent("handoff_copied", { source: "ready_card" });
                     setHandoffPreparing(true);
                     try {
-                      copyText(await buildPreparedHandoffMarkdown());
+                      const markdown = await buildPreparedHandoffMarkdown();
+                      if (!confirmPreparedHandoffQuality(markdown)) return;
+                      copyText(markdown);
                     } finally {
                       setHandoffPreparing(false);
                     }
@@ -5961,6 +6017,7 @@ export function ForkFirstRedesignApp() {
                     setHandoffPreparing(true);
                     try {
                       const markdown = await buildPreparedHandoffMarkdown();
+                      if (!confirmPreparedHandoffQuality(markdown)) return;
                       downloadHandoff("forkfirst-builder-handoff.md", markdown);
                     } finally {
                       setHandoffPreparing(false);
@@ -5970,6 +6027,7 @@ export function ForkFirstRedesignApp() {
                     setHandoffPreparing(true);
                     try {
                       const markdown = await buildPreparedHandoffMarkdown();
+                      if (!confirmPreparedHandoffQuality(markdown)) return;
                       downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(markdown), markdown);
                     } finally {
                       setHandoffPreparing(false);

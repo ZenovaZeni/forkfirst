@@ -159,7 +159,7 @@ describe("Build Pack export regressions", () => {
       score: { total: 100, fit: 100, activity: 100, popularity: 100, license: 100, docs: 100, reasons: ["Strong keyword fit"] },
       readme: {
         ...repo().readme!,
-        excerpt: "<h1>KitchenOwl</h1> Self-hosted grocery list and recipe manager with meal planning and Docker setup.",
+        excerpt: '<h1 align="center" <picture <source media=" prefers color scheme: dark " srcset="./docs/docs/img/icon.png" <img width="1 | KitchenOwl is a self-hosted grocery list and recipe manager with meal planning and Docker setup.',
         evidence: {
           fetchStatus: "ok",
           fetchedAt: "2026-05-20T12:00:00Z",
@@ -203,6 +203,7 @@ describe("Build Pack export regressions", () => {
     expect(section(prd, "Product Thesis")).not.toMatch(/save recipe links|bookmark/i);
     expect(markdown).not.toContain("Keep from repo: I don't know");
     expect(markdown).not.toContain("saved research cases");
+    expect(markdown).not.toMatch(/<h1|<a href|<img|shields\.io/i);
     expect(section(markdown, "Architecture Evidence")).not.toMatch(/<a href|<img|shields\.io/i);
   });
 });
