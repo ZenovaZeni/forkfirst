@@ -36,7 +36,7 @@ import { decodeHandoff } from "@/lib/handoff/share-url";
 import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-status";
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
 import { defaultBoard, repoBoards } from "@/lib/repos/boards";
-import { inferRepoSetupFit, setupPreferenceScore, type SetupPreference, type SetupFit } from "@/lib/repos/setup-fit";
+import { inferRepoSetupFit, type SetupFit } from "@/lib/repos/setup-fit";
 import {
   buildIdeaCheckRequestBody,
   buildKeyVerificationRequestBody,
@@ -86,15 +86,6 @@ type GoOptions = { scroll?: "top" | "preserve" };
 type Theme = "light" | "dark";
 type ChatTurn = { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent };
 type SettingsTab = "appearance" | "keys" | "usage" | "backup" | "install";
-const SETUP_PREFERENCES: Array<{ id: SetupPreference; label: string }> = [
-  { id: "any", label: "Any setup" },
-  { id: "web", label: "Web/hosted" },
-  { id: "docker", label: "Docker" },
-  { id: "windows", label: "Windows" },
-  { id: "mac", label: "macOS" },
-  { id: "linux", label: "Linux" },
-  { id: "mobile", label: "Mobile" }
-];
 const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
@@ -4627,7 +4618,6 @@ function LiveTrendingScreen({
   const [cat, setCat] = useState<TrendingCategory["id"]>("all");
   const [detailsRepo, setDetailsRepo] = useState<TrendingRepo | null>(null);
   const [query, setQuery] = useState("");
-  const [setupPreference, setSetupPreference] = useState<SetupPreference>("any");
   const trending = useTrendingRepos(cat);
   const activeCategory = TRENDING_CATEGORIES.find((item) => item.id === cat);
   const visibleTrendingRepos = trending.repos
@@ -4636,16 +4626,9 @@ function LiveTrendingScreen({
       repo.description,
       repo.language ?? "",
       repo.license ?? "",
-      inferRepoSetupFit(repo).label,
       trendingCategoryLabels(repo, activeCategory).join(" "),
       repo.topics.join(" ")
-    ].join(" "), query))
-    .map((repo, index) => ({ repo, index, setupFit: inferRepoSetupFit(repo) }))
-    .sort((a, b) => {
-      const setupDelta = setupPreferenceScore(b.setupFit, setupPreference) - setupPreferenceScore(a.setupFit, setupPreference);
-      return setupDelta || a.index - b.index;
-    })
-    .map((item) => item.repo);
+    ].join(" "), query));
 
   return (
     <>
@@ -4673,19 +4656,6 @@ function LiveTrendingScreen({
           />
           {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
         </div>
-        <div className="setup-preference-row" aria-label="Target setup preference">
-          <span>Target setup</span>
-          {SETUP_PREFERENCES.map((item) => (
-            <button
-              key={item.id}
-              className={`setup-pill ${setupPreference === item.id ? "active" : ""}`}
-              type="button"
-              onClick={() => setSetupPreference(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
         <div className="trending-grid">
           {trending.status === "loading" ? [1, 2, 3].map((item) => (
             <article key={item} className="trend-card">
@@ -4706,7 +4676,6 @@ function LiveTrendingScreen({
             const asSavedRepo = classifiedFromTrendingRepo(repo, repoCategory);
             const saved = isSavedRepo(asSavedRepo, savedRepos);
             const categoryLabels = trendingCategoryLabels(repo, repoCategory);
-            const setupFit = inferRepoSetupFit(repo);
             return (
             <article key={repo.fullName} className="trend-card">
               {cat === "all" && categoryLabels.length ? (
@@ -4723,7 +4692,6 @@ function LiveTrendingScreen({
                 {repo.language ? <span>{repo.language}</span> : null}
                 {repo.license ? <span>{repo.license}</span> : null}
               </div>
-              <SetupFitPill fit={setupFit} />
               <div className="trend-card-mid">
                 {repo.topics.length ? (
                   <div className="trend-topics" aria-label={`${repo.fullName} topics`}>

@@ -5448,40 +5448,6 @@ input, textarea, select { font: inherit; color: inherit; }
 .trend-card .meta .github-star-icon {
   color: #f6c945;
 }
-.setup-preference-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0 12px;
-}
-.setup-preference-row > span {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-right: 2px;
-}
-.setup-pill {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--paper-2);
-  color: var(--ink-2);
-  padding: 8px 11px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.setup-pill:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
-  color: var(--ink);
-}
-.setup-pill.active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
-}
 .trend-card-mid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
