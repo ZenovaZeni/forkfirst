@@ -159,4 +159,75 @@ describe("repo scoring", () => {
     expect(first.fullName).toBe("niche/real-estate-lead-gen");
     expect(first.score.reasons).toContain("Vertical/domain match");
   });
+
+  test("ranks Pokemon collection managers above data repos for rough card value prompts", () => {
+    const [first] = classifyRepositories(
+      [
+        repo({
+          owner: "marcelpanse",
+          name: "tcg-pocket-collection-tracker",
+          fullName: "marcelpanse/tcg-pocket-collection-tracker",
+          description: "Application to track your Pokemon Pocket collection and find others to trade with",
+          topics: ["pokemon", "tcg", "collection", "trading"],
+          stars: 150,
+          forks: 44,
+          license: "GPL-3.0",
+          readme: {
+            ...repo().readme!,
+            excerpt:
+              "TCG Pocket Collection Tracker is an application designed to help users efficiently track their Pokemon Pocket game cards, identify optimal card packs to open, manage trades, and engage with friends and the community. The backend manages user authentication via OTP email and includes a database for card storage.",
+            qualityScore: 100
+          }
+        }),
+        repo({
+          owner: "chase-9234",
+          name: "pokemon-tcg-pocket-cards",
+          fullName: "chase-9234/pokemon-tcg-pocket-cards",
+          description: "An open source repo for data on the Pokemon TCG Cards",
+          topics: ["pokemon", "tcg", "cards", "data"],
+          stars: 9000,
+          forks: 350,
+          readme: {
+            ...repo().readme!,
+            excerpt: "Open source data exports for Pokemon TCG Pocket cards."
+          }
+        }),
+        repo({
+          owner: "Git-Romer",
+          name: "pokecollector",
+          fullName: "Git-Romer/pokecollector",
+          description:
+            "A self-hosted Pokemon TCG collection manager to track cards, prices, binders, and portfolio analytics. Syncs free data from TCGdex, pulls Cardmarket/TCGPlayer prices, supports variants, wishlists, sealed products, exports, backups, and optional AI card recognition - Docker-ready.",
+          topics: ["container", "docker", "docker-compose", "pokemon", "self-hosted", "tcg", "tcgdex", "trading-cards"],
+          stars: 18,
+          forks: 8,
+          license: "AGPL-3.0",
+          homepage: "https://pokecollector.example.com",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Disclaimer: this repository is vibecoded. Expect vibes, not guarantees. Proceed with version control.",
+            qualityScore: 100
+          }
+        }),
+        repo({
+          owner: "public-apis",
+          name: "public-apis",
+          fullName: "public-apis/public-apis",
+          description: "A collective list of free APIs",
+          topics: ["api", "list", "data"],
+          stars: 360000,
+          forks: 38000,
+          readme: {
+            ...repo().readme!,
+            excerpt: "A curated list of free public APIs for developers."
+          }
+        })
+      ],
+      "pokemon coloter where i can see values"
+    );
+
+    expect(first.fullName).toBe("Git-Romer/pokecollector");
+    expect(first.score.fit).toBeGreaterThanOrEqual(70);
+    expect(["already_exists", "forkable"]).toContain(first.category);
+  });
 });

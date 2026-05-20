@@ -1,7 +1,7 @@
 import type { ClassifiedRepo, RepoScore } from "@/lib/analysis/types";
 import type { NormalizedRepo, RepoCategory } from "@/lib/github/types";
 import { getRepoKindInsight } from "../analysis/repo-kind";
-import { extractIdeaTerms } from "../search/planner";
+import { extractIdeaTerms, planPromptRefinement } from "../search/planner";
 
 function clamp(value: number, max = 100): number {
   return Math.max(0, Math.min(max, Math.round(value)));
@@ -31,8 +31,64 @@ const GENERIC_INTENT_TERMS = new Set([
   "tools"
 ]);
 
+const SEARCH_SYNTAX_TERMS = new Set([
+  "description",
+  "descriptions",
+  "find",
+  "github",
+  "match",
+  "matches",
+  "matching",
+  "metadata",
+  "name",
+  "names",
+  "open-source",
+  "public",
+  "readme",
+  "search",
+  "starter",
+  "user",
+  "users",
+  "workflow",
+  "workflows"
+]);
+
 function singularize(term: string): string {
   return term.length > 4 && term.endsWith("s") ? term.slice(0, -1) : term;
+}
+
+function hasValueIntent(prompt: string): boolean {
+  return /\b(values?|valuations?|worth|prices?|pricing|market[-\s]?value|portfolio)\b/i.test(prompt);
+}
+
+function valueFeatureSignal(normalizedHaystack: string): number {
+  return [
+    /\bprices?\b/,
+    /\bpricing\b/,
+    /\bvalues?\b/,
+    /\bvaluation\b/,
+    /\bworth\b/,
+    /\bportfolio\b/,
+    /\btcgplayer\b/,
+    /\bcardmarket\b/,
+    /\bmarket\s+value\b/
+  ].reduce((total, signal) => total + (signal.test(normalizedHaystack) ? 1 : 0), 0);
+}
+
+function valueFeatureBoost(prompt: string, normalizedHaystack: string): number {
+  if (!hasValueIntent(prompt)) return 0;
+  return Math.min(22, valueFeatureSignal(normalizedHaystack) * 6);
+}
+
+function scoringIntentTerms(prompt: string): string[] {
+  const refinement = planPromptRefinement(prompt);
+  const text = [
+    refinement.probableMeaning,
+    ...refinement.queries.slice(0, 6)
+  ].join(" ").replace(/[-/]/g, " ");
+  return Array.from(new Set(extractIdeaTerms(text)))
+    .filter((term) => !GENERIC_INTENT_TERMS.has(term) && !SEARCH_SYNTAX_TERMS.has(term))
+    .slice(0, 12);
 }
 
 function termMatchWeight(term: string, tokens: Set<string>, normalizedHaystack: string): number {
@@ -53,14 +109,18 @@ function domainMatchScore(prompt: string, tokens: Set<string>, normalizedHaystac
 
 function scoreFit(repo: NormalizedRepo, prompt: string): number {
   const terms = extractIdeaTerms(prompt);
+  const intentTerms = scoringIntentTerms(prompt);
   const haystack = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
   const normalizedHaystack = haystack.replace(/[^a-z0-9+#.\s-]/g, " ");
   const tokens = new Set(normalizedHaystack.split(/[\s/_-]+/).filter(Boolean));
-  if (terms.length === 0) return 30;
+  if (terms.length === 0 && intentTerms.length === 0) return 30;
   const matches = terms.reduce((total, term) => total + termMatchWeight(term, tokens, normalizedHaystack), 0);
+  const intentMatches = intentTerms.reduce((total, term) => total + termMatchWeight(term, tokens, normalizedHaystack), 0);
+  const rawScore = terms.length > 0 ? (matches / terms.length) * 100 : 0;
+  const intentScore = intentTerms.length > 0 ? (intentMatches / intentTerms.length) * 100 : 0;
   const exactNameBoost = terms.some((term) => repo.name.toLowerCase() === term || repo.fullName.toLowerCase().includes(`/${term}`)) ? 12 : 0;
-  const domainBoost = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 ? 10 : 0;
-  return clamp((matches / terms.length) * 100 + exactNameBoost + domainBoost);
+  const domainBoost = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 || intentScore >= 55 ? 10 : 0;
+  return clamp(Math.max(rawScore, intentScore) + exactNameBoost + domainBoost + valueFeatureBoost(prompt, normalizedHaystack));
 }
 
 function isGameBuildPrompt(prompt: string): boolean {
@@ -100,6 +160,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   const normalizedHaystack = haystack.replace(/[^a-z0-9+#.\s-]/g, " ");
   const tokens = new Set(normalizedHaystack.split(/[\s/_-]+/).filter(Boolean));
   const hasDomainMatch = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5;
+  const hasValueFeatureMatch = hasValueIntent(prompt) && valueFeatureSignal(normalizedHaystack) > 0;
   const archivedPenalty = repo.archived ? 45 : 0;
   const kindUtility =
     kind.kind === "game_engine"
@@ -122,6 +183,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   ];
 
   if (hasDomainMatch) reasons.push("Vertical/domain match");
+  if (hasValueFeatureMatch) reasons.push("Value/pricing feature match");
   if (repo.archived) reasons.push("Repository is archived");
   if (repo.readme?.hasSetup) reasons.push("Setup path found in README");
   if (repo.readme?.hasExamples) reasons.push("Examples or usage found in README");
