@@ -2,6 +2,7 @@
 
 import { AlertTriangle, BookOpen, ExternalLink, GitFork, Home, Search, Trash2, X } from "lucide-react";
 import { buildRepoNarrative } from "@/lib/analysis/human-answer";
+import { useSlideDismiss } from "@/components/use-slide-dismiss";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import { defaultBoard, repoBoards } from "@/lib/repos/boards";
 
@@ -36,6 +37,7 @@ export function SavedRepoModal({ repo, onClose, board, isSaved = false, onBoardC
   const narrative = buildRepoNarrative(repo);
   const currentBoard = board ?? defaultBoard(repo);
   const steps = inspectionSteps(repo);
+  const slideDismiss = useSlideDismiss(onClose);
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -45,6 +47,7 @@ export function SavedRepoModal({ repo, onClose, board, isSaved = false, onBoardC
         aria-modal="true"
         aria-labelledby="saved-modal-title"
         onMouseDown={(event) => event.stopPropagation()}
+        {...slideDismiss}
       >
         <div className="saved-modal-header">
           <div>

@@ -1267,6 +1267,10 @@ body {
     touch-action: pan-y;
   }
 
+  .saved-modal {
+    touch-action: pan-y;
+  }
+
   .library {
     touch-action: pan-y;
   }
@@ -1316,6 +1320,24 @@ body {
   justify-content: center;
   white-space: normal;
   text-align: center;
+}
+
+.drawer.is-slide-dismissing,
+.drawer.slide-dismiss-resetting,
+.saved-modal.is-slide-dismissing,
+.saved-modal.slide-dismiss-resetting,
+.saved-library-modal .saved-modal.is-slide-dismissing,
+.saved-library-modal .saved-modal.slide-dismiss-resetting {
+  animation: none !important;
+  transform: translateX(var(--slide-dismiss-x, 0)) !important;
+  opacity: var(--slide-dismiss-opacity, 1) !important;
+  will-change: transform, opacity;
+}
+
+.drawer.slide-dismiss-resetting,
+.saved-modal.slide-dismiss-resetting,
+.saved-library-modal .saved-modal.slide-dismiss-resetting {
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
 }
 
 .trending-drawer .drawer-foot .btn.accent {

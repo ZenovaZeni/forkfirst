@@ -27,6 +27,7 @@ import {
 import { KeySettings, type UserKeys } from "@/components/key-settings";
 import { PromptPacksPanel } from "@/components/prompt-packs-panel";
 import { SavedRepoModal } from "@/components/saved-repo-modal";
+import { useSlideDismiss } from "@/components/use-slide-dismiss";
 import { TestimonialsColumn, type TestimonialItem } from "@/components/ui/testimonials-columns-1";
 import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
@@ -3773,6 +3774,7 @@ function RepoDrawer({
 }) {
   const [tab, setTab] = useState("overview");
   const swipeDown = useSwipeDownDismiss(onClose);
+  const slideDismiss = useSlideDismiss(onClose);
   useEffect(() => {
     if (repo) setTab("overview");
   }, [repo]);
@@ -3780,7 +3782,7 @@ function RepoDrawer({
   return (
     <>
       <div className="overlay" onClick={onClose} />
-      <aside className="drawer">
+      <aside className="drawer" {...slideDismiss}>
         <div className="mobile-swipe-handle" aria-hidden="true" />
         <div className="drawer-head" {...swipeDown}>
           <button className="close" type="button" onClick={onClose} aria-label="Close">
@@ -4830,13 +4832,14 @@ function TrendingRepoDrawer({
   onUse: (repo: TrendingRepo) => void;
 }) {
   const swipeDown = useSwipeDownDismiss(onClose);
+  const slideDismiss = useSlideDismiss(onClose);
   if (!repo) return null;
   const alsoInLabels = (repo.matchedCategoryLabels ?? []).filter((label) => label !== repo.sourceCategoryLabel);
   const setupFit = inferRepoSetupFit(repo);
   return (
     <>
       <div className="overlay" onClick={onClose} />
-      <aside className="drawer trending-drawer">
+      <aside className="drawer trending-drawer" {...slideDismiss}>
         <div className="mobile-swipe-handle" aria-hidden="true" />
         <div className="drawer-head" {...swipeDown}>
           <button className="close" type="button" onClick={onClose} aria-label="Close trending repo details">
