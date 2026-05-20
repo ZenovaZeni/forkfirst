@@ -4,6 +4,7 @@ import { searchGithubRepositories } from "@/lib/github/provider";
 import { classifyRepositories } from "@/lib/scoring/scoring";
 import { saveIdeaCheck } from "@/lib/db/research-cases";
 import type { IdeaCheckResult } from "@/types/idea-check";
+import { enrichTopCandidateReadmes } from "./enrich-candidates";
 
 export type RunIdeaCheckInput = {
   prompt: string;
@@ -19,7 +20,8 @@ export type RunIdeaCheckInput = {
 
 export async function runIdeaCheck(input: RunIdeaCheckInput): Promise<IdeaCheckResult> {
   const search = await searchGithubRepositories(input.prompt, input.githubToken);
-  const classified = classifyRepositories(search.repos, input.prompt);
+  const enrichedRepos = await enrichTopCandidateReadmes(search.repos, input.prompt, input.githubToken);
+  const classified = classifyRepositories(enrichedRepos, input.prompt);
 
   // Wrap untrusted repo content to mitigate prompt injection
   const wrappedRepos = classified.map((repo) => ({

@@ -4854,7 +4854,7 @@ function PromptPacksScreen({
           <span className="eyebrow">Builder behavior</span>
           <h2>Prompt <span>Packs</span></h2>
           <p className="sub">
-            Choose the reusable rules that get appended to every Builder Handoff.
+            Choose reusable rules to summarize under Builder Rule Packs so the PRD stays focused.
             Preview any pack before it becomes part of the package.
           </p>
         </div>

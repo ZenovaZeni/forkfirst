@@ -39,7 +39,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint src scripts eslint.config.mjs next.config.ts postcss.config.mjs tailwind.config.ts vitest.config.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "screenshots": "node scripts/capture-screenshots.mjs"

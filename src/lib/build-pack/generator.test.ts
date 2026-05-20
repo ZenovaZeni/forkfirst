@@ -155,9 +155,9 @@ describe("build pack generator", () => {
     expect(markdown).toContain("- [ ] Copy/split the relevant sections yourself without asking the user to manually arrange the Markdown.");
     expect(markdown).toContain("### Phase 2 - Smallest Product Loop");
     expect(markdown).toContain("## Verification Checklist");
-    expect(markdown).toContain("- [ ] Run npm run lint and address any new violations.");
-    expect(markdown).toContain("- [ ] Run npm run typecheck and resolve any new errors.");
-    expect(markdown).toContain("- [ ] Run npm test and confirm the primary workflow has at least one focused test.");
+    expect(markdown).toContain("- [ ] Run the starter repo's documented install, build, dev, and test commands");
+    expect(markdown).toContain("- [ ] If lint, typecheck, or test scripts are missing, record that instead of inventing commands.");
+    expect(markdown).toContain("- [ ] Add focused automated tests or a manual QA checklist for the primary workflow");
   });
 
   test("cleans follow-up lookup noise out of the handoff", () => {
@@ -434,5 +434,208 @@ describe("build pack generator", () => {
     expect(markdown).not.toContain("legal clearance claims");
     expect(markdown).not.toContain("third-party AI app store integrations");
     expect(markdown).not.toContain("Background crawling or scraping of GitHub beyond the documented search API");
+  });
+
+  test("Pokemon collector prompt produces a card-specific product handoff with IP and data risks", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build a Pokemon card collection tracker like Pokemon Collector.",
+        repos: [
+          {
+            ...repo(),
+            fullName: "cards/pokemon-collector",
+            url: "https://github.com/cards/pokemon-collector",
+            description: "Pokemon TCG collection manager with card search, binder, pricing, and export.",
+            topics: ["pokemon", "tcg", "cards", "collection", "pricing"]
+          }
+        ]
+      }),
+      "codex"
+    );
+
+    expect(markdown).toMatch(/card search|search cards/i);
+    expect(markdown).toMatch(/detail.*value|value.*detail/i);
+    expect(markdown).toMatch(/collection vault|album|binder/i);
+    expect(markdown).toMatch(/condition|quantity|purchase price|notes/i);
+    expect(markdown).toMatch(/total estimated value/i);
+    expect(markdown).toMatch(/backup|export/i);
+    expect(markdown).toMatch(/original branding/i);
+    expect(markdown).toMatch(/do not copy Pokemon Collector/i);
+    expect(markdown).toMatch(/official logos|copied product UI/i);
+    expect(markdown).toMatch(/card-image|pricing API terms/i);
+    expect(markdown).toMatch(/values as estimates/i);
+  });
+
+  test("generic trading-card prompts avoid Pokemon-specific product copy", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build an MTG and sports-card tracker.",
+        repos: [
+          {
+            ...repo(),
+            fullName: "cards/trading-vault",
+            description: "Trading card collection manager with binder, pricing, and export.",
+            topics: ["tcg", "sports-cards", "collection", "pricing"]
+          }
+        ]
+      }),
+      "codex"
+    );
+
+    expect(markdown).toMatch(/trading-card|sports-card|collectibles collector/i);
+    expect(markdown).toMatch(/collection vault|album|binder/i);
+    expect(markdown).toContain("## Foundation Coverage Map");
+    expect(markdown).toContain("card search/catalog");
+    expect(markdown).toContain("collection/vault");
+    expect(markdown).toContain("pricing/value estimates");
+    expect(markdown).toMatch(/official league|brand|logo/i);
+    expect(markdown).not.toContain("Pokemon Collector");
+    expect(markdown).not.toContain("official Pokemon logos");
+    expect(markdown).not.toContain("Pokemon TCG or trading-card collector");
+  });
+
+  test("cleans untrusted repo tags and adds a foundation coverage map", () => {
+    const taggedRepo: ClassifiedRepo = {
+      ...repo(),
+      description: "<UNTRUSTED_REPO_CONTENT>Pokemon TCG card catalog, collection vault, wishlist, pricing dashboard, export, scanner, API, database, and Docker setup.</UNTRUSTED_REPO_CONTENT>",
+      topics: ["pokemon", "tcg", "collection", "pricing", "docker"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "<UNTRUSTED_REPO_CONTENT>React frontend with binder groups, value analytics, backup export, image-assisted entry, backend API, SQLite persistence.</UNTRUSTED_REPO_CONTENT>"
+      }
+    };
+
+    const markdown = buildProjectBuildPack(
+      makeResult({ prompt: "Original idea: Pokemon card collection vault", repos: [taggedRepo] }),
+      "codex"
+    );
+
+    expect(markdown).not.toContain("<UNTRUSTED_REPO_CONTENT>");
+    expect(markdown).not.toContain("</UNTRUSTED_REPO_CONTENT>");
+    expect(markdown).toContain("## Foundation Coverage Map");
+    expect(markdown).toContain("Already detected:");
+    expect(markdown).toContain("card search/catalog");
+    expect(markdown).toContain("collection/vault");
+    expect(markdown).toContain("binder/wishlist/grouping");
+    expect(markdown).toContain("pricing/value estimates");
+    expect(markdown).toContain("export/backup");
+    expect(markdown).toContain("scanner/image-assisted entry");
+    expect(markdown).toContain("analytics/dashboard");
+    expect(markdown).toContain("frontend shell");
+    expect(markdown).toContain("backend/API");
+    expect(markdown).toContain("database/persistence");
+    expect(markdown).toContain("Docker/local setup");
+    expect(markdown).toContain("Keep first:");
+    expect(markdown).toContain("Replace/rebrand:");
+    expect(markdown).toContain("Add/customize:");
+    expect(markdown).toContain("Remove/defer:");
+    expect(markdown).toContain("Risk checks:");
+  });
+
+  test("cleans untrusted markers from differentiation gaps", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        gaps: [
+          "<UNTRUSTED_REPO_CONTENT>Differentiate with a focused collection workflow.</UNTRUSTED_REPO_CONTENT>"
+        ]
+      }),
+      "codex"
+    );
+
+    expect(markdown).not.toContain("<UNTRUSTED_REPO_CONTENT>");
+    expect(markdown).not.toContain("</UNTRUSTED_REPO_CONTENT>");
+    expect(markdown).toContain("- [ ] Differentiate with a focused collection workflow.");
+  });
+
+  test("summarizes prompt packs under builder rules instead of dumping raw packs into PRD", () => {
+    const promptPackMarkdown = [
+      "## Repo Orientation",
+      "This exact raw prompt pack text should not be dumped into the PRD.",
+      "- Inspect every route and component before editing.",
+      "## Test-First Verification",
+      "- Run the relevant test before and after every change."
+    ].join("\n");
+
+    const markdown = buildProjectBuildPack(result(), "codex", undefined, undefined, promptPackMarkdown);
+    const prd = markdown.split("# BUILD_PLAN")[0] ?? "";
+    const agents = markdown.split("# AGENTS")[1] ?? "";
+
+    expect(prd).not.toContain("## Prompt Packs");
+    expect(prd).not.toContain("This exact raw prompt pack text should not be dumped into the PRD.");
+    expect(agents).toContain("## Builder Rule Packs");
+    expect(agents).toContain("Repo Orientation");
+    expect(agents).not.toContain("This exact raw prompt pack text should not be dumped into the PRD.");
+    expect(agents).toContain("Inspect every route and component before editing.");
+    expect(agents).toContain("Test-First Verification");
+  });
+
+  test("filters unrelated also-worth-checking repos when a focus repo is selected", () => {
+    const focus: ClassifiedRepo = {
+      ...repo(),
+      id: 2,
+      fullName: "cards/tcg-vault",
+      url: "https://github.com/cards/tcg-vault",
+      description: "Pokemon TCG collection vault with card search and pricing.",
+      topics: ["pokemon", "tcg", "cards", "collection"],
+      score: { ...repo().score, fit: 92 }
+    };
+    const unrelatedFonts: ClassifiedRepo = {
+      ...repo(),
+      id: 3,
+      fullName: "fontsource/fontsource",
+      url: "https://github.com/fontsource/fontsource",
+      description: "Self-host open source fonts.",
+      topics: ["fonts", "typography"],
+      score: { ...repo().score, fit: 0 }
+    };
+    const unrelatedSecurity: ClassifiedRepo = {
+      ...repo(),
+      id: 4,
+      fullName: "security/awesome-security",
+      url: "https://github.com/security/awesome-security",
+      description: "Awesome security links.",
+      topics: ["security", "awesome-list"],
+      score: { ...repo().score, fit: 0 }
+    };
+
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: Pokemon card collection tracker",
+        repos: [focus, unrelatedFonts, unrelatedSecurity]
+      }),
+      "codex",
+      focus
+    );
+
+    expect(markdown).toContain("cards/tcg-vault");
+    expect(markdown).not.toContain("fontsource/fontsource");
+    expect(markdown).not.toContain("security/awesome-security");
+  });
+
+  test("verification checklist is repo-aware instead of inventing npm scripts", () => {
+    const markdown = buildProjectBuildPack(result(), "codex");
+
+    expect(markdown).not.toContain("Run npm run lint and address any new violations.");
+    expect(markdown).not.toContain("Run npm run typecheck and resolve any new errors.");
+    expect(markdown).not.toContain("Run npm test and confirm the primary workflow has at least one focused test.");
+    expect(markdown).toContain("Run the starter repo's documented install, build, dev, and test commands");
+    expect(markdown).toContain("If lint, typecheck, or test scripts are missing, record that instead of inventing commands.");
+    expect(markdown).toContain("Manually run the first milestone end to end");
+    expect(markdown).toContain("Add focused automated tests or a manual QA checklist");
+  });
+
+  test("AGPL license notes call out network-use source-sharing obligations", () => {
+    const agplRepo: ClassifiedRepo = {
+      ...repo(),
+      license: "AGPL-3.0"
+    };
+
+    const markdown = buildProjectBuildPack(
+      makeResult({ prompt: "Original idea: build a niche workflow tool", repos: [agplRepo] }),
+      "codex"
+    );
+
+    expect(markdown).toContain("AGPL-3.0");
+    expect(markdown).toMatch(/network use|source-sharing|source sharing/i);
   });
 });

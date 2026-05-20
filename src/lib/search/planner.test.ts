@@ -97,4 +97,42 @@ describe("search planner", () => {
     ]);
     expect(queries.join(" ")).not.toContain("anything");
   });
+
+  test("plans Pokemon TCG collector searches before generic prompt searches", () => {
+    const queries = planSearches("I want to build a Pokemon collector app for my TCG cards");
+
+    expect(queries.slice(0, 6)).toEqual([
+      "pokemon tcg collection manager in:name,description,readme",
+      "pokemon card collection tracker in:name,description,readme",
+      "tcg collection manager price tracker in:name,description,readme",
+      "trading card binder app in:name,description,readme",
+      "pokemon tcg portfolio tracker in:name,description,readme",
+      "tcgdex collection app in:name,description,readme"
+    ]);
+    expect(queries[0]).not.toContain("want build");
+  });
+
+  test("refines plain-English TCG collector prompts into a collectible-card meaning", () => {
+    const refinement = planPromptRefinement("Find a good foundation for a Pokémon card binder and price tracker");
+
+    expect(refinement.probableMeaning).toContain("Pokemon TCG");
+    expect(refinement.bestQuery).toBe("pokemon tcg collection manager in:name,description,readme");
+    expect(refinement.alternateAngles[0]).toContain("pokemon card collection tracker");
+  });
+
+  test("hyphenated trading-card prompts use the collectibles vertical", () => {
+    const queries = planSearches("I need a trading-card tracker with value estimates");
+
+    expect(queries[0]).toBe("trading card collection manager in:name,description,readme");
+    expect(queries).toContain("tcg collection manager price tracker in:name,description,readme");
+    expect(queries).not.toContain("pokemon tcg collection manager in:name,description,readme");
+  });
+
+  test("non-Pokemon collectibles prompts do not force Pokemon-specific searches", () => {
+    const queries = planSearches("MTG collection tracker for sports-card and other collectibles");
+
+    expect(queries[0]).toBe("trading card collection manager in:name,description,readme");
+    expect(queries).toContain("sports card collection tracker in:name,description,readme");
+    expect(queries).not.toContain("tcgdex collection app in:name,description,readme");
+  });
 });

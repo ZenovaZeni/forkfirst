@@ -42,6 +42,36 @@ const STOP_WORDS = new Set([
 
 const VERTICAL_SEARCH_PLANS = [
   {
+    pattern:
+      /\b(pokemon|pokémon|tcgdex)\b/i,
+    label: "pokemon-tcg-collectibles",
+    meaning:
+      "Find open-source Pokemon TCG collection, binder, card-value, and catalog tools that match the user's collector workflow.",
+    queries: [
+      "pokemon tcg collection manager in:name,description,readme",
+      "pokemon card collection tracker in:name,description,readme",
+      "tcg collection manager price tracker in:name,description,readme",
+      "trading card binder app in:name,description,readme",
+      "pokemon tcg portfolio tracker in:name,description,readme",
+      "tcgdex collection app in:name,description,readme"
+    ]
+  },
+  {
+    pattern:
+      /\b(tcg|trading[-\s]?card|card collector|card collection|collector album|card binder|card value|tcgplayer|cardmarket|sports[-\s]?cards?|magic the gathering|mtg|yu-gi-oh|yugioh|collectibles)\b/i,
+    label: "trading-card-collectibles",
+    meaning:
+      "Find open-source trading-card, collectibles, collection-tracking, binder, and price-tracking tools that match the user's collector workflow.",
+    queries: [
+      "trading card collection manager in:name,description,readme",
+      "tcg collection manager price tracker in:name,description,readme",
+      "card collection tracker in:name,description,readme",
+      "trading card binder app in:name,description,readme",
+      "collectibles inventory tracker in:name,description,readme",
+      "sports card collection tracker in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(healthcare|health care|medical|clinic|clinics|patient|patients|hipaa)\b/i,
     label: "healthcare",
     meaning: "Find open-source healthcare, clinic, compliance, or medical-practice tools that match the user's specific workflow.",
@@ -99,6 +129,7 @@ export function extractIdeaTerms(prompt: string): string[] {
     new Set(
       prompt
         .toLowerCase()
+        .replace(/pokémon/g, "pokemon")
         .replace(/[^a-z0-9+#.\s-]/g, " ")
         .split(/\s+/)
         .map((term) => term.trim())

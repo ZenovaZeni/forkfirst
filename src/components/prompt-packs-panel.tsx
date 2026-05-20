@@ -166,7 +166,7 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
       <div className="prompt-packs-header">
         <strong className="prompt-packs-title">Prompt Packs</strong>
         <p className="prompt-packs-subtitle">
-          Enabled packs are appended to the Builder Handoff under <strong>PRD.md &gt; Prompt Packs</strong>. Preview shows the exact Markdown before you include it.
+          Enabled packs are summarized under <strong>Builder Rule Packs</strong> in the builder rules file, while PRD.md stays focused on the product. Preview shows the source Markdown before it is summarized.
         </p>
       </div>
 
@@ -424,9 +424,9 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
               <section>
                 <div className="prompt-pack-preview-head">
                   <div>
-                    <strong>Exact handoff text</strong>
+                    <strong>Source Markdown preview</strong>
                     <p className="prompt-pack-details-note">
-                      {detailsPack.enabled ? "Included in the next Builder Handoff." : "Not included unless you toggle it on."}
+                      {detailsPack.enabled ? "Summarized under Builder Rule Packs in the next Builder Handoff." : "Not summarized unless you toggle it on."}
                     </p>
                   </div>
                   <button
@@ -508,7 +508,7 @@ function packCardSummary(pack: ResolvedPack) {
 
   return summaries[pack.id] ?? {
     short: pack.blurb || "Adds reusable builder instructions to the exported handoff.",
-    useWhen: "You want this rule appended to future AI builder handoffs.",
-    long: pack.blurb || "This custom pack appends its Markdown instructions to the Builder Handoff so your coding agent follows the rule during implementation.",
+    useWhen: "You want this rule summarized in future AI builder handoffs.",
+    long: pack.blurb || "This custom pack provides Markdown source that ForkFirst summarizes under Builder Rule Packs so your coding agent follows the rule during implementation.",
   };
 }

@@ -109,6 +109,99 @@ function productProfileFor(idea: string): ProductProfile {
   const isProjectTool = /\b(clickup|asana|trello|notion|monday|linear|jira|kanban|project management|task management|team collaboration|productivity suite|workspace tool|todo app)\b/i.test(idea);
   const isNotebookTool = /\b(obsidian|roam|logseq|notion notes|second brain|note[-\s]?taking|notebook app|markdown editor|wiki app|knowledge base|knowledge graph|personal knowledge|pkm|zettelkasten)\b/i.test(idea);
   const isCodeEditor = /\b(cursor|vs ?code|vscode|copilot|code editor|ide alternative|ai coding|coding assistant|developer ide|programming editor|ai pair programmer)\b/i.test(idea);
+  const isPokemonCardCollector = /\b(pokemon|pokémon|tcgdex)\b/i.test(idea);
+  const isGenericCardCollector =
+    !isPokemonCardCollector &&
+    /\b(tcg|trading[-\s]?card|collectibles?|card collector|card collection|collector album|card binder|card value|tcgplayer|cardmarket|sports[-\s]?cards?|magic the gathering|mtg|yu-gi-oh|yugioh)\b/i.test(idea);
+
+  if (isPokemonCardCollector) {
+    return {
+      goal: "Help collectors track a personal trading-card collection with fast card search, card detail/value views, and a trustworthy collection vault.",
+      primaryUser: "A Pokemon TCG or trading-card collector who wants a simple album, binder, or vault for owned cards, wishlist cards, and estimated collection value.",
+      problem: "Collectors often split card lookup, condition notes, purchase history, pricing, and backup exports across apps or spreadsheets. The first version needs one reliable collection loop without copying Pokemon Collector's branding or product UI.",
+      promise: "Let the collector search for cards, open a detail/value view, add cards to a collection vault, and track condition, quantity, purchase price, notes, and total estimated value with original branding.",
+      coreWorkflow: [
+        "User searches a card catalog by name, set, number, rarity, or type.",
+        "User opens a card detail/value view with image, set details, owned status, and estimated market value.",
+        "User adds the card to a collection vault, album, or binder.",
+        "User records condition, quantity, purchase price, purchase date, and collector notes.",
+        "User reviews total estimated collection value and exports or backs up the collection."
+      ],
+      stories: [
+        "As a collector, I can search cards quickly and open a detail page with useful value context.",
+        "As a collector, I can add cards to my vault, album, or binder and group cards by set, wishlist, or custom list.",
+        "As a collector, I can track condition, quantity, purchase price, and notes for each owned card.",
+        "As a collector, I can see total estimated value and export or back up my collection data.",
+        "As a builder, I can reuse starter patterns without copying Pokemon Collector's brand, logos, layout, or protected assets."
+      ],
+      mustHave: [
+        "Card search/catalog with filters for name, set, number, rarity, and type.",
+        "Card detail/value view that labels prices as estimates and shows source/date when available.",
+        "Collection vault, album, or binder with owned cards, wishlist, and custom grouping.",
+        "Owned-card fields for condition, quantity, purchase price, purchase date, and notes.",
+        "Total estimated value for the collection, plus backup/export to CSV or JSON.",
+        "Original branding, names, icons, and UI copy; do not copy Pokemon Collector."
+      ],
+      notInFirstVersion: [
+        "Marketplace buying/selling, escrow, trades, or payments.",
+        "Official Pokemon logos, copied product UI, scraped card images, or protected assets without permission.",
+        "Automated valuation claims that present estimates as guaranteed prices.",
+        "Bulk card scanning before manual search and entry works.",
+        "Account sync or social collection sharing before local backup/export is solid."
+      ],
+      firstMilestone: "Build the collector loop: search a realistic card catalog, open a detail/value view, add a card to a vault or binder with condition, quantity, purchase price, and notes, then show total estimated value and export the collection.",
+      successMetrics: [
+        "A collector can search and add a card to their vault in under one minute.",
+        "The collection shows condition, quantity, purchase price, notes, and total estimated value clearly.",
+        "Export or backup works without an account.",
+        "The product uses original branding and labels card values as estimates."
+      ]
+    };
+  }
+  if (isGenericCardCollector) {
+    return {
+      goal: "Help collectors track a personal trading-card or collectibles collection with fast item search, detail/value views, and a trustworthy vault.",
+      primaryUser: "A trading-card, sports-card, or collectibles collector who wants a simple album, binder, or vault for owned items, wishlist items, and estimated collection value.",
+      problem: "Collectors often split lookup, condition notes, purchase history, pricing, and backup exports across apps or spreadsheets. The first version needs one reliable collection loop with original branding and clear value-estimate language.",
+      promise: "Let the collector search a catalog, open a detail/value view, add items to a collection vault, and track condition, quantity, purchase price, notes, and total estimated value with original branding.",
+      coreWorkflow: [
+        "User searches a card or collectible catalog by name, set, number, category, rarity, or keyword.",
+        "User opens a detail/value view with image, set/category details, owned status, and estimated market value.",
+        "User adds the item to a collection vault, album, or binder.",
+        "User records condition, quantity, purchase price, purchase date, and collector notes.",
+        "User reviews total estimated collection value and exports or backs up the collection."
+      ],
+      stories: [
+        "As a collector, I can search cards or collectibles quickly and open a detail page with useful value context.",
+        "As a collector, I can add items to my vault, album, or binder and group them by set, wishlist, or custom list.",
+        "As a collector, I can track condition, quantity, purchase price, and notes for each owned item.",
+        "As a collector, I can see total estimated value and export or back up my collection data.",
+        "As a builder, I can reuse starter patterns without copying another app's brand, logos, layout, or protected assets."
+      ],
+      mustHave: [
+        "Catalog search with filters for name, set/category, number, rarity, and type.",
+        "Detail/value view that labels prices as estimates and shows source/date when available.",
+        "Collection vault, album, or binder with owned items, wishlist, and custom grouping.",
+        "Owned-item fields for condition, quantity, purchase price, purchase date, and notes.",
+        "Total estimated value for the collection, plus backup/export to CSV or JSON.",
+        "Original branding, names, icons, and UI copy."
+      ],
+      notInFirstVersion: [
+        "Marketplace buying/selling, escrow, trades, or payments.",
+        "Official league, game, brand, logo, scraped image, or protected asset usage without permission.",
+        "Automated valuation claims that present estimates as guaranteed prices.",
+        "Bulk scanning before manual search and entry works.",
+        "Account sync or social collection sharing before local backup/export is solid."
+      ],
+      firstMilestone: "Build the collector loop: search a realistic catalog, open a detail/value view, add an item to a vault or binder with condition, quantity, purchase price, and notes, then show total estimated value and export the collection.",
+      successMetrics: [
+        "A collector can search and add an item to their vault in under one minute.",
+        "The collection shows condition, quantity, purchase price, notes, and total estimated value clearly.",
+        "Export or backup works without an account.",
+        "The product uses original branding and labels values as estimates."
+      ]
+    };
+  }
 
   if (isRealEstate && isImageTool) {
     return {
@@ -508,6 +601,86 @@ function readmeSignals(repo: BuildPackRepo): string {
   return `${signals.join(", ")}. README quality score: ${repo.readme.qualityScore}%.`;
 }
 
+function cleanRepoContent(text: string | null | undefined): string {
+  if (!text) return "";
+  return text
+    .replace(/<\/?UNTRUSTED_REPO_CONTENT>/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanRepo(repo: BuildPackRepo): BuildPackRepo {
+  return {
+    ...repo,
+    description: cleanRepoContent(repo.description),
+    topics: repo.topics.map((topic) => cleanRepoContent(topic)).filter(Boolean),
+    readme: repo.readme
+      ? {
+          ...repo.readme,
+          excerpt: cleanRepoContent(repo.readme.excerpt)
+        }
+      : undefined
+  };
+}
+
+function repoHaystack(repo: BuildPackRepo | undefined): string {
+  if (!repo) return "";
+  return [
+    repo.fullName,
+    repo.name,
+    cleanRepoContent(repo.description),
+    ...repo.topics.map(cleanRepoContent),
+    cleanRepoContent(repo.readme?.excerpt)
+  ].join(" ").toLowerCase();
+}
+
+type FoundationFeature = {
+  label: string;
+  pattern: RegExp;
+};
+
+const foundationFeatures: FoundationFeature[] = [
+  { label: "card search/catalog", pattern: /\b(card catalog|catalogue|card search|search cards?|card database|tcg api|pok[eé]mon tcg|sets?|rarity)\b/i },
+  { label: "collection/vault", pattern: /\b(collection|collector|owned cards?|vault|inventory|portfolio)\b/i },
+  { label: "binder/wishlist/grouping", pattern: /\b(binder|album|wishlist|wish list|groups?|tags?)\b/i },
+  { label: "pricing/value estimates", pattern: /\b(price|pricing|value|valuation|market|tcgplayer|cardmarket|estimate|worth)\b/i },
+  { label: "export/backup", pattern: /\b(export|backup|csv|json|download|import|restore)\b/i },
+  { label: "scanner/image-assisted entry", pattern: /\b(scan|scanner|image[-\s]?assisted|camera|ocr|photo|recognition)\b/i },
+  { label: "analytics/dashboard", pattern: /\b(analytics|dashboard|chart|stats?|insights?|total value|portfolio)\b/i },
+  { label: "frontend shell", pattern: /\b(frontend|front-end|react|next\.?js|vue|svelte|ui|components?|routes?|pages?)\b/i },
+  { label: "backend/API", pattern: /\b(api|backend|back-end|server|routes?|endpoints?|graphql|rest)\b/i },
+  { label: "database/persistence", pattern: /\b(database|db|sqlite|postgres|mysql|mongodb|prisma|drizzle|persistence|storage|localstorage|indexeddb)\b/i },
+  { label: "Docker/local setup", pattern: /\b(docker|dockerfile|compose|local setup|localhost|dev server|install|self-host)\b/i }
+];
+
+const cardSpecificFoundationLabels = new Set([
+  "card search/catalog",
+  "collection/vault",
+  "binder/wishlist/grouping",
+  "pricing/value estimates",
+  "export/backup",
+  "scanner/image-assisted entry"
+]);
+
+function foundationCoverageMap(repo: BuildPackRepo | undefined, profile: ProductProfile, originalIdea: string): string[] {
+  if (!repo) return ["- Already detected: no starter repo selected yet."];
+  const haystack = repoHaystack(repo);
+  const isCardProduct =
+    /\b(pokemon|pokémon|tcgdex|tcg|trading[-\s]?card|collectibles?|card collection|card collector|collector album|card binder|card value|tcgplayer|cardmarket|sports[-\s]?cards?|magic the gathering|mtg|yu-gi-oh|yugioh)\b/i.test(originalIdea);
+  const features = isCardProduct ? foundationFeatures : foundationFeatures.filter((feature) => !cardSpecificFoundationLabels.has(feature.label));
+  const detected = features.filter((feature) => feature.pattern.test(haystack)).map((feature) => feature.label);
+  const missing = features.filter((feature) => !detected.includes(feature.label)).map((feature) => feature.label);
+
+  return [
+    `- Already detected: ${detected.length ? detected.join(", ") : "no strong feature coverage from description, topics, or README excerpt."}`,
+    `- Keep first: ${detected.length ? detected.slice(0, 5).join(", ") : "working setup and any generic app shell that runs locally."}`,
+    `- Replace/rebrand: product name, navigation, sample data, screenshots, demo copy, and any branding that belongs to ${repo.fullName}.`,
+    `- Add/customize: ${missing.length ? missing.slice(0, 5).join(", ") : `the product-specific workflow from the PRD: ${profile.firstMilestone}`}.`,
+    "- Remove/defer: unrelated demo pages, marketplace/social/admin features, and anything listed in Skip In v1.",
+    `- Risk checks: verify license, attribution, data/image terms, and setup health before copying code${isCardProduct ? "; use original branding, avoid official logos or copied product UI, confirm card-image/pricing API terms, and label card values as estimates." : "."}`
+  ];
+}
+
 function verdictDirection(result: IdeaCheckResult): string {
   const best = result.repos[0];
   if (best && best.score.fit < 25) {
@@ -738,7 +911,7 @@ function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRep
       title: "Phase 3 - Quality Bar",
       tasks: [
         "Add focused tests or a manual QA checklist for the primary workflow.",
-        "Run lint, typecheck, and the relevant tests.",
+        "Run the starter repo's documented verification commands and record any missing lint/typecheck/test scripts.",
         "Update the build plan with completed items and remaining risks."
       ],
       acceptance: [
@@ -753,6 +926,9 @@ function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRep
 function licenseReuseNote(repo: BuildPackRepo): string {
   if (!repo.license) return "No license was detected. Treat this as research only until a human confirms reuse rights.";
   const license = repo.license.toUpperCase();
+  if (license.includes("AGPL")) {
+    return `${repo.license} may add reciprocal obligations, including network use and source-sharing requirements for users who interact with a modified hosted version. Confirm compatibility, notice, source-offer, and deployment obligations before copying code into a closed or differently licensed project.`;
+  }
   if (license.includes("GPL") || license.includes("AGPL") || license.includes("LGPL")) {
     return `${repo.license} may add reciprocal obligations. Confirm compatibility before copying code into a closed or differently licensed project.`;
   }
@@ -833,6 +1009,65 @@ function mergedSkipList(profileList: string[], derivedList: string[]): string[] 
   return merged.slice(0, 6);
 }
 
+function promptPackSummaries(markdown: string | undefined): string[] {
+  if (!markdown?.trim()) return [];
+  const sections = markdown
+    .split(/\n(?=##\s+)/)
+    .map((section) => section.trim())
+    .filter(Boolean);
+
+  return sections.slice(0, 6).map((section) => {
+    const lines = section.split("\n").map((line) => line.trim()).filter(Boolean);
+    const title = (lines[0] ?? "Custom rule pack").replace(/^#+\s*/, "").slice(0, 80);
+    const firstRule = lines
+      .slice(1)
+      .filter((line) => /^[-*]\s+/.test(line))
+      .map((line) => line.replace(/^[-*]\s*/, "").replace(/\s+/g, " ").trim())
+      .find((line) => line.length > 0);
+    return `- ${title}: ${firstRule ? firstRule.slice(0, 140) : "Apply this pack as a concise builder rule."}`;
+  });
+}
+
+function ideaRiskChecks(originalIdea: string): string[] {
+  const isPokemonProduct = /\b(pokemon|pokémon|tcgdex)\b/i.test(originalIdea);
+  const isGenericCardProduct = /\b(tcg|trading[-\s]?card|collectibles?|card collection|card collector|sports[-\s]?cards?|magic the gathering|mtg|yu-gi-oh|yugioh)\b/i.test(originalIdea);
+  if (!isPokemonProduct && !isGenericCardProduct) return [];
+
+  const brandRisk = isPokemonProduct
+    ? "Use original branding; do not copy Pokemon Collector's product name, layout, iconography, screenshots, or UI copy."
+    : "Use original branding; do not copy another collector app's product name, layout, iconography, screenshots, or UI copy.";
+  const assetRisk = isPokemonProduct
+    ? "Avoid official Pokemon logos, protected card images, and copied product UI unless rights and terms explicitly allow the intended use."
+    : "Avoid official league, game, brand, logo, scraped image, and copied product UI unless rights and terms explicitly allow the intended use.";
+
+  return [
+    brandRisk,
+    assetRisk,
+    "Confirm card-image and pricing API terms before integrating or caching external data.",
+    "Label card values as estimates, show source/date when possible, and avoid implying guaranteed resale value."
+  ];
+}
+
+function verificationChecklist(repo: BuildPackRepo | undefined): string[] {
+  const repoName = repo?.fullName ?? "the starter repo";
+  return [
+    `Run the starter repo's documented install, build, dev, and test commands from README/package files (${repoName}).`,
+    "If lint, typecheck, or test scripts are missing, record that instead of inventing commands.",
+    "Manually run the first milestone end to end before claiming it works.",
+    "Add focused automated tests or a manual QA checklist for the primary workflow and any data/export behavior.",
+    "Update BUILD_PLAN.md checkboxes with what is actually done, what failed, and what remains unverified."
+  ];
+}
+
+function isRelevantAlsoWorthChecking(repo: BuildPackRepo, focusRepo: BuildPackRepo, originalIdea: string): boolean {
+  if (repo.fullName === focusRepo.fullName) return false;
+  if (repo.score.fit < 25) return false;
+
+  const terms = relevantTerms(originalIdea);
+  const haystack = repoHaystack(repo);
+  return Array.from(terms).some((term) => haystack.includes(term));
+}
+
 // TODO: LLM-driven PRD prose upgrade (planned, not yet implemented).
 // Add an async function llmPrdSection(result, keys) that POSTs to
 // /api/handoff-prd/route.ts running the LLM with a tight prompt and returns
@@ -848,7 +1083,7 @@ export function notToBuildInV1(result: IdeaCheckResult): string[] {
     "Analytics or dashboards before you have any users."
   ];
 
-  const fromGaps: string[] = result.gaps.slice(0, 2).flatMap((gap) => {
+  const fromGaps: string[] = result.gaps.map(cleanRepoContent).filter(Boolean).slice(0, 2).flatMap((gap) => {
     const lower = gap.toLowerCase();
     if (lower.includes("auth") || lower.includes("account") || lower.includes("login")) {
       return ["Full authentication and account management — start with local-only or single-user mode."];
@@ -868,11 +1103,14 @@ export function notToBuildInV1(result: IdeaCheckResult): string[] {
 
 export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarget, focusRepo?: BuildPackRepo, wizardAnswers?: BuildPackPreferences, promptPackMarkdown?: string): string {
   const { originalIdea, researchContext } = cleanIdeaPrompt(result.prompt);
-  const topRepos = result.repos.slice(0, 3);
-  const bestRepo = focusRepo ?? topRepos[0];
+  const sanitizedRepos = result.repos.map(cleanRepo);
+  const topRepos = sanitizedRepos.slice(0, 3);
+  const sanitizedFocusRepo = focusRepo ? cleanRepo(focusRepo) : undefined;
+  const bestRepo = sanitizedFocusRepo ?? topRepos[0];
   const bestNarrative = bestRepo ? buildRepoNarrative(bestRepo) : null;
-  // When a focusRepo is provided, show the other top repos as "also worth checking"
-  const alsoWorthChecking = focusRepo ? topRepos.filter((repo) => repo.fullName !== focusRepo.fullName).slice(0, 2) : [];
+  const alsoWorthChecking = sanitizedFocusRepo
+    ? topRepos.filter((repo) => isRelevantAlsoWorthChecking(repo, sanitizedFocusRepo, originalIdea)).slice(0, 2)
+    : [];
   const baseProfile = productProfileFor(originalIdea);
   const profile = profileWithPreferences(baseProfile, wizardAnswers);
   const projectName = preferredProjectName(originalIdea, wizardAnswers);
@@ -880,7 +1118,9 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const skipPreferences = preferenceSkipList(wizardAnswers);
   const relevantQueries = filterRelevantQueries(result.queries, originalIdea, researchContext);
   const visibleVerdict = displayVerdict(result);
-  const gaps = result.gaps.length ? result.gaps : ["No explicit gaps were returned. Validate differentiation during repo inspection."];
+  const sanitizedGaps = result.gaps.map(cleanRepoContent).filter(Boolean);
+  const gaps = [...(sanitizedGaps.length ? sanitizedGaps : ["No explicit gaps were returned. Validate differentiation during repo inspection."]), ...ideaRiskChecks(originalIdea)];
+  const builderRulePackLines = promptPackSummaries(promptPackMarkdown);
   const phaseLines = phasePlan(profile.firstMilestone, target === "codex" ? "AGENTS.md" : target === "claude-code" ? "CLAUDE.md" : "AI_BUILDER_NOTES.md", bestRepo, projectName).flatMap(
     (phase) => [
       `### ${phase.title}`,
@@ -979,6 +1219,9 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `## Repo-To-Product Adaptation Map`,
     ...adaptationMap(bestRepo, profile, wizardAnswers),
     ``,
+    `## Foundation Coverage Map`,
+    ...foundationCoverageMap(bestRepo, profile, originalIdea),
+    ``,
     `## Foundation Guardrails`,
     ...checkItems([
       "Do not scaffold a brand-new app unless repo inspection proves the starter is unusable.",
@@ -1004,16 +1247,6 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
           ``,
           `## Builder Preferences`,
           ...preferenceBullets
-        ]
-      : []),
-    ...(promptPackMarkdown
-      ? [
-          ``,
-          `## Prompt Packs`,
-          ``,
-          `The user has enabled the following build-philosophy packs. Apply these throughout your work:`,
-          ``,
-          promptPackMarkdown
         ]
       : []),
     ...(researchContext ? [``, `## Research Context`, researchContext] : []),
@@ -1071,13 +1304,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `## Implementation Phases`,
     ...phaseLines,
     `## Verification Checklist`,
-    ...checkItems([
-      "Run npm run lint and address any new violations.",
-      "Run npm run typecheck and resolve any new errors.",
-      "Run npm test and confirm the primary workflow has at least one focused test.",
-      "Manually run the first milestone end to end before claiming it works.",
-      "Update BUILD_PLAN.md checkboxes with what is actually done."
-    ]),
+    ...checkItems(verificationChecklist(bestRepo)),
     ``,
     `# REPO_STARTER_NOTES`,
     ``,
@@ -1118,6 +1345,14 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
       "Stop and record blockers when verification fails instead of hiding them."
     ]),
     ``,
+    ...(builderRulePackLines.length
+      ? [
+          `## Builder Rule Packs`,
+          `Enabled prompt packs were summarized here so PRD.md stays focused on the product.`,
+          ...builderRulePackLines,
+          ``
+        ]
+      : []),
     `## Prompt To Start`,
     `You are building the product described in Original Idea, not ForkFirst itself. The user may have pasted or uploaded this single ForkFirst Builder Handoff. Treat it as the source of truth. Start by cloning or opening the selected starter repo in STARTER_REPO.md, then split this packet into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile} in that repo without asking the user to do manual setup. Inspect the repo before edits, summarize architecture and setup evidence, then adapt the existing foundation toward the PRD, brand, and MVP workflow. Implement Phase 0 and Phase 1, then build the first milestone only. Keep the checklist current, document reuse decisions, preserve unrelated work, and run the verification commands before expanding scope.`
   ].join("\n");
