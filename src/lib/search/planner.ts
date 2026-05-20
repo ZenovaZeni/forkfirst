@@ -27,6 +27,7 @@ const STOP_WORDS = new Set([
   "lets",
   "like",
   "looking",
+  "make",
   "me",
   "my",
   "of",
@@ -111,6 +112,19 @@ const VERTICAL_SEARCH_PLANS = [
       "restaurant reservation automation in:name,description,readme",
       "hospitality crm open source in:name,description,readme",
       "food service workflow automation in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(grocery|groceries|supermarket|shopping list|shopping lists|food shopping)\b/i,
+    label: "grocery-shopping",
+    meaning: "Find open-source grocery, shopping-list, supermarket, inventory, or food-shopping apps that match the user's workflow.",
+    queries: [
+      "grocery shopping list app in:name,description,readme",
+      "grocery store app in:name,description,readme",
+      "shopping list app in:name,description,readme",
+      "grocery inventory app in:name,description,readme",
+      "supermarket app template in:name,description,readme",
+      "meal planner grocery list in:name,description,readme"
     ]
   },
   {

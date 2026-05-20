@@ -98,6 +98,20 @@ describe("search planner", () => {
     expect(queries.join(" ")).not.toContain("anything");
   });
 
+  test("plans grocery app searches around the product vertical, not generic make terms", () => {
+    const refinement = planPromptRefinement("I want to make a grocery app");
+
+    expect(refinement.probableMeaning).toContain("grocery");
+    expect(refinement.bestQuery).toBe("grocery shopping list app in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "grocery shopping list app in:name,description,readme",
+      "grocery store app in:name,description,readme",
+      "shopping list app in:name,description,readme",
+      "grocery inventory app in:name,description,readme"
+    ]);
+    expect(refinement.queries.join(" ")).not.toContain("make grocery");
+  });
+
   test("plans Pokemon TCG collector searches before generic prompt searches", () => {
     const queries = planSearches("I want to build a Pokemon collector app for my TCG cards");
 

@@ -230,4 +230,51 @@ describe("repo scoring", () => {
     expect(first.score.fit).toBeGreaterThanOrEqual(70);
     expect(["already_exists", "forkable"]).toContain(first.category);
   });
+
+  test("ranks grocery app repos above popular generic automation repos", () => {
+    const [first] = classifyRepositories(
+      [
+        repo({
+          owner: "browser-use",
+          name: "browser-use",
+          fullName: "browser-use/browser-use",
+          description: "Make websites accessible for AI agents. Automate tasks online with ease.",
+          topics: ["ai", "agents", "browser", "automation"],
+          stars: 94834,
+          forks: 10690,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Make websites accessible for AI agents. Automate browser tasks and workflows online with ease.",
+            hasSetup: true,
+            hasExamples: true,
+            qualityScore: 100
+          }
+        }),
+        repo({
+          owner: "plutonicdev",
+          name: "GroceryStore",
+          fullName: "plutonicdev/GroceryStore",
+          description:
+            "Grocery store Android app UI template for grocery shopping, supermarket products, store orders, and checkout.",
+          topics: ["grocery", "shopping", "store", "android", "template"],
+          stars: 51,
+          forks: 24,
+          license: null,
+          pushedAt: "2024-11-01T00:00:00Z",
+          readme: {
+            ...repo().readme!,
+            excerpt:
+              "Grocery app template for shopping list, grocery products, supermarket store pages, cart, checkout, and order screens.",
+            qualityScore: 45
+          }
+        })
+      ],
+      "I want to make a grocery app"
+    );
+
+    expect(first.fullName).toBe("plutonicdev/GroceryStore");
+    expect(first.score.fit).toBeGreaterThanOrEqual(70);
+    expect(first.score.reasons).toContain("Vertical/domain match");
+  });
 });

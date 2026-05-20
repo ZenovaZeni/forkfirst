@@ -115,6 +115,17 @@ describe("research chat planner and composer", () => {
     expect(plan.searchPrompt).toContain("pokemon coloter");
   });
 
+  test("starts a repo search from short app-making prompts", () => {
+    const plan = planResearchChat({
+      prompt: "I want to make a grocery app",
+      repos: []
+    });
+
+    expect(plan.intent).toBe("new_search");
+    expect(plan.needsSearch).toBe(true);
+    expect(plan.searchPrompt).toBe("I want to make a grocery app");
+  });
+
   test("does not let AI planning suppress an obvious no-context repo search", () => {
     const heuristic = planResearchChat({
       prompt: "I'm looking for a Pokemon like repo that lets me keep my Pokemon cards, see values, and manage a collector album.",

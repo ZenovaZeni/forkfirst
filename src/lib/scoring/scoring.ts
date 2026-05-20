@@ -107,6 +107,13 @@ function domainMatchScore(prompt: string, tokens: Set<string>, normalizedHaystac
   return matches / domainTerms.length;
 }
 
+function plannedIntentMatchScore(prompt: string, tokens: Set<string>, normalizedHaystack: string): number {
+  const intentTerms = scoringIntentTerms(prompt);
+  if (intentTerms.length === 0) return 0;
+  const intentMatches = intentTerms.reduce((total, term) => total + termMatchWeight(term, tokens, normalizedHaystack), 0);
+  return intentMatches / intentTerms.length;
+}
+
 function scoreFit(repo: NormalizedRepo, prompt: string): number {
   const terms = extractIdeaTerms(prompt);
   const intentTerms = scoringIntentTerms(prompt);
@@ -159,7 +166,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   const haystack = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
   const normalizedHaystack = haystack.replace(/[^a-z0-9+#.\s-]/g, " ");
   const tokens = new Set(normalizedHaystack.split(/[\s/_-]+/).filter(Boolean));
-  const hasDomainMatch = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5;
+  const hasDomainMatch = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 || plannedIntentMatchScore(prompt, tokens, normalizedHaystack) >= 0.55;
   const hasValueFeatureMatch = hasValueIntent(prompt) && valueFeatureSignal(normalizedHaystack) > 0;
   const archivedPenalty = repo.archived ? 45 : 0;
   const kindUtility =

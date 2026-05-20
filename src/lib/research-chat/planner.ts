@@ -69,12 +69,12 @@ function basePlan(intent: ChatIntent, context: ResearchChatContext, overrides: P
 
 function searchPrompt(context: ResearchChatContext, prefix: string) {
   const idea = cleanChatText(context.idea, 160) || cleanChatText(context.prompt, 160);
-  return `${prefix}: ${idea}`.trim();
+  return idea || prefix;
 }
 
 function looksLikeNoContextRepoHunt(lowerPrompt: string) {
   return (
-    lowerPrompt.length >= 30 &&
+    lowerPrompt.length >= 18 &&
     ((BUILD_IDEA_RE.test(lowerPrompt) &&
       /\b(i'?m looking for|im looking for|i am looking for|i want|i need|build|make|create|app like|tool for)\b/.test(lowerPrompt)) ||
       (TERSE_VERTICAL_RE.test(lowerPrompt) && TERSE_PRODUCT_SIGNAL_RE.test(lowerPrompt)))
