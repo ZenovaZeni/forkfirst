@@ -12,6 +12,7 @@ export type ProductKind =
   | "knowledge-base"
   | "developer-tool"
   | "recipe-bookmark"
+  | "grocery-shopping"
   | "workflow-app"
   | "marketplace"
   | "unknown-app";
@@ -58,9 +59,33 @@ const GENERIC_WIZARD_COPY = [
   /turn the selected repo into the user'?s product idea/i,
   /clone the repo, inspect the core flows/i,
   /target user from the idea/i,
+  /^i don'?t know\b/i,
+  /\bkeep whatever you need\b/i,
+  /^whatever you need$/i,
   /^your app$/i,
   /^untitled app$/i
 ];
+
+function preferenceText(preferences: BuildPackPreferences | undefined): string {
+  if (!preferences) return "";
+  return Object.values(preferences)
+    .flatMap((value) => Array.isArray(value) ? value : [value])
+    .filter((value): value is string => typeof value === "string" && !isGenericBuildPackPreference(value))
+    .join(" ");
+}
+
+function directTextFrom(input: HandoffSignalInput): string {
+  return [
+    input.originalIdea,
+    input.researchContext,
+    input.chatContext,
+    preferenceText(input.preferences),
+    ...input.queries
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
 
 function textFrom(input: HandoffSignalInput): string {
   const repo = input.selectedRepo;
@@ -68,6 +93,7 @@ function textFrom(input: HandoffSignalInput): string {
     input.originalIdea,
     input.researchContext,
     input.chatContext,
+    preferenceText(input.preferences),
     ...input.queries,
     repo?.fullName,
     repo?.name,
@@ -198,6 +224,77 @@ function recipeBookmarkBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   };
 }
 
+function groceryShoppingBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  const signal = directTextFrom(input);
+  const priceFocused = /\b(cheap|cheaper|cheapest|price|prices|deal|deals|coupon|coupons|sale|sales|discount|compare|comparison|budget|save money|savings|cost)\b/i.test(signal);
+  return {
+    productKind: "grocery-shopping",
+    confidence: priceFocused ? 82 : 70,
+    productThesis: priceFocused
+      ? `${name || "The app"} should help shoppers build a grocery list, compare store prices or deals with source/date context, and keep a reusable record of what saves money.`
+      : `${name || "The app"} should help shoppers plan groceries, manage a reusable shopping list, track pantry or favorite items, and get through the store with less friction.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? (priceFocused ? "A household shopper trying to keep grocery costs down across stores without juggling notes, ads, and spreadsheets." : "A household shopper who wants one practical place to plan, reuse, and finish grocery trips."),
+    jobToBeDone: priceFocused
+      ? "When I need groceries, I want to build a list, compare realistic prices or deals, decide where to shop, and save what I learned for next time."
+      : "When I need groceries, I want to build a list quickly, reuse common items, check what I already have, and leave with a clean shopping plan.",
+    currentAlternatives: priceFocused
+      ? ["store apps", "weekly ads", "coupon sites", "notes apps", "spreadsheets", "manual price comparison"]
+      : ["paper lists", "notes apps", "store apps", "recipe apps", "shared family chats"],
+    differentiatedWedge: priceFocused
+      ? "Start from the grocery-list foundation, then add price/deal comparison, source/date labels, and local history so the product is about cheaper shopping, not just recipes."
+      : "Start from the grocery-list foundation, then simplify around one fast planning loop with persistent lists, reusable items, and clean export/share.",
+    primaryWorkflow: priceFocused
+      ? [
+          "User creates or reuses a grocery list.",
+          "User enters items, quantities, preferred stores, and optional budget.",
+          "System shows price/deal entries with source, date, confidence, and manual-entry fallback.",
+          "User chooses a store plan or split-by-store list.",
+          "User saves the trip, exports the list, and reuses price history next time."
+        ]
+      : [
+          "User creates or reuses a grocery list.",
+          "User adds items, quantities, categories, and notes.",
+          "User checks pantry/favorites or recurring items.",
+          "User organizes the list by aisle, store section, or priority.",
+          "User saves, copies, or exports the list for the shopping trip."
+        ],
+    keyScreens: priceFocused
+      ? ["Shopping list", "Price/deal comparison", "Store plan", "Item detail/history", "Saved trips", "Import/export", "Settings/data sources"]
+      : ["Shopping list", "Pantry/favorites", "Item detail", "Store/aisle view", "Saved lists", "Import/export"],
+    coreDataObjects: priceFocused
+      ? ["GroceryItem", "ShoppingList", "Store", "PriceSnapshot", "Deal", "Budget", "SavedTrip", "Export"]
+      : ["GroceryItem", "ShoppingList", "PantryItem", "FavoriteItem", "StoreSection", "SavedTrip", "Export"],
+    userActions: priceFocused
+      ? ["create grocery list", "add item and quantity", "compare price/deal options", "choose store plan", "save trip", "export list"]
+      : ["create grocery list", "add item and quantity", "reuse favorites", "organize by aisle", "save trip", "export list"],
+    systemStates: {
+      empty: "No list yet; show one clear list starter and optional common grocery suggestions.",
+      loading: priceFocused ? "Fetching or calculating price/deal options; keep the list visible." : "Preparing list suggestions or saved items; keep the list editable.",
+      error: priceFocused ? "Price/deal lookup failed; preserve the list and allow manual price entry." : "List action failed; preserve the user's items and offer retry.",
+      noResult: priceFocused ? "No price found for an item; let the user save it with unknown price or manual entry." : "No saved item matches; let the user add it as a new item.",
+      partialSuccess: priceFocused ? "Some item prices were found; clearly mark missing or stale prices." : "Some list data saved; clearly mark anything still unsynced or missing."
+    },
+    mvpRequirements: priceFocused
+      ? ["Persistent grocery list", "Store/item price or deal entries with source/date", "Manual price fallback", "Best-store or split-store plan", "Save/export list and trip history"]
+      : ["Persistent grocery list", "Reusable favorite items", "Pantry or saved-list support", "Store/aisle grouping", "Copy/export list"],
+    explicitNonGoals: priceFocused
+      ? ["No automated scraping claims until store terms and data sources are verified", "No guaranteed cheapest-price claims", "No checkout, delivery, or payment flow in v1", "No account sync before local persistence/export works"]
+      : ["No recipe social network", "No delivery checkout or payments in v1", "No complex meal-planning engine before the list loop works", "No account sync before local persistence/export works"],
+    trustPrivacySafety: priceFocused
+      ? ["Label prices as estimates with source/date when possible", "Respect store and coupon source terms", "Keep shopping history exportable", "Do not claim every store or item is covered"]
+      : ["Keep list data exportable", "Document whether data is local or synced", "Do not claim pantry accuracy without user confirmation", "Respect source terms for any imported data"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? (priceFocused ? "Build the grocery savings loop: create a list, add three items, enter or fetch price options for two stores, choose a shopping plan, save it, and export/copy the list." : "Build the grocery list loop: create a list, add recurring items, organize by section, save it, and export/copy it."),
+    successMetrics: priceFocused
+      ? ["A shopper can create a list and compare prices for three items in under two minutes.", "Saved lists and price entries survive refresh.", "The UI clearly labels prices as estimates with source/date or manual-entry status."]
+      : ["A shopper can create and reuse a list in under one minute.", "Saved lists survive refresh.", "The list can be copied or exported for a real shopping trip."],
+    wowDemoScript: priceFocused
+      ? ["Create a grocery list with three common items.", "Show price/deal options for at least two stores or manual sample sources.", "Choose a cheaper store plan.", "Save the trip and export/copy the list."]
+      : ["Create a grocery list.", "Add favorite or recurring items.", "Group by section.", "Save and export/copy the list."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
 function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const name = stringPreference(input.preferences, "productName");
   const repo = input.selectedRepo;
@@ -237,9 +334,16 @@ function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
 }
 
 export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const directSignal = directTextFrom(input);
   const signal = textFrom(input);
   if (/\b(pokemon|pok[eé]mon|tcg|trading[-\s]?card|card collector|card collection|collector album|card binder|card value|tcgdex|tcgplayer|cardmarket)\b/i.test(signal)) {
     return cardCollectorBlueprint(input);
+  }
+  if (/\b(recipe|recipes|meal plan|meal planning|ingredients?|cookbook|cooking|recipe bookmark|bookmark manager)\b/i.test(directSignal)) {
+    return recipeBookmarkBlueprint(input);
+  }
+  if (/\b(grocery|groceries|supermarket|shopping list|shopping lists|food shopping)\b/i.test(directSignal)) {
+    return groceryShoppingBlueprint(input);
   }
   if (/\b(recipe|recipes|grocery list|meal plan|ingredients?|cookbook|cooking|bookmark manager)\b/i.test(signal)) {
     return recipeBookmarkBlueprint(input);

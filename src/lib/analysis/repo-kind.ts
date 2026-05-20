@@ -135,7 +135,7 @@ export function getRepoKindInsight(repo: NormalizedRepo): RepoKindInsight {
       label: "Starter / Template",
       plainEnglish: "This is meant to be copied and customized as a starting project.",
       goodFor: "Starting faster when the stack and license fit your plan.",
-      notFor: "Understanding the whole market by itself.",
+      notFor: "Assuming it is the whole product strategy without comparing alternatives.",
       reuseAdvice: "Copy or clone it, run the setup, and verify the code quality before committing."
     };
   }

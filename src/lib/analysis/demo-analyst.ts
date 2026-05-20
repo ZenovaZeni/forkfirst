@@ -38,7 +38,7 @@ export function analyzeWithDemo(prompt: string, repos: ClassifiedRepo[]): Analys
     repos,
     gaps:
       verdict === "open_gap" || verdict === "build_differentiated"
-        ? ["The strongest opportunity is packaging repo discovery as a build/fork/use decision report."]
-        : ["Differentiate with saved research cases, evidence transparency, and a graph-style idea map."]
+        ? ["Differentiate with a narrower user promise, cleaner onboarding, and workflows the existing repos do not already cover."]
+        : ["Differentiate with a focused audience, original branding, and a first workflow that is simpler than the existing repos."]
   };
 }

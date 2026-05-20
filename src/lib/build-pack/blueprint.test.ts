@@ -99,4 +99,37 @@ describe("handoff blueprint", () => {
     expect(blueprint.coreDataObjects.join(" ")).toMatch(/Recipe|Ingredient|GroceryList/);
     expect(blueprint.productThesis).not.toMatch(/Pokemon|card collector/i);
   });
+
+  test("keeps grocery savings prompts focused on shopping, not recipe bookmarking", () => {
+    const selectedRepo = repo({
+      owner: "TomBursch",
+      name: "kitchenowl",
+      fullName: "TomBursch/kitchenowl",
+      description: "KitchenOwl is a self-hosted grocery list and recipe manager.",
+      topics: ["grocery", "shopping-list", "recipes"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "Self-hosted grocery list, recipe manager, meal planning, and household shopping app."
+      }
+    });
+
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want to make a grocery app",
+      researchContext: null,
+      chatContext: null,
+      queries: ["grocery shopping list app in:name,description,readme"],
+      selectedRepo,
+      candidateRepos: [selectedRepo],
+      preferences: {
+        audience: "Just to help me find groceries cheaper everywhere and keep up with that.",
+        keepFromRepo: "I don't know, keep whatever you need"
+      }
+    });
+
+    expect(blueprint.productKind).toBe("grocery-shopping");
+    expect(blueprint.productThesis).toMatch(/compare store prices|deals|saves money/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/price|deal|store plan/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/PriceSnapshot|Store|Deal/i);
+    expect(blueprint.productThesis).not.toMatch(/recipe links|recipe bookmark/i);
+  });
 });

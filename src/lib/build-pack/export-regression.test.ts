@@ -145,4 +145,64 @@ describe("Build Pack export regressions", () => {
     expect(section(prd, "Core Data Objects")).toMatch(/Recipe|Ingredient|GroceryList/i);
     expect(section(prd, "Product Thesis")).not.toMatch(/Pokemon|card collector/i);
   });
+
+  test("grocery savings handoff follows user preferences over recipe-heavy repo metadata", () => {
+    const groceryRepo = repo({
+      owner: "TomBursch",
+      name: "kitchenowl",
+      fullName: "TomBursch/kitchenowl",
+      url: "https://github.com/TomBursch/kitchenowl",
+      description: "KitchenOwl is a self-hosted grocery list and recipe manager.",
+      topics: ["grocery", "shopping-list", "recipes", "self-hosted"],
+      license: "AGPL-3.0",
+      category: "forkable",
+      score: { total: 100, fit: 100, activity: 100, popularity: 100, license: 100, docs: 100, reasons: ["Strong keyword fit"] },
+      readme: {
+        ...repo().readme!,
+        excerpt: "<h1>KitchenOwl</h1> Self-hosted grocery list and recipe manager with meal planning and Docker setup.",
+        evidence: {
+          fetchStatus: "ok",
+          fetchedAt: "2026-05-20T12:00:00Z",
+          setupSnippets: ["## App Install"],
+          commandSnippets: ['<a href="https://hub.docker.com/repository/docker/tombursch/kitchenowl">', '<img alt="Docker pulls" src="https://img.shields.io/docker/pulls/tombursch/kitchenowl" />'],
+          featureSnippets: ["Grocery list, recipes, meal planning, shared household lists."],
+          integrationSnippets: ['<img alt="Stars" src="https://img.shields.io/github/stars/tombursch/kitchenowl" />'],
+          licenseSnippets: ["AGPL-3.0"]
+        }
+      }
+    });
+
+    const markdown = buildProjectBuildPack(
+      result({
+        id: "grocery-check",
+        prompt: "Original idea: I want to make a grocery app",
+        queries: ["grocery shopping list app in:name,description,readme"],
+        verdict: "already_exists",
+        verdictLabel: "Already Exists",
+        confidence: 92,
+        gaps: ["Differentiate with a focused audience, original branding, and a first workflow that is simpler than the existing repos."],
+        repos: [groceryRepo]
+      }),
+      "codex",
+      groceryRepo,
+      {
+        productName: "Grocery",
+        audience: "Just to help me find groceries cheaper everywhere and keep up with that.",
+        productGoal: "Grocery store app",
+        firstMilestone: "Full working frontend, backend, and persistent data.",
+        keepFromRepo: "I don't know, keep whatever you need",
+        vibe: "calm and trustworthy",
+        accentColor: "#2647F0"
+      }
+    );
+    const prd = markdown.split("# PRD")[1]?.split("# BUILD_PLAN")[0] ?? "";
+
+    expect(section(prd, "Product Thesis")).toMatch(/compare store prices|deals|saves money/i);
+    expect(section(prd, "Primary Workflow")).toMatch(/price|deal|store plan/i);
+    expect(section(prd, "Core Data Objects")).toMatch(/PriceSnapshot|Store|Deal/i);
+    expect(section(prd, "Product Thesis")).not.toMatch(/save recipe links|bookmark/i);
+    expect(markdown).not.toContain("Keep from repo: I don't know");
+    expect(markdown).not.toContain("saved research cases");
+    expect(section(markdown, "Architecture Evidence")).not.toMatch(/<a href|<img|shields\.io/i);
+  });
 });

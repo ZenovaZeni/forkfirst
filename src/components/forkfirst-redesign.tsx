@@ -2807,7 +2807,7 @@ function LoadingView({ prompt }: { prompt: string }) {
         <div className="v-eyebrow">Checking your idea</div>
         <h3>Looking at what&apos;s already out there...</h3>
         <div className="steps-loading">
-          {["Reading your idea", "Searching public GitHub", "Ranking 47 candidates", "Writing your handoff"].map((step, index) => (
+          {["Reading your idea", "Searching public GitHub", "Comparing repo signals", "Preparing your recommendation"].map((step, index) => (
             <div key={step} className={`ls ${index < 2 ? "done" : ""}`}>
               <span className="ind" />
               <span>{step}</span>

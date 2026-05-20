@@ -804,10 +804,11 @@ function preferenceLines(preferences?: BuildPackPreferences): string[] {
     skipInV1: "Skip in v1"
   };
   return Object.entries(preferences)
-    .filter(([, value]) => Array.isArray(value) ? value.length > 0 : typeof value === "string" && value.trim().length > 0)
+    .filter(([, value]) => Array.isArray(value) ? value.some((item) => !isGenericBuildPackPreference(item)) : typeof value === "string" && !isGenericBuildPackPreference(value))
     .map(([key, value]) => {
       const label = labels[key] ?? key.charAt(0).toUpperCase() + key.slice(1).replace(/-/g, " ");
-      return `- ${label}: ${Array.isArray(value) ? value.join(", ") : value}`;
+      const cleaned = Array.isArray(value) ? value.filter((item) => !isGenericBuildPackPreference(item)).join(", ") : value;
+      return `- ${label}: ${cleaned}`;
     });
 }
 
@@ -907,9 +908,9 @@ function brandDesignBrief(profile: ProductProfile, preferences?: BuildPackPrefer
 }
 
 function reuseMatrixLines(repo: BuildPackRepo | undefined, blueprint: HandoffBlueprint): string[] {
-  const firstFeature = repo?.readme?.evidence?.featureSnippets?.[0] ?? "Inspect README/app files";
-  const firstIntegration = repo?.readme?.evidence?.integrationSnippets?.[0] ?? "Inspect models/schemas";
-  const firstCommand = repo?.readme?.evidence?.commandSnippets?.[0] ?? "Inspect package files";
+  const firstFeature = cleanEvidenceSnippet(repo?.readme?.evidence?.featureSnippets?.[0]) ?? "Inspect README/app files";
+  const firstIntegration = cleanEvidenceSnippet(repo?.readme?.evidence?.integrationSnippets?.[0]) ?? "Inspect models/schemas";
+  const firstCommand = cleanEvidenceSnippet(repo?.readme?.evidence?.commandSnippets?.[0]) ?? "Inspect package files";
   return [
     "| Area | Keep | Replace | Build Fresh | Avoid | Evidence |",
     "|---|---|---|---|---|---|",
@@ -937,12 +938,32 @@ function architectureEvidenceLines(repo: BuildPackRepo | undefined): string[] {
       ? `- README fetch status: ${evidence.fetchStatus}${evidence.fetchedAt ? ` at ${evidence.fetchedAt}` : ""}`
       : "- README fetch status: unknown"
   ];
-  for (const line of evidence?.setupSnippets ?? []) lines.push(`- Setup: ${line}`);
-  for (const line of evidence?.commandSnippets ?? []) lines.push(`- Command: ${line}`);
-  for (const line of evidence?.featureSnippets ?? []) lines.push(`- Feature: ${line}`);
-  for (const line of evidence?.integrationSnippets ?? []) lines.push(`- Integration: ${line}`);
+  for (const line of evidence?.setupSnippets ?? []) pushEvidenceLine(lines, "Setup", line);
+  for (const line of evidence?.commandSnippets ?? []) pushEvidenceLine(lines, "Command/setup note", line);
+  for (const line of evidence?.featureSnippets ?? []) pushEvidenceLine(lines, "Feature", line);
+  for (const line of evidence?.integrationSnippets ?? []) pushEvidenceLine(lines, "Integration", line);
   if (lines.length === 1 && repo?.readme?.excerpt) lines.push(`- README excerpt: ${repo.readme.excerpt.slice(0, 260)}`);
   return lines;
+}
+
+function cleanEvidenceSnippet(line: string | null | undefined): string | null {
+  if (!line) return null;
+  const cleaned = cleanRepoContent(line)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned || cleaned.length < 4) return null;
+  if (/shields\.io|github\/stars|github\/license|docker pulls/i.test(cleaned)) return null;
+  return cleaned.slice(0, 220);
+}
+
+function pushEvidenceLine(lines: string[], label: string, raw: string): void {
+  const cleaned = cleanEvidenceSnippet(raw);
+  if (cleaned) lines.push(`- ${label}: ${cleaned}`);
 }
 
 function wowDemoScript(blueprint: HandoffBlueprint, repo: BuildPackRepo | undefined): string[] {
