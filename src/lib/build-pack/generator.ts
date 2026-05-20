@@ -1,5 +1,6 @@
 import { buildRepoNarrative } from "../analysis/human-answer";
 import type { IdeaCheckResult } from "../../types/idea-check";
+import { buildHandoffBlueprint, isGenericBuildPackPreference, type HandoffBlueprint, type ProductKind } from "./blueprint";
 
 type BuildPackRepo = IdeaCheckResult["repos"][number];
 
@@ -98,6 +99,59 @@ type ProductProfile = {
   firstMilestone: string;
   successMetrics: string[];
 };
+
+function profileFromBlueprint(blueprint: HandoffBlueprint): ProductProfile {
+  return {
+    goal: blueprint.productThesis,
+    primaryUser: blueprint.targetUserSegment,
+    problem: blueprint.jobToBeDone,
+    promise: blueprint.differentiatedWedge,
+    coreWorkflow: blueprint.primaryWorkflow,
+    stories: blueprint.userActions.map((action) => `As a user, I can ${action}.`),
+    mustHave: blueprint.mvpRequirements,
+    notInFirstVersion: blueprint.explicitNonGoals,
+    firstMilestone: blueprint.firstMilestone,
+    successMetrics: blueprint.successMetrics
+  };
+}
+
+function isGenericProductProfile(profile: ProductProfile): boolean {
+  return profile.goal === "Turn the idea into one narrow workflow that saves the target user time immediately.";
+}
+
+function blueprintFromProfile(profile: ProductProfile, productKind: ProductKind, inferredFrom: string[]): HandoffBlueprint {
+  return {
+    productKind,
+    confidence: isGenericProductProfile(profile) ? 45 : 72,
+    productThesis: profile.goal,
+    targetUserSegment: profile.primaryUser,
+    jobToBeDone: profile.problem,
+    currentAlternatives: ["existing apps found during repo research", "manual workflows", "generic SaaS tools", "spreadsheets or notes"],
+    differentiatedWedge: profile.promise,
+    primaryWorkflow: profile.coreWorkflow,
+    keyScreens: ["Start/new item", "Primary workflow", "Result/detail", "Saved library", "Export/share"],
+    coreDataObjects: ["PrimaryItem", "UserInput", "Result", "SavedItem", "Export"],
+    userActions: profile.stories.map((story) => story.replace(/^As a user, I can\s*/i, "").replace(/^As a builder, I can\s*/i, "inspect and ").replace(/\.$/, "")),
+    systemStates: {
+      empty: "No saved work yet; guide the user into the first workflow.",
+      loading: "Show clear progress while preserving the user's input.",
+      error: "Explain what failed, preserve input, and offer a retry or manual fallback.",
+      noResult: "Explain that nothing matched and suggest a narrower input or alternate route.",
+      partialSuccess: "Keep the useful result and clearly label what still needs verification."
+    },
+    mvpRequirements: profile.mustHave,
+    explicitNonGoals: profile.notInFirstVersion,
+    trustPrivacySafety: ["Document what data is stored and where.", "Confirm license and attribution before copying starter code.", "Keep secrets out of client code, logs, telemetry, and generated docs."],
+    firstMilestone: profile.firstMilestone,
+    successMetrics: profile.successMetrics,
+    wowDemoScript: [
+      profile.firstMilestone,
+      "Show the saved or exported output.",
+      "Call out the repo reuse decision and any honest limitation."
+    ],
+    inferredFrom
+  };
+}
 
 function productProfileFor(idea: string): ProductProfile {
   const lower = idea.toLowerCase();
@@ -766,6 +820,7 @@ function preferenceSkipList(preferences?: BuildPackPreferences): string[] {
 
 function stringPreference(preferences: BuildPackPreferences | undefined, key: string): string | null {
   const value = preferences?.[key];
+  if (isGenericBuildPackPreference(value)) return null;
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
@@ -851,18 +906,72 @@ function brandDesignBrief(profile: ProductProfile, preferences?: BuildPackPrefer
   return lines;
 }
 
-function wowDemoScript(profile: ProductProfile, repo: BuildPackRepo | undefined): string[] {
+function reuseMatrixLines(repo: BuildPackRepo | undefined, blueprint: HandoffBlueprint): string[] {
+  const firstFeature = repo?.readme?.evidence?.featureSnippets?.[0] ?? "Inspect README/app files";
+  const firstIntegration = repo?.readme?.evidence?.integrationSnippets?.[0] ?? "Inspect models/schemas";
+  const firstCommand = repo?.readme?.evidence?.commandSnippets?.[0] ?? "Inspect package files";
+  return [
+    "| Area | Keep | Replace | Build Fresh | Avoid | Evidence |",
+    "|---|---|---|---|---|---|",
+    `| Product workflow | Starter flows that support ${blueprint.primaryWorkflow[0]} | Copy, labels, sample data | Missing steps from the primary workflow | Unrelated starter features | ${firstFeature} |`,
+    `| Data model | Entities matching ${blueprint.coreDataObjects.slice(0, 3).join(", ")} | Domain-specific assumptions | Missing product entities | License-unclear data | ${firstIntegration} |`,
+    `| UI | Useful shells, lists, cards, forms | Branding, layout that feels copied | Screens listed in PRD | Protected logos/assets | ${repo?.readme?.excerpt?.slice(0, 120) ?? "Inspect components"} |`,
+    `| Setup/tests | Documented commands | Broken scripts | Missing QA for first milestone | Invented commands | ${firstCommand} |`
+  ];
+}
+
+function filesLikelyToInspect(repo: BuildPackRepo | undefined, blueprint: HandoffBlueprint): string[] {
+  const text = `${repo?.readme?.excerpt ?? ""} ${repo?.description ?? ""}`.toLowerCase();
+  const files = ["README.md", "LICENSE", "package files / lockfiles", "app entrypoints"];
+  if (/react|vite|next|frontend/.test(text)) files.push("frontend routes/components");
+  if (/fastapi|express|backend|api/.test(text)) files.push("backend API routes/services");
+  if (/postgres|sqlite|database|model|schema/.test(text)) files.push("database models/schemas");
+  if (blueprint.productKind === "card-collector") files.push("card search, owned collection, pricing, export, and backup modules");
+  return files;
+}
+
+function architectureEvidenceLines(repo: BuildPackRepo | undefined): string[] {
+  const evidence = repo?.readme?.evidence;
+  const lines = [
+    evidence?.fetchStatus
+      ? `- README fetch status: ${evidence.fetchStatus}${evidence.fetchedAt ? ` at ${evidence.fetchedAt}` : ""}`
+      : "- README fetch status: unknown"
+  ];
+  for (const line of evidence?.setupSnippets ?? []) lines.push(`- Setup: ${line}`);
+  for (const line of evidence?.commandSnippets ?? []) lines.push(`- Command: ${line}`);
+  for (const line of evidence?.featureSnippets ?? []) lines.push(`- Feature: ${line}`);
+  for (const line of evidence?.integrationSnippets ?? []) lines.push(`- Integration: ${line}`);
+  if (lines.length === 1 && repo?.readme?.excerpt) lines.push(`- README excerpt: ${repo.readme.excerpt.slice(0, 260)}`);
+  return lines;
+}
+
+function wowDemoScript(blueprint: HandoffBlueprint, repo: BuildPackRepo | undefined): string[] {
+  const scripted = blueprint.wowDemoScript.map((step) => `- ${step}`);
   return [
     "- Start from a blank or realistic sample state, not a mocked marketing page.",
-    `- Complete this milestone on screen: ${profile.firstMilestone}`,
+    `- Complete this milestone on screen: ${blueprint.firstMilestone}`,
+    ...scripted,
     repo ? `- Show where ${repo.fullName} helped: reused setup, component pattern, data model, workflow, or implementation idea.` : "- Show the repo decision or explain why no foundation was selected.",
     "- End with a saved, copied, exported, or revisitable output that proves the product did useful work.",
     "- Call out any honest limitation, missing key, mocked data, or license question before the user asks."
   ];
 }
 
-function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRepo | undefined, projectName: string): Array<{ title: string; tasks: string[]; acceptance: string[] }> {
+function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRepo | undefined, projectName: string, blueprint?: HandoffBlueprint): Array<{ title: string; tasks: string[]; acceptance: string[] }> {
   const commands = foundationCommands(repo, projectName);
+  const productTasks = blueprint
+    ? [
+        `Data: model or adapt ${blueprint.coreDataObjects.slice(0, 5).join(", ")}.`,
+        `Screens: build ${blueprint.keyScreens.slice(0, 5).join(", ")}.`,
+        `Core actions: support ${blueprint.userActions.slice(0, 6).join(", ")}.`,
+        `States: implement empty/loading/error/no-result/partial-success behavior from PRD.md.`,
+        "Export/share/save path: make the first workflow revisitable or portable."
+      ]
+    : [
+        firstMilestone,
+        "Use realistic sample data when external integrations are not ready.",
+        "Keep persistence local unless the PRD requires accounts or collaboration."
+      ];
   return [
     {
       title: "Phase 0 - Clone Foundation And Add Handoff Files",
@@ -896,12 +1005,9 @@ function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRep
     },
     {
       title: "Phase 2 - Smallest Product Loop",
-      tasks: [
-        firstMilestone,
-        "Use realistic sample data when external integrations are not ready.",
-        "Keep persistence local unless the PRD requires accounts or collaboration."
-      ],
+      tasks: productTasks,
       acceptance: [
+        firstMilestone,
         "A user can complete the main workflow from input to useful output.",
         "The result can be saved, copied, exported, or revisited.",
         "Empty, loading, error, and no-result states are handled."
@@ -1016,16 +1122,26 @@ function promptPackSummaries(markdown: string | undefined): string[] {
     .map((section) => section.trim())
     .filter(Boolean);
 
-  return sections.slice(0, 6).map((section) => {
+  const rows = sections.slice(0, 6).map((section) => {
     const lines = section.split("\n").map((line) => line.trim()).filter(Boolean);
-    const title = (lines[0] ?? "Custom rule pack").replace(/^#+\s*/, "").slice(0, 80);
-    const firstRule = lines
+    const title = (lines[0] ?? "Custom rule pack").replace(/^#+\s*/, "").replace(/\|/g, "/").slice(0, 60);
+    const rules = lines
       .slice(1)
       .filter((line) => /^[-*]\s+/.test(line))
       .map((line) => line.replace(/^[-*]\s*/, "").replace(/\s+/g, " ").trim())
-      .find((line) => line.length > 0);
-    return `- ${title}: ${firstRule ? firstRule.slice(0, 140) : "Apply this pack as a concise builder rule."}`;
+      .filter(Boolean);
+    const mustFollow = (rules[0] ?? "Apply this pack only where it improves the first milestone.").replace(/\|/g, "/").slice(0, 120);
+    const verification = (rules.find((rule) => /test|verify|check|run|confirm|inspect/i.test(rule)) ?? "Verify the first milestone still matches the PRD.").replace(/\|/g, "/").slice(0, 120);
+    return `| ${title} | The user enabled this build-rule pack. | ${mustFollow} | ${verification} |`;
   });
+
+  return [
+    "The user enabled these build-rule packs. Apply the intent, but keep PRD.md focused on the actual product.",
+    "Full prompt pack text is omitted from the PRD to keep the handoff concise.",
+    "| Pack | Why Included | Must Follow | Verification |",
+    "|---|---|---|---|",
+    ...rows
+  ];
 }
 
 function ideaRiskChecks(originalIdea: string): string[] {
@@ -1111,8 +1227,31 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const alsoWorthChecking = sanitizedFocusRepo
     ? topRepos.filter((repo) => isRelevantAlsoWorthChecking(repo, sanitizedFocusRepo, originalIdea)).slice(0, 2)
     : [];
-  const baseProfile = productProfileFor(originalIdea);
-  const profile = profileWithPreferences(baseProfile, wizardAnswers);
+  const chatContext = typeof wizardAnswers?.chatContext === "string" ? wizardAnswers.chatContext : null;
+  const blueprintSignal = [
+    originalIdea,
+    researchContext,
+    chatContext,
+    bestRepo?.fullName,
+    bestRepo?.description,
+    ...(bestRepo?.topics ?? []),
+    bestRepo?.readme?.excerpt,
+    ...result.queries
+  ].filter(Boolean).join(" ");
+  const inferredBlueprint = buildHandoffBlueprint({
+    originalIdea,
+    researchContext,
+    chatContext,
+    queries: result.queries,
+    selectedRepo: bestRepo,
+    candidateRepos: topRepos,
+    preferences: wizardAnswers
+  });
+  const legacyProfile = profileWithPreferences(productProfileFor(blueprintSignal || originalIdea), wizardAnswers);
+  const blueprint = inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
+    ? blueprintFromProfile(legacyProfile, "workflow-app", ["user idea", "legacy product profile", bestRepo ? "selected repo metadata" : "search result"])
+    : inferredBlueprint;
+  const profile = profileFromBlueprint(blueprint);
   const projectName = preferredProjectName(originalIdea, wizardAnswers);
   const preferenceBullets = preferenceLines(wizardAnswers);
   const skipPreferences = preferenceSkipList(wizardAnswers);
@@ -1121,7 +1260,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const sanitizedGaps = result.gaps.map(cleanRepoContent).filter(Boolean);
   const gaps = [...(sanitizedGaps.length ? sanitizedGaps : ["No explicit gaps were returned. Validate differentiation during repo inspection."]), ...ideaRiskChecks(originalIdea)];
   const builderRulePackLines = promptPackSummaries(promptPackMarkdown);
-  const phaseLines = phasePlan(profile.firstMilestone, target === "codex" ? "AGENTS.md" : target === "claude-code" ? "CLAUDE.md" : "AI_BUILDER_NOTES.md", bestRepo, projectName).flatMap(
+  const phaseLines = phasePlan(profile.firstMilestone, target === "codex" ? "AGENTS.md" : target === "claude-code" ? "CLAUDE.md" : "AI_BUILDER_NOTES.md", bestRepo, projectName, blueprint).flatMap(
     (phase) => [
       `### ${phase.title}`,
       `Tasks`,
@@ -1222,6 +1361,9 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `## Foundation Coverage Map`,
     ...foundationCoverageMap(bestRepo, profile, originalIdea),
     ``,
+    `## Reuse Matrix`,
+    ...reuseMatrixLines(bestRepo, blueprint),
+    ``,
     `## Foundation Guardrails`,
     ...checkItems([
       "Do not scaffold a brand-new app unless repo inspection proves the starter is unusable.",
@@ -1252,39 +1394,61 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...(researchContext ? [``, `## Research Context`, researchContext] : []),
     ...(relevantQueries.length ? [``, `## Search Queries Used`, ...bulletItems(relevantQueries)] : []),
     ``,
-    `## Product Goal`,
-    profile.goal,
-    ``,
-    `## Primary User`,
-    profile.primaryUser,
-    ``,
-    `## Problem To Solve`,
-    profile.problem,
-    ``,
-    `## Product Promise`,
-    profile.promise,
+    `## Product Thesis`,
+    blueprint.productThesis,
     ``,
     `## Brand And Design Brief`,
     ...brandDesignBrief(profile, wizardAnswers),
     ``,
-    `## Core Workflow`,
-    ...profile.coreWorkflow.map((step, index) => `${index + 1}. ${step}`),
+    `## Target User Segment`,
+    blueprint.targetUserSegment,
     ``,
-    `## Core User Stories`,
-    ...checkItems(profile.stories),
+    `## Job To Be Done`,
+    blueprint.jobToBeDone,
     ``,
-    `## Must Have (MVP Scope)`,
-    ...checkItems(profile.mustHave),
+    `## Current Alternatives`,
+    ...bulletItems(blueprint.currentAlternatives),
+    ``,
+    `## Differentiated Wedge`,
+    blueprint.differentiatedWedge,
+    ``,
+    `## Primary Workflow`,
+    ...blueprint.primaryWorkflow.map((step, index) => `${index + 1}. ${step}`),
+    ``,
+    `## Key Screens / Surfaces`,
+    ...bulletItems(blueprint.keyScreens),
+    ``,
+    `## Core Data Objects`,
+    ...bulletItems(blueprint.coreDataObjects),
+    ``,
+    `## User Actions`,
+    ...bulletItems(blueprint.userActions),
+    ``,
+    `## System States`,
+    `- Empty: ${blueprint.systemStates.empty}`,
+    `- Loading: ${blueprint.systemStates.loading}`,
+    `- Error: ${blueprint.systemStates.error}`,
+    `- No result: ${blueprint.systemStates.noResult}`,
+    `- Partial success: ${blueprint.systemStates.partialSuccess}`,
+    ``,
+    `## MVP Requirements`,
+    ...checkItems(blueprint.mvpRequirements),
     ``,
     `## Skip In v1`,
-    ...bulletItems(mergedSkipList([...profile.notInFirstVersion, ...skipPreferences], notToBuild)),
+    ...bulletItems(mergedSkipList([...blueprint.explicitNonGoals, ...skipPreferences], notToBuild)),
+    ``,
+    `## Trust, Privacy, And Safety`,
+    ...bulletItems(blueprint.trustPrivacySafety),
     ``,
     `## Differentiation And Risks`,
     ...checkItems(gaps),
     ``,
+    `## Success Metrics`,
+    ...checkItems(blueprint.successMetrics),
+    ``,
     `## Acceptance Criteria`,
     ...checkItems([
-      ...profile.successMetrics,
+      ...blueprint.successMetrics,
       "The chosen repo dependency or reference is documented with license, attribution, and reuse notes.",
       "The main workflow has focused automated tests or a written manual QA path.",
       "The generated handoff is editable Markdown with no hidden state required to continue."
@@ -1299,7 +1463,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     profile.firstMilestone,
     ``,
     `## Wow Demo Script`,
-    ...wowDemoScript(profile, bestRepo),
+    ...wowDemoScript(blueprint, bestRepo),
     ``,
     `## Implementation Phases`,
     ...phaseLines,
@@ -1313,6 +1477,12 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
       ? `${bestRepo.fullName} is a ${recommendedRepoLabel(bestRepo).toLowerCase()}. ${foundationDecision(bestRepo)} ${bestNarrative.overview} Use it for: ${bestNarrative.goodFor} Watch out: ${bestNarrative.notFor}`
       : "No strong starting repo was found yet. Run a narrower search before building.",
     ...(bestRepo ? [``, `## Recommended Repo Decision`, ...checkItems([`Use STARTER_REPO.md as the source of truth for cloning or inspecting ${bestRepo.fullName}.`, "Record setup, license, and architecture evidence in REPO_STARTER_NOTES.md before implementation.", "If the repo is not a fit, inspect the next ranked repo instead of forcing it."])] : []),
+    ``,
+    `## Architecture Evidence`,
+    ...architectureEvidenceLines(bestRepo),
+    ``,
+    `## Files Likely To Inspect First`,
+    ...bulletItems(filesLikelyToInspect(bestRepo, blueprint)),
     ``,
     `## Repo Research Notes`,
     ...(repoLines.length ? repoLines : [`No repo leads were available.`, ``]),
@@ -1348,7 +1518,6 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...(builderRulePackLines.length
       ? [
           `## Builder Rule Packs`,
-          `Enabled prompt packs were summarized here so PRD.md stays focused on the product.`,
           ...builderRulePackLines,
           ``
         ]

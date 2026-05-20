@@ -344,6 +344,8 @@ const BUILD_TARGETS: Array<{ id: BuildTarget; label: string; sub: string; logo?:
   { id: "generic", label: "Any builder", sub: "Markdown pack" }
 ];
 
+const BUILD_PACK_SCHEMA_VERSION = 2;
+
 const READY_FILE_DEFS: Array<{ kind: string; file: HandoffDocTab }> = [
   { kind: "STR", file: "STARTER_REPO.md" },
   { kind: "PRD", file: "PRD.md" },
@@ -405,6 +407,18 @@ function createHandoffDocuments(markdown: string): HandoffDocuments {
     "AGENTS.md": markdownSection(markdown, "AGENTS") || createFallbackAgentDoc(markdown, "AGENTS.md"),
     "CLAUDE.md": markdownSection(markdown, "CLAUDE") || createFallbackAgentDoc(markdown, "CLAUDE.md")
   };
+}
+
+async function prepareSelectedRepoForExport(repo: ClassifiedRepo, githubToken?: string): Promise<ClassifiedRepo> {
+  if (repo.readme?.evidence?.fetchStatus === "ok") return repo;
+  const response = await fetch("/api/repo-evidence", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ repo, githubToken })
+  });
+  if (!response.ok) return repo;
+  const data = (await response.json()) as { repo?: ClassifiedRepo };
+  return data.repo ?? repo;
 }
 
 function composeHandoffMarkdown(intro: string, docs: HandoffDocuments) {
@@ -3874,6 +3888,8 @@ function HandoffView({
   activeChatId,
   activeBuildPack,
   onCopy,
+  onPrepareMarkdown,
+  preparing,
   onDownloadZip,
   onSaveBuildPack
 }: {
@@ -3886,6 +3902,8 @@ function HandoffView({
   activeChatId: string | null;
   activeBuildPack: SavedBuildPack | null;
   onCopy: (text: string) => void;
+  onPrepareMarkdown?: (target: BuildTarget) => Promise<string>;
+  preparing?: boolean;
   onDownloadZip: (filename: string, docs: HandoffDocuments, markdown: string) => void;
   onSaveBuildPack: (pack: SavedBuildPack) => void;
 }) {
@@ -3902,7 +3920,9 @@ function HandoffView({
     if (!result) return "# Builder Handoff\n\nRun an idea check first.";
     return buildProjectBuildPack(result, target, selectedStarterRepo ?? result.repos[0], buildPackPreferences(brand, followUps), enabledPackMarkdown(promptPackState));
   }, [brand, followUps, promptPackState, result, selectedStarterRepo, target]);
-  const sourceMarkdown = activeBuildPack?.markdown || generatedMarkdown;
+  const activePackIsCurrent = activeBuildPack?.schemaVersion === BUILD_PACK_SCHEMA_VERSION;
+  const canRegenerateActivePack = Boolean(result);
+  const sourceMarkdown = activeBuildPack && (activePackIsCurrent || !canRegenerateActivePack) ? activeBuildPack.markdown : generatedMarkdown;
   const generatedIntro = useMemo(() => handoffIntro(sourceMarkdown), [sourceMarkdown]);
   const generatedDocs = useMemo(() => createHandoffDocuments(sourceMarkdown), [sourceMarkdown]);
   const [docs, setDocs] = useState<HandoffDocuments>(generatedDocs);
@@ -3928,6 +3948,7 @@ function HandoffView({
     tokenEstimate: handoffTokens,
     qualityScore: score,
     status: activeBuildPack?.status ?? "draft",
+    schemaVersion: BUILD_PACK_SCHEMA_VERSION,
     createdAt: activeBuildPack?.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     workspace: buildPackWorkspaceSnapshot({
@@ -3946,12 +3967,6 @@ function HandoffView({
     setDocs(createHandoffDocuments(version.markdown));
     setTab("STARTER_REPO.md");
   }, []);
-  const saveWithVersion = useCallback((label: string, status: SavedBuildPack["status"]) => {
-    const next = withBuildPackVersion({ ...pack, status }, label);
-    setLocalVersions(next.versions ?? []);
-    onSaveBuildPack(next);
-    return next;
-  }, [onSaveBuildPack, pack]);
   useEffect(() => {
     if (!canExport) return;
     if (markdown.trim().length < 60) return;
@@ -3967,20 +3982,37 @@ function HandoffView({
             <small>One packet for {BUILD_TARGETS.find((item) => item.id === target)?.label ?? "your AI builder"}. Drop it in and let it read from the top.</small>
           </h2>
           <p className="handoff-subline">{starterName} to {packTitle}. Repo, prompt, and build files your AI builder can follow.</p>
+          {activeBuildPack && !activePackIsCurrent && canRegenerateActivePack ? (
+            <p className="handoff-subline">This saved handoff used an older generator, so ForkFirst regenerated the preview before export.</p>
+          ) : null}
         </div>
         <div className="handoff-actions">
           <div className="handoff-token-pill" title="Estimated tokens in this handoff">
             ~{formatTokensShort(handoffTokens)} tokens
           </div>
           <div className="handoff-actions-main">
-            <button className="btn ghost" type="button" onClick={() => onCopy(markdown)}>
+            <button className="btn ghost" type="button" disabled={preparing} onClick={async () => onCopy(onPrepareMarkdown ? await onPrepareMarkdown(target) : markdown)}>
               <Copy size={14} /> Copy
             </button>
-            <button className="btn accent" type="button" disabled={!canExport} onClick={() => {
-              saveWithVersion("Exported .zip", "exported");
-              onDownloadZip("forkfirst-build-pack.zip", docs, markdown);
+            <button className="btn accent" type="button" disabled={!canExport || preparing} title={preparing ? "Preparing repo evidence..." : "Download Build Pack zip"} onClick={async () => {
+              const preparedMarkdown = onPrepareMarkdown ? await onPrepareMarkdown(target) : markdown;
+              const preparedDocs = createHandoffDocuments(preparedMarkdown);
+              setDocs(preparedDocs);
+              const preparedPack: SavedBuildPack = {
+                ...pack,
+                markdown: preparedMarkdown,
+                tokenEstimate: estimateHandoffTokens(preparedMarkdown),
+                qualityScore: qualityScore(qualityItems({ result, brand, starterRepo, followUps, promptPackState, docs: preparedDocs })),
+                status: "exported",
+                schemaVersion: BUILD_PACK_SCHEMA_VERSION,
+                updatedAt: new Date().toISOString()
+              };
+              const next = withBuildPackVersion(preparedPack, "Exported .zip");
+              setLocalVersions(next.versions ?? []);
+              onSaveBuildPack(next);
+              onDownloadZip("forkfirst-build-pack.zip", preparedDocs, preparedMarkdown);
             }}>
-              <Download size={14} /> Download .zip
+              <Download size={14} /> {preparing ? "Preparing..." : "Download .zip"}
             </button>
           </div>
         </div>
@@ -5009,6 +5041,7 @@ export function ForkFirstRedesignApp() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [followUps, setFollowUps] = useState<ChatTurn[]>([]);
   const [chatSending, setChatSending] = useState(false);
+  const [handoffPreparing, setHandoffPreparing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const didPersistSessionRef = useRef(false);
 
@@ -5063,6 +5096,7 @@ export function ForkFirstRedesignApp() {
           tokenEstimate: estimateHandoffTokens(decoded.markdown),
           qualityScore: score,
           status: "draft",
+          schemaVersion: BUILD_PACK_SCHEMA_VERSION,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           workspace: {
@@ -5377,6 +5411,7 @@ export function ForkFirstRedesignApp() {
       const existing = current.find((item) => item.id === pack.id);
       const nextPack = {
         ...pack,
+        schemaVersion: pack.schemaVersion ?? BUILD_PACK_SCHEMA_VERSION,
         createdAt: existing?.createdAt ?? pack.createdAt ?? now,
         updatedAt: now
       };
@@ -5569,6 +5604,22 @@ export function ForkFirstRedesignApp() {
     if (!result) return "# Builder Handoff\n\nRun an idea check first.";
     return buildProjectBuildPack(result, "codex", selectedStarterRepo ?? result.repos[0], buildPackPreferences(brand, followUps), enabledPackMarkdown(promptPackState));
   }, [brand, followUps, promptPackState, result, selectedStarterRepo]);
+
+  const buildPreparedHandoffMarkdown = useCallback(async (target: BuildTarget = "codex") => {
+    if (!result) return "# Builder Handoff\n\nRun an idea check first.";
+    const starter = selectedStarterRepo ?? result.repos[0] ?? null;
+    const preparedStarter = starter ? await prepareSelectedRepoForExport(starter, keys.githubToken) : null;
+    if (preparedStarter && preparedStarter !== starter) {
+      setSelectedStarterRepo(preparedStarter);
+    }
+    return buildProjectBuildPack(
+      result,
+      target,
+      preparedStarter ?? starter ?? result.repos[0],
+      buildPackPreferences(brand, followUps),
+      enabledPackMarkdown(promptPackState)
+    );
+  }, [brand, followUps, keys.githubToken, promptPackState, result, selectedStarterRepo]);
 
   const promptPackRecommendations = useMemo(() => recommendPromptPacks({
     idea: prompt,
@@ -5893,13 +5944,34 @@ export function ForkFirstRedesignApp() {
                   onOpenRepo={openRepoDetails}
                   onSaveRepo={saveRepo}
                   onSelectStarter={(repo) => selectStarterForHandoff(repo, "result_card")}
-                  onCopyHandoff={() => {
+                  onCopyHandoff={async () => {
                     trackForkFirstEvent("handoff_copied", { source: "ready_card" });
-                    copyText(makeHandoffMarkdown());
+                    setHandoffPreparing(true);
+                    try {
+                      copyText(await buildPreparedHandoffMarkdown());
+                    } finally {
+                      setHandoffPreparing(false);
+                    }
                   }}
                   onCopyText={copyText}
-                  onDownloadHandoff={() => downloadHandoff("forkfirst-builder-handoff.md", makeHandoffMarkdown())}
-                  onDownloadHandoffZip={() => downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(makeHandoffMarkdown()), makeHandoffMarkdown())}
+                  onDownloadHandoff={async () => {
+                    setHandoffPreparing(true);
+                    try {
+                      const markdown = await buildPreparedHandoffMarkdown();
+                      downloadHandoff("forkfirst-builder-handoff.md", markdown);
+                    } finally {
+                      setHandoffPreparing(false);
+                    }
+                  }}
+                  onDownloadHandoffZip={async () => {
+                    setHandoffPreparing(true);
+                    try {
+                      const markdown = await buildPreparedHandoffMarkdown();
+                      downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(markdown), markdown);
+                    } finally {
+                      setHandoffPreparing(false);
+                    }
+                  }}
                   onBuilderSelect={(target, source) => trackForkFirstEvent("builder_selected", { target, source })}
                   onFollowUp={sendFollowUp}
                   readyDocs={createHandoffDocuments(makeHandoffMarkdown())}
@@ -5944,6 +6016,15 @@ export function ForkFirstRedesignApp() {
                       trackForkFirstEvent("handoff_copied", { source: "handoff_view" });
                       copyText(text);
                     }}
+                    onPrepareMarkdown={result ? async (target) => {
+                      setHandoffPreparing(true);
+                      try {
+                        return await buildPreparedHandoffMarkdown(target);
+                      } finally {
+                        setHandoffPreparing(false);
+                      }
+                    } : undefined}
+                    preparing={handoffPreparing}
                     onDownloadZip={downloadHandoffZip}
                     onSaveBuildPack={saveBuildPack}
                   />

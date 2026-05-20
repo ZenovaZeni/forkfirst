@@ -34,6 +34,17 @@ export type ReadmeAnalysis = {
   hasLicenseText: boolean;
   qualityScore: number;
   reasons: string[];
+  evidence?: ReadmeEvidence;
+};
+
+export type ReadmeEvidence = {
+  fetchStatus: "ok" | "missing" | "rate_limited" | "error";
+  fetchedAt: string | null;
+  setupSnippets: string[];
+  commandSnippets: string[];
+  featureSnippets: string[];
+  integrationSnippets: string[];
+  licenseSnippets: string[];
 };
 
 export type GitHubSearchWarning = {

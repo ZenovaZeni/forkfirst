@@ -9,14 +9,16 @@ const REQUIRED_SECTIONS = [
   "## Clone Or Fork Commands",
   "## File Inspection Checklist",
   "## Original Idea",
-  "## Product Goal",
-  "## Primary User",
-  "## Problem To Solve",
-  "## Product Promise",
+  "## Product Thesis",
   "## Brand And Design Brief",
-  "## Core Workflow",
-  "## Must Have (MVP Scope)",
+  "## Target User Segment",
+  "## Job To Be Done",
+  "## Primary Workflow",
+  "## Key Screens / Surfaces",
+  "## Core Data Objects",
+  "## MVP Requirements",
   "## Skip In v1",
+  "## Trust, Privacy, And Safety",
   "## Repo Research Notes",
   "## License And Reuse",
   "## First Milestone",
@@ -217,7 +219,7 @@ describe("build pack generator", () => {
   test("includes every required Build Pack section for a default idea", () => {
     const markdown = buildProjectBuildPack(result(), "codex");
     expectAllRequiredSections(markdown);
-    expect(markdown).toContain("## Core Workflow\n1. ");
+    expect(markdown).toContain("## Primary Workflow\n1. ");
   });
 
   test("turns brand answers and chat context into builder constraints", () => {

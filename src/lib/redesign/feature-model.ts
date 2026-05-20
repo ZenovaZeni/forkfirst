@@ -101,6 +101,7 @@ export type SavedBuildPack = {
   tokenEstimate: number;
   qualityScore: number;
   status: "draft" | "exported";
+  schemaVersion?: number;
   createdAt: string;
   updatedAt: string;
   workspace?: SavedBuildPackWorkspaceSnapshot;
@@ -342,6 +343,7 @@ function normalizeSavedBuildPacks(value: unknown): SavedBuildPack[] {
       tokenEstimate: typeof item.tokenEstimate === "number" ? item.tokenEstimate : 0,
       qualityScore: typeof item.qualityScore === "number" ? item.qualityScore : 0,
       status: (item.status === "exported" ? "exported" : "draft") as SavedBuildPack["status"],
+      schemaVersion: typeof item.schemaVersion === "number" ? item.schemaVersion : undefined,
       createdAt: typeof item.createdAt === "string" ? item.createdAt : new Date().toISOString(),
       updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : new Date().toISOString(),
       workspace: normalizeBuildPackWorkspace(item.workspace),

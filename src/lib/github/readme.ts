@@ -26,6 +26,14 @@ function excerptFrom(readme: string): string {
     .slice(0, 1200);
 }
 
+function matchingLines(readme: string, patterns: RegExp[], limit = 4): string[] {
+  return readme
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter((line) => line.length >= 8 && patterns.some((pattern) => pattern.test(line)))
+    .slice(0, limit);
+}
+
 export function analyzeReadme(readme: string, url: string | null = null): ReadmeAnalysis {
   const hasSetup = hasAny(readme, SETUP_PATTERNS);
   const hasExamples = hasAny(readme, EXAMPLE_PATTERNS);
@@ -59,11 +67,20 @@ export function analyzeReadme(readme: string, url: string | null = null): Readme
     hasLocalDevelopment,
     hasLicenseText,
     qualityScore,
-    reasons
+    reasons,
+    evidence: {
+      fetchStatus: "ok",
+      fetchedAt: new Date().toISOString(),
+      setupSnippets: matchingLines(readme, SETUP_PATTERNS),
+      commandSnippets: matchingLines(readme, [/npm |pnpm |yarn |docker|compose|pip |poetry|bun |cargo |go run/i]),
+      featureSnippets: matchingLines(readme, [/feature|search|collection|dashboard|export|backup|scanner|analytics|workflow|auth/i], 6),
+      integrationSnippets: matchingLines(readme, API_PATTERNS, 6),
+      licenseSnippets: matchingLines(readme, LICENSE_PATTERNS, 3)
+    }
   };
 }
 
-async function fetchReadme(repo: NormalizedRepo, token?: string): Promise<ReadmeAnalysis | undefined> {
+export async function fetchReadmeAnalysis(repo: NormalizedRepo, token?: string): Promise<ReadmeAnalysis | undefined> {
   const url = `https://api.github.com/repos/${repo.owner}/${repo.name}/readme`;
 
   try {
@@ -93,7 +110,7 @@ export async function enrichRepositoriesWithReadmes(repos: NormalizedRepo[], tok
   const enriched = await Promise.all(
     repos.slice(0, enrichmentLimit).map(async (repo) => ({
       ...repo,
-      readme: await fetchReadme(repo, token)
+      readme: await fetchReadmeAnalysis(repo, token)
     }))
   );
 
