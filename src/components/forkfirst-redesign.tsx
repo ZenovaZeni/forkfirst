@@ -36,6 +36,7 @@ import { decodeHandoff } from "@/lib/handoff/share-url";
 import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-status";
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
 import { defaultBoard, repoBoards } from "@/lib/repos/boards";
+import { inferRepoSetupFit, setupPreferenceScore, type SetupPreference, type SetupFit } from "@/lib/repos/setup-fit";
 import {
   buildIdeaCheckRequestBody,
   buildKeyVerificationRequestBody,
@@ -85,6 +86,15 @@ type GoOptions = { scroll?: "top" | "preserve" };
 type Theme = "light" | "dark";
 type ChatTurn = { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent };
 type SettingsTab = "appearance" | "keys" | "usage" | "backup" | "install";
+const SETUP_PREFERENCES: Array<{ id: SetupPreference; label: string }> = [
+  { id: "any", label: "Any setup" },
+  { id: "web", label: "Web/hosted" },
+  { id: "docker", label: "Docker" },
+  { id: "windows", label: "Windows" },
+  { id: "mac", label: "macOS" },
+  { id: "linux", label: "Linux" },
+  { id: "mobile", label: "Mobile" }
+];
 const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
@@ -821,6 +831,15 @@ function RepoSiteLink({ url, className = "btn ghost" }: { url: string | null | u
     <a className={className} href={safeUrl} target="_blank" rel="noreferrer">
       <ExternalLink size={13} /> Site
     </a>
+  );
+}
+
+function SetupFitPill({ fit, compact = false }: { fit: SetupFit; compact?: boolean }) {
+  return (
+    <span className={`setup-fit setup-fit-${fit.tone} ${compact ? "compact" : ""}`} title={fit.detail}>
+      <span className="setup-dot" aria-hidden="true" />
+      <span>Setup: {fit.label}</span>
+    </span>
   );
 }
 
@@ -2794,6 +2813,7 @@ function FeaturedRepo({
   onUse: (repo: ClassifiedRepo) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const setupFit = inferRepoSetupFit(repo);
   return (
     <article className="repo-card featured">
       <div className="rc-head">
@@ -2825,6 +2845,7 @@ function FeaturedRepo({
         </span>
         <span>{repo.language ?? "Mixed"}</span>
         <span>{repo.license ?? "License unknown"}</span>
+        <SetupFitPill fit={setupFit} />
       </div>
 
       <div className="rc-notes">
@@ -2838,7 +2859,7 @@ function FeaturedRepo({
         </div>
         <div className="rc-note warn">
           <div className="nlabel">Watch out</div>
-          <div className="nbody">{repoWatch(repo)}</div>
+          <div className="nbody">{repoWatch(repo)} Setup note: {setupFit.detail}</div>
         </div>
         <div className="rc-note next">
           <div className="nlabel">Next move</div>
@@ -2915,6 +2936,7 @@ function CompactRepo({
   onOpen: (repo: ClassifiedRepo) => void;
   onUse: (repo: ClassifiedRepo) => void;
 }) {
+  const setupFit = inferRepoSetupFit(repo);
   return (
     <article className="repo-card compact">
       <div className="left">
@@ -2925,6 +2947,7 @@ function CompactRepo({
           {repo.fullName}
         </button>
         <p className="rc-tagline">{repoSummary(repo)}</p>
+        <SetupFitPill fit={setupFit} compact />
         <p className="rc-user-hint"><strong>Why it showed up:</strong> {repoWhyShown(repo, idea)}</p>
       </div>
       <div className="right">
@@ -4604,16 +4627,25 @@ function LiveTrendingScreen({
   const [cat, setCat] = useState<TrendingCategory["id"]>("all");
   const [detailsRepo, setDetailsRepo] = useState<TrendingRepo | null>(null);
   const [query, setQuery] = useState("");
+  const [setupPreference, setSetupPreference] = useState<SetupPreference>("any");
   const trending = useTrendingRepos(cat);
   const activeCategory = TRENDING_CATEGORIES.find((item) => item.id === cat);
-  const visibleTrendingRepos = trending.repos.filter((repo) => includesSmartSearch([
-    repo.fullName,
-    repo.description,
-    repo.language ?? "",
-    repo.license ?? "",
-    trendingCategoryLabels(repo, activeCategory).join(" "),
-    repo.topics.join(" ")
-  ].join(" "), query));
+  const visibleTrendingRepos = trending.repos
+    .filter((repo) => includesSmartSearch([
+      repo.fullName,
+      repo.description,
+      repo.language ?? "",
+      repo.license ?? "",
+      inferRepoSetupFit(repo).label,
+      trendingCategoryLabels(repo, activeCategory).join(" "),
+      repo.topics.join(" ")
+    ].join(" "), query))
+    .map((repo, index) => ({ repo, index, setupFit: inferRepoSetupFit(repo) }))
+    .sort((a, b) => {
+      const setupDelta = setupPreferenceScore(b.setupFit, setupPreference) - setupPreferenceScore(a.setupFit, setupPreference);
+      return setupDelta || a.index - b.index;
+    })
+    .map((item) => item.repo);
 
   return (
     <>
@@ -4623,7 +4655,6 @@ function LiveTrendingScreen({
             <h2>Pick a repo <span className="accent-word">foundation.</span></h2>
             <p>Fresh GitHub repos updated daily. Browse what builders are starring now, then use one as the starting point for a new ForkFirst chat.</p>
           </div>
-          <div className="right"><span className="pulse" /> Daily GitHub Search</div>
         </div>
         <div className="cat-row">
           {TRENDING_CATEGORIES.map((item) => (
@@ -4642,9 +4673,19 @@ function LiveTrendingScreen({
           />
           {query ? <button type="button" onClick={() => setQuery("")}>Clear</button> : null}
         </div>
-        <p style={{ color: "var(--muted)", fontSize: 14, margin: "-10px 0 20px" }}>
-          {activeCategory?.blurb} Results come from recently pushed public repos, sorted by stars, and cached for about 24 hours.
-        </p>
+        <div className="setup-preference-row" aria-label="Target setup preference">
+          <span>Target setup</span>
+          {SETUP_PREFERENCES.map((item) => (
+            <button
+              key={item.id}
+              className={`setup-pill ${setupPreference === item.id ? "active" : ""}`}
+              type="button"
+              onClick={() => setSetupPreference(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
         <div className="trending-grid">
           {trending.status === "loading" ? [1, 2, 3].map((item) => (
             <article key={item} className="trend-card">
@@ -4665,6 +4706,7 @@ function LiveTrendingScreen({
             const asSavedRepo = classifiedFromTrendingRepo(repo, repoCategory);
             const saved = isSavedRepo(asSavedRepo, savedRepos);
             const categoryLabels = trendingCategoryLabels(repo, repoCategory);
+            const setupFit = inferRepoSetupFit(repo);
             return (
             <article key={repo.fullName} className="trend-card">
               {cat === "all" && categoryLabels.length ? (
@@ -4681,6 +4723,7 @@ function LiveTrendingScreen({
                 {repo.language ? <span>{repo.language}</span> : null}
                 {repo.license ? <span>{repo.license}</span> : null}
               </div>
+              <SetupFitPill fit={setupFit} />
               <div className="trend-card-mid">
                 {repo.topics.length ? (
                   <div className="trend-topics" aria-label={`${repo.fullName} topics`}>
@@ -4740,6 +4783,7 @@ function TrendingRepoDrawer({
   const swipeDown = useSwipeDownDismiss(onClose);
   if (!repo) return null;
   const alsoInLabels = (repo.matchedCategoryLabels ?? []).filter((label) => label !== repo.sourceCategoryLabel);
+  const setupFit = inferRepoSetupFit(repo);
   return (
     <>
       <div className="overlay" onClick={onClose} />
@@ -4770,6 +4814,11 @@ function TrendingRepoDrawer({
             <p>{trendingRepoWhat(repo)}</p>
             <p>{trendingRepoUse(repo, category)}</p>
           </div>
+          <div className={`repo-section setup-explain setup-fit-${setupFit.tone}`}>
+            <h3>Can I run it?</h3>
+            <SetupFitPill fit={setupFit} />
+            <p>{setupFit.detail}</p>
+          </div>
           <div className="repo-section">
             <h3>Why this showed up</h3>
             <p>ForkFirst pulled this from live GitHub Search for {category?.label ?? "this category"}, filtered to recently pushed projects and sorted by stars. This is a lead, not proof it is the right foundation.</p>
@@ -4788,6 +4837,7 @@ function TrendingRepoDrawer({
             <div className="kv"><span className="k">Stars</span><span className="v">{repo.stars.toLocaleString()}</span></div>
             <div className="kv"><span className="k">Language</span><span className="v">{repo.language ?? "Mixed"}</span></div>
             <div className="kv"><span className="k">License</span><span className="v">{repo.license ?? "Inspect"}</span></div>
+            <div className="kv"><span className="k">Setup fit</span><span className="v">{setupFit.label}</span></div>
             {safeExternalUrl(repo.homepage) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">{safeExternalUrl(repo.homepage)}</a></span></div> : null}
             <div className="kv"><span className="k">Updated</span><span className="v">{repo.updatedAt ? new Date(repo.updatedAt).toLocaleDateString() : "Inspect"}</span></div>
             <div className="kv"><span className="k">Created</span><span className="v">{repo.createdAt ? new Date(repo.createdAt).toLocaleDateString() : "Inspect"}</span></div>
