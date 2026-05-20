@@ -95,7 +95,7 @@ describe("repo kind insight", () => {
         topics: ["php", "billing", "api-client"],
         readme: {
           ...repo().readme!,
-          excerpt: "PHP SDK client for the Recurly billing API."
+          excerpt: "Install the client and configure API credentials."
         }
       })
     );

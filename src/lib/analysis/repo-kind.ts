@@ -72,7 +72,18 @@ export function getRepoKindInsight(repo: NormalizedRepo): RepoKindInsight {
     };
   }
 
-  if (includesAny(text, [/\bsdk\b/, /\bframework\b/, /\btoolkit\b/, /\bclient library\b/, /\bapi library\b/])) {
+  if (
+    includesAny(text, [
+      /\bsdk\b/,
+      /\bframework\b/,
+      /\btoolkit\b/,
+      /\bclient library\b/,
+      /\bapi library\b/,
+      /\bapi[-_\s]?client\b/,
+      /\b(?:php|javascript|typescript|python|ruby|go|java|node|dotnet|csharp)\s+client\b/,
+      /\bclient[-_\s]?(?:php|js|ts|py|go|ruby|java)\b/
+    ])
+  ) {
     return {
       kind: "framework_sdk",
       label: "Framework / SDK",
