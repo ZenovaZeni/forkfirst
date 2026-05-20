@@ -12,8 +12,8 @@ function labelFor(verdict: IdeaVerdict): string {
 }
 
 export function analyzeWithDemo(prompt: string, repos: ClassifiedRepo[]): AnalysisResult {
-  const alreadyExists = repos.filter((repo) => repo.category === "already_exists");
-  const forkable = repos.filter((repo) => repo.category === "forkable");
+  const alreadyExists = repos.filter((repo) => repo.category === "already_exists" && repo.score.fit >= 65);
+  const forkable = repos.filter((repo) => repo.category === "forkable" && repo.score.fit >= 55);
   const references = repos.filter((repo) => repo.category === "reference");
   const top = repos[0];
 
@@ -21,7 +21,7 @@ export function analyzeWithDemo(prompt: string, repos: ClassifiedRepo[]): Analys
   if (alreadyExists.length >= 2 && alreadyExists[0]?.score.total > 76) verdict = "already_exists";
   else if (alreadyExists.length > 0 && forkable.length > 0) verdict = "build_differentiated";
   else if (forkable.length > 0) verdict = "fork_candidate_found";
-  else if (repos.length <= 2) verdict = "open_gap";
+  else if (repos.length <= 2 && references.length === 0) verdict = "open_gap";
   else if (references.length > 0) verdict = "build_differentiated";
 
   const summary =
@@ -42,4 +42,3 @@ export function analyzeWithDemo(prompt: string, repos: ClassifiedRepo[]): Analys
         : ["Differentiate with saved research cases, evidence transparency, and a graph-style idea map."]
   };
 }
-
