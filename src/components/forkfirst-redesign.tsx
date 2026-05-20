@@ -674,6 +674,36 @@ function FormattedChatMessage({ content }: { content: string }) {
   );
 }
 
+function ChatCopyButton({
+  text,
+  onCopy,
+  label = "Copy message"
+}: {
+  text: string;
+  onCopy: (text: string) => void | Promise<void>;
+  label?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    await onCopy(text);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1400);
+  }, [onCopy, text]);
+
+  return (
+    <button
+      type="button"
+      className={`chat-copy-btn ${copied ? "is-copied" : ""}`}
+      onClick={handleCopy}
+      aria-label={copied ? "Copied" : label}
+      title={copied ? "Copied" : label}
+    >
+      {copied ? <Check size={14} /> : <Copy size={14} />}
+    </button>
+  );
+}
+
 function formatChatFallback(title: string, sections: Array<{ heading: string; items: string[] }>, next?: string, intro?: string) {
   const body = sections
     .filter((section) => section.items.some((item) => item.trim().length > 0))
@@ -3121,6 +3151,7 @@ function ChatResults({
   onSaveRepo,
   onSelectStarter,
   onCopyHandoff,
+  onCopyText,
   onDownloadHandoff,
   onDownloadHandoffZip,
   onBuilderSelect,
@@ -3143,6 +3174,7 @@ function ChatResults({
   onSaveRepo: (repo: ClassifiedRepo) => void;
   onSelectStarter: (repo: ClassifiedRepo) => void;
   onCopyHandoff: () => void;
+  onCopyText: (text: string) => void | Promise<void>;
   onDownloadHandoff: () => void;
   onDownloadHandoffZip: () => void;
   onBuilderSelect: (target: BuildTarget, source: string) => void;
@@ -3158,6 +3190,11 @@ function ChatResults({
   const recovery = result.recovery ?? buildSearchRecovery({ prompt: result.prompt, repos: result.repos, warnings: result.warnings });
   const isWeakSearch = recovery.state !== "ok";
   const closeMatchCount = recovery.closeMatchCount;
+  const initialAssistantCopy = isWeakSearch
+    ? `${recovery.headline}. ${recovery.explanation}\n\n${recovery.reassurance}`
+    : best
+      ? `${result.verdictLabel}. I'd start with ${best.fullName}. Why: ${repoIdeaReason(best, prompt)}`
+      : "I did not find a strong repo yet. Try a more specific product shape or name a repo you expected to see.";
   const chatTailRef = useRef<HTMLDivElement | null>(null);
   const previousFollowUpCountRef = useRef(followUps.length);
 
@@ -3178,7 +3215,10 @@ function ChatResults({
   return (
     <section className="chat" data-screen-label={`04 Chat / ${phase}`} data-clarity-mask="true">
       <div className="t t-user">
-        <div className="bubble">{prompt}</div>
+        <div className="copyable-message copyable-message-user">
+          <div className="bubble">{prompt}</div>
+          <ChatCopyButton text={prompt} onCopy={onCopyText} label="Copy your message" />
+        </div>
       </div>
       <div className="t t-assist">
         <div className="who">
@@ -3213,6 +3253,9 @@ function ChatResults({
             "I did not find a strong repo yet. Try a more specific product shape or name a repo you expected to see."
           )}
         </p>
+        <div className="chat-message-tools">
+          <ChatCopyButton text={initialAssistantCopy} onCopy={onCopyText} label="Copy ForkFirst response" />
+        </div>
         {best ? (
           <FeaturedRepo
             repo={best}
@@ -3316,7 +3359,10 @@ function ChatResults({
       {followUps.map((turn, index) => (
         <div key={`${turn.role}-${index}-${turn.content.slice(0, 12)}`} className={`t ${turn.role === "user" ? "t-user" : "t-assist"}`}>
           {turn.role === "user" ? (
-            <div className="bubble">{turn.content}</div>
+            <div className="copyable-message copyable-message-user">
+              <div className="bubble">{turn.content}</div>
+              <ChatCopyButton text={turn.content} onCopy={onCopyText} label="Copy your message" />
+            </div>
           ) : (
             <div className="assistant-message">
               <div className="who">
@@ -3325,6 +3371,9 @@ function ChatResults({
                 <time>- now</time>
               </div>
               <FormattedChatMessage content={turn.content} />
+              <div className="chat-message-tools">
+                <ChatCopyButton text={turn.content} onCopy={onCopyText} label="Copy ForkFirst response" />
+              </div>
               <InlineChatActions
                 actions={turn.ui}
                 actionResult={turn.result}
@@ -5848,6 +5897,7 @@ export function ForkFirstRedesignApp() {
                     trackForkFirstEvent("handoff_copied", { source: "ready_card" });
                     copyText(makeHandoffMarkdown());
                   }}
+                  onCopyText={copyText}
                   onDownloadHandoff={() => downloadHandoff("forkfirst-builder-handoff.md", makeHandoffMarkdown())}
                   onDownloadHandoffZip={() => downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(makeHandoffMarkdown()), makeHandoffMarkdown())}
                   onBuilderSelect={(target, source) => trackForkFirstEvent("builder_selected", { target, source })}

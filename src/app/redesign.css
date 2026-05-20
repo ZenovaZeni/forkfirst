@@ -4037,6 +4037,16 @@ input, textarea, select { font: inherit; color: inherit; }
 /* Turn — generic */
 .t { display: flex; flex-direction: column; gap: 8px; }
 .t-user { align-items: flex-end; }
+.copyable-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.copyable-message-user {
+  justify-content: flex-end;
+  max-width: 78%;
+}
 .t-user .bubble {
   background: var(--accent);
   color: white;
@@ -4046,6 +4056,10 @@ input, textarea, select { font: inherit; color: inherit; }
   font-size: 15px;
   line-height: 1.5;
   letter-spacing: -0.005em;
+}
+.copyable-message-user .bubble {
+  max-width: none;
+  min-width: 0;
 }
 [data-theme="dark"] .t-user .bubble { color: var(--paper); }
 .t-assist {
@@ -4079,6 +4093,45 @@ input, textarea, select { font: inherit; color: inherit; }
   background: var(--paper-3);
   padding: 1px 5px;
   border-radius: 4px;
+}
+.chat-message-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 760px;
+  margin-top: -4px;
+}
+.chat-copy-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  cursor: pointer;
+  opacity: 0.76;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+.chat-copy-btn:hover,
+.chat-copy-btn:focus-visible,
+.chat-copy-btn.is-copied {
+  color: var(--ink);
+  background: var(--paper-2);
+  border-color: var(--line);
+  opacity: 1;
+}
+.t-user .chat-copy-btn {
+  color: color-mix(in srgb, var(--accent) 58%, var(--muted));
+}
+.t-user .chat-copy-btn:hover,
+.t-user .chat-copy-btn:focus-visible,
+.t-user .chat-copy-btn.is-copied {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
 }
 
 .chat-answer {

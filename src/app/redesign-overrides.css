@@ -558,6 +558,7 @@ body {
   }
 
   .t-user .bubble,
+  .copyable-message-user,
   .t-assist {
     max-width: 100%;
   }
