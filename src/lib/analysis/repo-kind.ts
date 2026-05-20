@@ -91,10 +91,14 @@ export function getRepoKindInsight(repo: NormalizedRepo): RepoKindInsight {
       /\bagents?\b.*\bplugins?\b/,
       /\bplugins?\b.*\bagents?\b/,
       /\bslash commands?\b/,
-      /\bworkflow orchestrators?\b/
+      /\bworkflow orchestrators?\b/,
+      /\bmcp\b/,
+      /\bmodel context protocol\b/
     ]) ||
     name.includes("/agents") ||
-    name.includes("plugin")
+    name.includes("plugin") ||
+    name.includes("-mcp") ||
+    name.includes("_mcp")
   ) {
     return {
       kind: "plugin_pack",

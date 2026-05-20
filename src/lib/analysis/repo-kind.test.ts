@@ -85,6 +85,43 @@ describe("repo kind insight", () => {
     expect(insight.goodFor).toContain("technical layer");
   });
 
+  test("recognizes language API clients as SDKs, not product apps", () => {
+    const insight = getRepoKindInsight(
+      repo({
+        owner: "recurly",
+        name: "recurly-client-php",
+        fullName: "recurly/recurly-client-php",
+        description: "Recurly PHP Client",
+        topics: ["php", "billing", "api-client"],
+        readme: {
+          ...repo().readme!,
+          excerpt: "PHP SDK client for the Recurly billing API."
+        }
+      })
+    );
+
+    expect(insight.kind).toBe("framework_sdk");
+    expect(insight.notFor).toContain("product design");
+  });
+
+  test("recognizes MCP servers as developer plugin packs", () => {
+    const insight = getRepoKindInsight(
+      repo({
+        owner: "example",
+        name: "deals-mcp",
+        fullName: "example/deals-mcp",
+        description: "MCP server for grocery deal hunting via an API.",
+        topics: ["mcp", "server", "automation"],
+        readme: {
+          ...repo().readme!,
+          excerpt: "Model Context Protocol server exposing tools for AI agents."
+        }
+      })
+    );
+
+    expect(insight.kind).toBe("plugin_pack");
+  });
+
   test("recognizes game engines as game foundations", () => {
     const insight = getRepoKindInsight(
       repo({
