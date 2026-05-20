@@ -41,6 +41,10 @@ const CASUAL_SUGGEST_RE = /\b(any suggestions?|what else|recommend|suggest|could
 const NEW_SEARCH_RE = /\b(find|search|look(?:ing)? for|discover|research)\b/;
 const BUILD_IDEA_RE =
   /\b(app|tool|platform|dashboard|tracker|manager|portal|website|repo|github|foundation|starter|collector|album|crm|scraper|workflow|automation)\b/;
+const TERSE_VERTICAL_RE =
+  /\b(pokemon|tcg|trading cards?|cards?|realtors?|real estate|lead gen|crm|booking|invoice|billing|recipe|voice|image|game)\b/;
+const TERSE_PRODUCT_SIGNAL_RE =
+  /\b(value|values|price|prices|track|tracker|manager|album|binder|collection|collector|coloter|scraper|portal|dashboard|booking|generator|crm)\b/;
 
 export function isCasualAdvicePrompt(prompt: string) {
   const lower = cleanChatText(prompt, 500).toLowerCase();
@@ -71,9 +75,25 @@ function searchPrompt(context: ResearchChatContext, prefix: string) {
 function looksLikeNoContextRepoHunt(lowerPrompt: string) {
   return (
     lowerPrompt.length >= 30 &&
-    BUILD_IDEA_RE.test(lowerPrompt) &&
-    /\b(i'?m looking for|im looking for|i am looking for|i want|i need|build|make|create|app like|tool for)\b/.test(lowerPrompt)
+    ((BUILD_IDEA_RE.test(lowerPrompt) &&
+      /\b(i'?m looking for|im looking for|i am looking for|i want|i need|build|make|create|app like|tool for)\b/.test(lowerPrompt)) ||
+      (TERSE_VERTICAL_RE.test(lowerPrompt) && TERSE_PRODUCT_SIGNAL_RE.test(lowerPrompt)))
   );
+}
+
+export function protectHeuristicSearchPlan(heuristicPlan: ResearchChatPlan, candidatePlan: ResearchChatPlan) {
+  const candidateSuppressedSearch =
+    !candidatePlan.needsSearch &&
+    (candidatePlan.intent === "ask_clarifying_question" || candidatePlan.intent === "answer_from_context");
+
+  if (heuristicPlan.needsSearch && heuristicPlan.confidence >= 0.7 && candidateSuppressedSearch) {
+    return {
+      ...heuristicPlan,
+      rationale: "Deterministic planner found an obvious repo-search request, so it was kept over a non-search AI plan."
+    };
+  }
+
+  return candidatePlan;
 }
 
 export function planResearchChat(context: ResearchChatContext): ResearchChatPlan {

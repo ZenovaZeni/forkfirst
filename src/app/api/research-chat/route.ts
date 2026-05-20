@@ -8,7 +8,7 @@ import { readJsonRequest } from "@/lib/security/request-json";
 import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
 import { composeResearchChatResponse } from "@/lib/research-chat/composer";
-import { isCasualAdvicePrompt, parseResearchChatPlanJson, planResearchChat } from "@/lib/research-chat/planner";
+import { isCasualAdvicePrompt, parseResearchChatPlanJson, planResearchChat, protectHeuristicSearchPlan } from "@/lib/research-chat/planner";
 import { runIdeaCheck } from "@/lib/idea-check/run";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import type { IdeaCheckResult } from "@/types/idea-check";
@@ -476,7 +476,7 @@ async function planWithAi({
     ]
   });
   const parsed = parseResearchChatPlanJson(completion.choices[0]?.message.content ?? "");
-  return parsed.ok ? parsed.plan : heuristicPlan;
+  return parsed.ok ? protectHeuristicSearchPlan(heuristicPlan, parsed.plan) : heuristicPlan;
 }
 
 export async function POST(request: Request) {

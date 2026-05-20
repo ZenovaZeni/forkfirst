@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { composeResearchChatResponse } from "./composer";
-import { parseResearchChatPlanJson, planResearchChat } from "./planner";
+import { parseResearchChatPlanJson, planResearchChat, protectHeuristicSearchPlan } from "./planner";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 
 function repo(overrides: Partial<ClassifiedRepo> = {}): ClassifiedRepo {
@@ -102,6 +102,39 @@ describe("research chat planner and composer", () => {
     expect(plan.intent).toBe("new_search");
     expect(plan.needsSearch).toBe(true);
     expect(plan.searchPrompt).toContain("Pokemon");
+  });
+
+  test("starts a repo search from terse typo-heavy vertical language", () => {
+    const plan = planResearchChat({
+      prompt: "pokemon coloter where i can see values",
+      repos: []
+    });
+
+    expect(plan.intent).toBe("new_search");
+    expect(plan.needsSearch).toBe(true);
+    expect(plan.searchPrompt).toContain("pokemon coloter");
+  });
+
+  test("does not let AI planning suppress an obvious no-context repo search", () => {
+    const heuristic = planResearchChat({
+      prompt: "I'm looking for a Pokemon like repo that lets me keep my Pokemon cards, see values, and manage a collector album.",
+      repos: []
+    });
+
+    const protectedPlan = protectHeuristicSearchPlan(heuristic, {
+      version: 2,
+      intent: "ask_clarifying_question",
+      confidence: 0.9,
+      needsSearch: false,
+      needsConfirmation: false,
+      targetRepoFullNames: [],
+      suggestedPrompts: ["Tell me more about the app"],
+      clarificationQuestion: "What are you trying to build?"
+    });
+
+    expect(protectedPlan.intent).toBe("new_search");
+    expect(protectedPlan.needsSearch).toBe(true);
+    expect(protectedPlan.searchPrompt).toContain("Pokemon");
   });
 
   test("search refinement shows repo cards after the search actually runs", () => {
