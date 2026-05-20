@@ -88,6 +88,7 @@ export type ResearchChatContext = {
   idea?: string | null;
   repos: ClassifiedRepo[];
   mode?: "demo" | "ai";
+  completedSearch?: boolean;
 };
 
 export type ResearchChatResponseV2 = {

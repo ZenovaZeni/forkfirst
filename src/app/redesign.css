@@ -4051,10 +4051,15 @@ input, textarea, select { font: inherit; color: inherit; }
 .t-assist {
   width: 100%;
 }
+.t-assist .assistant-message {
+  display: grid;
+  gap: 10px;
+  max-width: 820px;
+}
 .t-assist .who {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 12px; color: var(--muted); font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 .t-assist .who .mark { width: 22px; height: 22px; border-radius: 6px; }
 .t-assist .who strong { color: var(--ink); font-weight: 600; }
@@ -4404,8 +4409,8 @@ input, textarea, select { font: inherit; color: inherit; }
 
 .chat-actions {
   display: grid;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .chat-action-block {
@@ -4413,7 +4418,7 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 .chat-action-block .repo-card.compact {
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 .mini-compare {

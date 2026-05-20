@@ -3327,7 +3327,7 @@ function ChatResults({
           {turn.role === "user" ? (
             <div className="bubble">{turn.content}</div>
           ) : (
-            <>
+            <div className="assistant-message">
               <div className="who">
                 <Mark />
                 <strong>ForkFirst</strong>
@@ -3346,7 +3346,7 @@ function ChatResults({
                 onStartBranding={onStartBranding}
                 onFollowUp={onFollowUp}
               />
-            </>
+            </div>
           )}
         </div>
       ))}

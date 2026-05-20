@@ -40,6 +40,11 @@ const SAVE_RE = /\b(save|bookmark|pin|keep this|add to library|store this)\b/;
 const CASUAL_SUGGEST_RE = /\b(any suggestions?|what else|recommend|suggest|could i add|should i add|features?|next move|next step|what do you think)\b/;
 const NEW_SEARCH_RE = /\b(find|search|look for|discover|research)\b/;
 
+export function isCasualAdvicePrompt(prompt: string) {
+  const lower = cleanChatText(prompt, 500).toLowerCase();
+  return CASUAL_SUGGEST_RE.test(lower) && !MORE_OPTIONS_RE.test(lower) && !NEW_SEARCH_RE.test(lower);
+}
+
 function basePlan(intent: ChatIntent, context: ResearchChatContext, overrides: Partial<ResearchChatPlan> = {}): ResearchChatPlan {
   const targetRepo = overrides.targetRepoFullName ?? topRepos(context.repos, 1)[0]?.fullName;
   return {
@@ -156,9 +161,9 @@ export function planResearchChat(context: ResearchChatContext): ResearchChatPlan
   }
 
   return basePlan("answer_from_context", context, {
-    confidence: CASUAL_SUGGEST_RE.test(lower) ? 0.78 : 0.58,
+    confidence: isCasualAdvicePrompt(prompt) ? 0.78 : 0.58,
     targetRepoFullNames: topRepos(repos, 3).map((repo) => repo.fullName),
-    rationale: CASUAL_SUGGEST_RE.test(lower)
+    rationale: isCasualAdvicePrompt(prompt)
       ? "User asked for casual repo-aware advice."
       : "Fallback to answering from the current repo context."
   });

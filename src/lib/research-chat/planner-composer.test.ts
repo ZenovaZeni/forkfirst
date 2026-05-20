@@ -82,6 +82,37 @@ describe("research chat planner and composer", () => {
     expect(plan.searchPrompt).toContain("billing portal for freelancers");
   });
 
+  test("search refinement shows repo cards after the search actually runs", () => {
+    const plan = planResearchChat({
+      prompt: "Can you find more options like these?",
+      idea: "billing portal for freelancers",
+      repos: [repo()]
+    });
+    const beforeSearch = composeResearchChatResponse(plan, {
+      prompt: "Can you find more options like these?",
+      idea: "billing portal for freelancers",
+      repos: [repo()]
+    });
+    const afterSearch = composeResearchChatResponse(
+      {
+        ...plan,
+        targetRepoFullNames: ["vteams/open-source-billing"]
+      },
+      {
+        prompt: "Can you find more options like these?",
+        idea: "billing portal for freelancers",
+        repos: [repo()],
+        completedSearch: true
+      }
+    );
+
+    expect(beforeSearch.actions.some((action) => action.type === "repo_cards")).toBe(false);
+    expect(beforeSearch.actions.some((action) => action.type === "search_query")).toBe(true);
+    expect(afterSearch.actions.some((action) => action.type === "repo_cards")).toBe(true);
+    expect(afterSearch.actions.some((action) => action.type === "search_query")).toBe(false);
+    expect(afterSearch.reply).toContain("I found");
+  });
+
   test("compare plan uses existing repos instead of asking for a new search", () => {
     const first = repo();
     const second = repo({

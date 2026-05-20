@@ -66,6 +66,13 @@ function conversationalAnswer(plan: ResearchChatPlan, context: ResearchChatConte
 
 function searchReply(plan: ResearchChatPlan, context: ResearchChatContext) {
   const query = plan.searchPrompt ?? cleanChatText(context.idea || context.prompt, 180);
+  if (context.completedSearch) {
+    const repos = reposForPlan(plan, context);
+    const count = repos.length;
+    return count
+      ? `I found ${count === 1 ? "one repo lead" : `${count} repo leads`} worth inspecting for "${query}". I would scan these as evidence, then pick the one that saves the hardest part of the build without forcing the product in the wrong direction.`
+      : `I ran the search for "${query}", but I do not see a strong repo lead yet. I would narrow the wording around the exact workflow, stack, or user type and try again.`;
+  }
   return plan.intent === "new_search"
     ? `I would start a repo search for "${query}". That gives us evidence before we decide what to build.`
     : `Yes, this calls for another search pass. I would use "${query}" and look for options that cover the hard part better than the current leads.`;
@@ -129,7 +136,8 @@ function actionsForPlan(plan: ResearchChatPlan, context: ResearchChatContext): C
 
   if (plan.intent === "refine_search" || plan.intent === "new_search") {
     return actionList([
-      plan.searchPrompt ? { type: "search_query", query: plan.searchPrompt, label: "Search GitHub" } : null,
+      context.completedSearch ? null : plan.searchPrompt ? { type: "search_query", query: plan.searchPrompt, label: "Search GitHub" } : null,
+      context.completedSearch ? repoCardsAction(repos, "Repo options") : null,
       suggestions
     ]);
   }
