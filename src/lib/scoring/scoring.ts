@@ -236,5 +236,5 @@ export function classifyRepositories(repos: NormalizedRepo[], prompt: string): C
         summary: score.reasons.slice(0, 3).join(". ")
       };
     })
-    .sort((a, b) => b.score.total - a.score.total);
+    .sort((a, b) => b.score.total - a.score.total || b.score.fit - a.score.fit);
 }

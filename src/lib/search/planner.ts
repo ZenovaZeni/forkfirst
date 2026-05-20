@@ -6,9 +6,12 @@ const STOP_WORDS = new Set([
   "anything",
   "app",
   "are",
+  "all",
   "build",
   "building",
   "built",
+  "because",
+  "cause",
   "cool",
   "for",
   "from",
@@ -19,6 +22,9 @@ const STOP_WORDS = new Set([
   "in",
   "involving",
   "it",
+  "keep",
+  "let",
+  "lets",
   "like",
   "looking",
   "me",
@@ -30,7 +36,10 @@ const STOP_WORDS = new Set([
   "repo",
   "repos",
   "repositories",
+  "see",
   "some",
+  "stuff",
+  "stuff.",
   "that",
   "the",
   "there",
@@ -43,7 +52,7 @@ const STOP_WORDS = new Set([
 const VERTICAL_SEARCH_PLANS = [
   {
     pattern:
-      /\b(pokemon|pokémon|tcgdex)\b/i,
+      /\b(pokemon|tcgdex)\b/i,
     label: "pokemon-tcg-collectibles",
     meaning:
       "Find open-source Pokemon TCG collection, binder, card-value, and catalog tools that match the user's collector workflow.",
@@ -124,12 +133,18 @@ export type PromptRefinement = {
   queries: string[];
 };
 
+function normalizePromptForSearch(prompt: string): string {
+  return prompt
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\bpok(?:e)?[^a-z0-9]{0,4}mon\b/g, "pokemon");
+}
+
 export function extractIdeaTerms(prompt: string): string[] {
   return Array.from(
     new Set(
-      prompt
-        .toLowerCase()
-        .replace(/pokémon/g, "pokemon")
+      normalizePromptForSearch(prompt)
         .replace(/[^a-z0-9+#.\s-]/g, " ")
         .split(/\s+/)
         .map((term) => term.trim())
@@ -139,25 +154,26 @@ export function extractIdeaTerms(prompt: string): string[] {
 }
 
 function inferProbableMeaning(prompt: string, terms: string[]): string {
-  const lowerPrompt = prompt.toLowerCase();
+  const normalizedPrompt = normalizePromptForSearch(prompt);
+  const lowerPrompt = normalizedPrompt;
   const requestedName = extractRequestedName(prompt);
   const verticalPlan = findVerticalSearchPlan(prompt);
 
   if (requestedName) return `Check whether "${requestedName}" already exists as a GitHub project or brandable repo name.`;
-  if (/\b(voice|speech|audio|whisper|wisper|assistant|transcription|stt|wake word)\b/i.test(prompt)) {
+  if (/\b(voice|speech|audio|whisper|wisper|assistant|transcription|stt|wake word)\b/i.test(normalizedPrompt)) {
     return "Find open-source voice assistant, speech-to-text, or Whisper-powered projects that could be used or studied.";
   }
-  if (/\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold)\b/i.test(prompt)) {
+  if (/\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold)\b/i.test(normalizedPrompt)) {
     return "Find game engines, frameworks, or starter projects that could help build the game idea.";
   }
-  if (/\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(prompt)) {
+  if (/\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(normalizedPrompt)) {
     return "Find open-source tools that are practical for business owners, founders, or small-business workflows.";
   }
-  if (/\b(lead gen|lead generation|leads?|prospecting|realtors?|real estate|realty|broker|crm)\b/i.test(prompt)) {
+  if (/\b(lead gen|lead generation|leads?|prospecting|realtors?|real estate|realty|broker|crm)\b/i.test(normalizedPrompt)) {
     return "Find open-source lead-generation, prospecting, CRM, or real-estate sales tools that could help with the user's specific market.";
   }
   if (verticalPlan) return verticalPlan.meaning;
-  if (/\b(ai|artificial intelligence|machine learning|llm|agents?)\b/i.test(prompt)) {
+  if (/\b(ai|artificial intelligence|machine learning|llm|agents?)\b/i.test(normalizedPrompt)) {
     return "Find useful AI projects, agents, tools, or references that a builder could learn from or build on.";
   }
   if (
@@ -198,7 +214,8 @@ function extractRequestedName(prompt: string): string | null {
 }
 
 function findVerticalSearchPlan(prompt: string): (typeof VERTICAL_SEARCH_PLANS)[number] | null {
-  return VERTICAL_SEARCH_PLANS.find((plan) => plan.pattern.test(prompt)) ?? null;
+  const normalizedPrompt = normalizePromptForSearch(prompt);
+  return VERTICAL_SEARCH_PLANS.find((plan) => plan.pattern.test(normalizedPrompt)) ?? null;
 }
 
 export function planSearches(prompt: string): string[] {
@@ -206,30 +223,31 @@ export function planSearches(prompt: string): string[] {
   const quotedPrompt = prompt.trim().replace(/\s+/g, " ").slice(0, 120);
   const core = terms.slice(0, 6).join(" ");
   const focused = terms.slice(0, 4).join(" ");
-  const lowerPrompt = prompt.toLowerCase();
+  const normalizedPrompt = normalizePromptForSearch(prompt);
+  const lowerPrompt = normalizedPrompt;
   const requestedName = extractRequestedName(prompt);
-  const isBusinessDiscovery = /\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(prompt);
-  const isLeadGenDiscovery = /\b(lead gen|lead generation|leads?|prospecting|sales outreach|scraper|enrichment|crm)\b/i.test(prompt);
-  const isRealEstateDiscovery = /\b(realtors?|real estate(?:\s+agents?)?|realty|broker|mls|property|properties)\b/i.test(prompt);
+  const isBusinessDiscovery = /\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(normalizedPrompt);
+  const isLeadGenDiscovery = /\b(lead gen|lead generation|leads?|prospecting|sales outreach|scraper|enrichment|crm)\b/i.test(normalizedPrompt);
+  const isRealEstateDiscovery = /\b(realtors?|real estate(?:\s+agents?)?|realty|broker|mls|property|properties)\b/i.test(normalizedPrompt);
   const isImageGenerationDiscovery =
-    /\b(image|images|photo|photos|visual|creative|generator|generate|listing media|social post)\b/i.test(prompt);
+    /\b(image|images|photo|photos|visual|creative|generator|generate|listing media|social post)\b/i.test(normalizedPrompt);
   const verticalPlan = findVerticalSearchPlan(prompt);
   const isAiDiscovery =
     !isLeadGenDiscovery &&
     !isRealEstateDiscovery &&
     !verticalPlan &&
-    /\b(ai|artificial intelligence|machine learning|llm|agents?)\b/i.test(prompt) &&
-    /\b(cool|interesting|best|good|repos?|projects?|tools?)\b/i.test(prompt);
-  const isGameDiscovery = /\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold)\b/i.test(prompt);
+    /\b(ai|artificial intelligence|machine learning|llm|agents?)\b/i.test(normalizedPrompt) &&
+    /\b(cool|interesting|best|good|repos?|projects?|tools?)\b/i.test(normalizedPrompt);
+  const isGameDiscovery = /\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold)\b/i.test(normalizedPrompt);
   const isGameEngineDiscovery =
-    isGameDiscovery && /\b(engine|framework|building|build|make|making|2\.5d|2d|3d|isometric|orthographic)\b/i.test(prompt);
+    isGameDiscovery && /\b(engine|framework|building|build|make|making|2\.5d|2d|3d|isometric|orthographic)\b/i.test(normalizedPrompt);
   const shouldSkipRawPrompt =
     isAiDiscovery || isBusinessDiscovery || isLeadGenDiscovery || isRealEstateDiscovery || Boolean(verticalPlan) || isGameDiscovery;
   const isRepoDiscoveryIdea =
     lowerPrompt.includes("github") &&
     (lowerPrompt.includes("repo") || lowerPrompt.includes("repository")) &&
     (lowerPrompt.includes("idea") || lowerPrompt.includes("exist") || lowerPrompt.includes("start"));
-  const isVoiceAssistantDiscovery = /\b(voice|speech|audio|whisper|wisper|assistant|transcription|stt|wake word)\b/i.test(prompt);
+  const isVoiceAssistantDiscovery = /\b(voice|speech|audio|whisper|wisper|assistant|transcription|stt|wake word)\b/i.test(normalizedPrompt);
 
   return Array.from(
     new Set(

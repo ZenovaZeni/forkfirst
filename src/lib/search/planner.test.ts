@@ -112,6 +112,27 @@ describe("search planner", () => {
     expect(queries[0]).not.toContain("want build");
   });
 
+  test("normalizes accented Pokemon prompts into the Pokemon TCG vertical", () => {
+    const prompt = "I'm looking for a Pok\u00e9mon like repo that lets me keep my Pok\u00e9mon cards and see values.";
+    const refinement = planPromptRefinement(prompt);
+
+    expect(refinement.bestQuery).toBe("pokemon tcg collection manager in:name,description,readme");
+    expect(refinement.queries.slice(0, 3)).toEqual([
+      "pokemon tcg collection manager in:name,description,readme",
+      "pokemon card collection tracker in:name,description,readme",
+      "tcg collection manager price tracker in:name,description,readme"
+    ]);
+  });
+
+  test("recovers damaged Pokemon spellings instead of searching filler words", () => {
+    const prompt = "I'm looking for a Pok?mon like repo that lets me see cause to keep my Pok?mon cards, values, all that stuff.";
+    const refinement = planPromptRefinement(prompt);
+
+    expect(refinement.bestQuery).toBe("pokemon tcg collection manager in:name,description,readme");
+    expect(refinement.queries.join(" ")).not.toContain("cause");
+    expect(refinement.queries.join(" ")).not.toContain("pok mon");
+  });
+
   test("refines plain-English TCG collector prompts into a collectible-card meaning", () => {
     const refinement = planPromptRefinement("Find a good foundation for a Pokémon card binder and price tracker");
 
