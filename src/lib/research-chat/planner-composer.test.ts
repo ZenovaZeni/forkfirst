@@ -82,6 +82,28 @@ describe("research chat planner and composer", () => {
     expect(plan.searchPrompt).toContain("billing portal for freelancers");
   });
 
+  test("starts a repo search from natural no-context app hunting language", () => {
+    const plan = planResearchChat({
+      prompt: "I'm looking for a Pokemon like repo that lets me keep my Pokemon cards, see values, and manage a collector album.",
+      repos: []
+    });
+
+    expect(plan.intent).toBe("new_search");
+    expect(plan.needsSearch).toBe(true);
+    expect(plan.searchPrompt).toContain("Pokemon");
+  });
+
+  test("starts a repo search from a substantive no-context app idea", () => {
+    const plan = planResearchChat({
+      prompt: "I want an app like the Pokemon Collectors app that shows card values and has a collector album.",
+      repos: []
+    });
+
+    expect(plan.intent).toBe("new_search");
+    expect(plan.needsSearch).toBe(true);
+    expect(plan.searchPrompt).toContain("Pokemon");
+  });
+
   test("search refinement shows repo cards after the search actually runs", () => {
     const plan = planResearchChat({
       prompt: "Can you find more options like these?",

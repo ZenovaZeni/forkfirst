@@ -38,7 +38,9 @@ const SITE_RE = /\b(project sites?|homepages?|demo links?|live links?|websites?|
 const HANDOFF_RE = /\b(handoff|build pack|builder handoff|prd|agent instructions|claude|codex|start.*build|send to (an )?ai builder)\b/;
 const SAVE_RE = /\b(save|bookmark|pin|keep this|add to library|store this)\b/;
 const CASUAL_SUGGEST_RE = /\b(any suggestions?|what else|recommend|suggest|could i add|should i add|features?|next move|next step|what do you think)\b/;
-const NEW_SEARCH_RE = /\b(find|search|look for|discover|research)\b/;
+const NEW_SEARCH_RE = /\b(find|search|look(?:ing)? for|discover|research)\b/;
+const BUILD_IDEA_RE =
+  /\b(app|tool|platform|dashboard|tracker|manager|portal|website|repo|github|foundation|starter|collector|album|crm|scraper|workflow|automation)\b/;
 
 export function isCasualAdvicePrompt(prompt: string) {
   const lower = cleanChatText(prompt, 500).toLowerCase();
@@ -64,6 +66,14 @@ function basePlan(intent: ChatIntent, context: ResearchChatContext, overrides: P
 function searchPrompt(context: ResearchChatContext, prefix: string) {
   const idea = cleanChatText(context.idea, 160) || cleanChatText(context.prompt, 160);
   return `${prefix}: ${idea}`.trim();
+}
+
+function looksLikeNoContextRepoHunt(lowerPrompt: string) {
+  return (
+    lowerPrompt.length >= 30 &&
+    BUILD_IDEA_RE.test(lowerPrompt) &&
+    /\b(i'?m looking for|im looking for|i am looking for|i want|i need|build|make|create|app like|tool for)\b/.test(lowerPrompt)
+  );
 }
 
 export function planResearchChat(context: ResearchChatContext): ResearchChatPlan {
@@ -138,7 +148,7 @@ export function planResearchChat(context: ResearchChatContext): ResearchChatPlan
     });
   }
 
-  if (!hasRepos && NEW_SEARCH_RE.test(lower)) {
+  if (!hasRepos && (NEW_SEARCH_RE.test(lower) || looksLikeNoContextRepoHunt(lower))) {
     return basePlan("new_search", context, {
       confidence: 0.74,
       needsSearch: true,
