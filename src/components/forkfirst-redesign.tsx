@@ -4435,7 +4435,7 @@ function SettingsScreen({
   const backupItemCount = savedRepoCount + savedBuildPackCount + chatCount;
   const keyStorageMeta = keys.githubToken || keys.aiApiKey
     ? rememberKeys
-      ? "Saved locally"
+      ? "Saved"
       : "Session only"
     : "Optional";
   const settingsTabs: Array<{ id: SettingsTab; label: string; description: string; meta: string }> = [
