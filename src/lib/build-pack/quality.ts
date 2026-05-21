@@ -35,6 +35,10 @@ function pushIssue(issues: BuildPackQualityIssue[], issue: BuildPackQualityIssue
   if (!issues.some((existing) => existing.id === issue.id)) issues.push(issue);
 }
 
+function countMatches(text: string, patterns: RegExp[]): number {
+  return patterns.filter((pattern) => pattern.test(text)).length;
+}
+
 export function auditBuildPackQuality({ idea, markdown }: BuildPackQualityInput): BuildPackQualityAudit {
   const issues: BuildPackQualityIssue[] = [];
   const normalizedMarkdown = normalize(markdown);
@@ -50,7 +54,7 @@ export function auditBuildPackQuality({ idea, markdown }: BuildPackQualityInput)
     });
   }
 
-  if (/\bi don'?t know\b/i.test(markdown) || /\bkeep whatever you need\b/i.test(markdown) || /turn the selected repo into the user's product idea/i.test(markdown)) {
+  if (/\bi don'?t know\b/i.test(markdown) || /\bkeep whatever you need\b/i.test(markdown) || /-\s*Keep:\s*keep all\b/i.test(markdown) || /turn the selected repo into the user's product idea/i.test(markdown)) {
     pushIssue(issues, {
       id: "generic-filler",
       severity: "warning",
@@ -59,12 +63,42 @@ export function auditBuildPackQuality({ idea, markdown }: BuildPackQualityInput)
     });
   }
 
-  if (/<\/?(a|img|picture|source|div|span|h1|h2|p|br)\b/i.test(markdown) || /UNTRUSTED_REPO_CONTENT/i.test(markdown)) {
+  if (/<\/?[a-z][a-z0-9-]*\b/i.test(markdown) || /UNTRUSTED_REPO_CONTENT/i.test(markdown)) {
     pushIssue(issues, {
       id: "raw-html",
       severity: "warning",
       title: "Raw repo markup leaked into the handoff",
       detail: "Clean README HTML, badge markup, and untrusted-content markers so the builder receives readable evidence."
+    });
+  }
+
+  const genericMarkers = countMatches(markdown, [
+    /\bPrimaryItem\b/,
+    /\bUserInput\b/,
+    /\bOne primary task\b/i,
+    /\bUser starts the primary task\b/i,
+    /\bThe idea is still broad\b/i,
+    /\bone working product loop\b/i,
+    /\bOne useful result view\b/i
+  ]);
+  if (genericMarkers >= 2) {
+    pushIssue(issues, {
+      id: "generic-handoff",
+      severity: "warning",
+      title: "Handoff stayed too generic",
+      detail: "The PRD still uses placeholder workflow/data language. Add domain-specific screens, actions, and data objects before handing it to a builder."
+    });
+  }
+
+  const askedForApp = /\bapp\b/i.test(idea ?? "");
+  const cloneCandidate = /Foundation mode:\s*clone\/fork candidate/i.test(markdown);
+  const toolRepo = /\b(Type:\s*)?(Library\s*\/\s*Tool|CLI|command line|cat\(1\)|terminal tool)\b/i.test(markdown);
+  if (askedForApp && cloneCandidate && toolRepo) {
+    pushIssue(issues, {
+      id: "app-tool-mismatch",
+      severity: "blocker",
+      title: "App request selected a tool/library as the clone foundation",
+      detail: "Treat CLI or library repos as references unless the user asked for that exact tool type."
     });
   }
 

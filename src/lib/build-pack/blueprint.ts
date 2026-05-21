@@ -13,6 +13,10 @@ export type ProductKind =
   | "developer-tool"
   | "recipe-bookmark"
   | "grocery-shopping"
+  | "appointment-booking"
+  | "prompt-library"
+  | "sports-schedule"
+  | "pet-identification"
   | "workflow-app"
   | "marketplace"
   | "unknown-app";
@@ -295,6 +299,149 @@ function groceryShoppingBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   };
 }
 
+function appointmentBookingBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  const salonFocused = /\b(salon|spa|barber|barbershop)\b/i.test(directTextFrom(input));
+  return {
+    productKind: "appointment-booking",
+    confidence: salonFocused ? 78 : 72,
+    productThesis: `${name || "The app"} should help ${salonFocused ? "a small salon or service business" : "a service business"} publish availability, let clients book appointments, and keep staff, services, confirmations, and rescheduling in one simple flow.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? (salonFocused ? "A small salon owner or stylist who needs simple booking without a heavy scheduling platform." : "A small service-business owner who needs clients to book time without back-and-forth messages."),
+    jobToBeDone: "When a client wants an appointment, they should see real availability, choose a service and time, share contact details, and get a clear confirmation the business can manage.",
+    currentAlternatives: ["phone calls", "text messages", "Google Calendar", "Calendly-style links", "salon management apps", "paper schedules"],
+    differentiatedWedge: "Use the appointment foundation for scheduling mechanics, then specialize the product around services, staff, client-friendly booking, confirmations, and rescheduling.",
+    primaryWorkflow: [
+      "Owner creates services with duration, price, and assigned staff.",
+      "Owner defines staff availability, blocked time, and booking rules.",
+      "Client chooses a service, staff member, date, and available time.",
+      "Client enters contact details and confirms the appointment.",
+      "Owner and client can view, cancel, or reschedule the appointment."
+    ],
+    keyScreens: ["Service setup", "Staff availability", "Booking calendar", "Client booking form", "Appointment detail", "Owner schedule", "Confirmation/reschedule"],
+    coreDataObjects: ["Service", "StaffMember", "AvailabilityWindow", "BlockedTime", "Appointment", "Client", "Confirmation", "Reminder"],
+    userActions: ["create service", "set availability", "book appointment", "confirm contact details", "reschedule appointment", "cancel appointment", "view daily schedule"],
+    systemStates: {
+      empty: "No services or availability yet; guide the owner to add the first service and staff schedule.",
+      loading: "Loading available times; keep selected service and date visible.",
+      error: "Booking failed; preserve the client's choices and explain how to retry.",
+      noResult: "No times are available; offer another date, staff member, or waitlist/manual contact fallback.",
+      partialSuccess: "Appointment saved but reminder/notification was not sent; mark it clearly for the owner."
+    },
+    mvpRequirements: ["Service catalog", "Staff availability", "Client booking flow", "Appointment confirmation", "Owner schedule view", "Cancel/reschedule path"],
+    explicitNonGoals: ["No payroll, POS, inventory, or full CRM in v1", "No marketplace of salons", "No payments until booking flow is reliable", "No SMS/email automation without provider setup and limits"],
+    trustPrivacySafety: ["Document where client contact details are stored", "Avoid exposing private calendars", "Keep confirmation messages clear about pending vs confirmed status", "Do not promise reminders unless they are wired and tested"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the booking loop: owner creates one service and staff availability, client books a time, owner sees the appointment, and the appointment can be cancelled or rescheduled.",
+    successMetrics: ["A client can book a valid appointment without back-and-forth.", "Owner can see the day's appointments at a glance.", "Double-booking is prevented or clearly flagged."],
+    wowDemoScript: ["Create a haircut or service appointment type.", "Add staff availability for the week.", "Book an appointment as a client.", "Show it on the owner schedule.", "Reschedule or cancel it."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
+function promptLibraryBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  return {
+    productKind: "prompt-library",
+    confidence: 76,
+    productThesis: `${name || "The app"} should help creators save, tag, search, compare, and reuse AI image prompts without turning into an image generator itself.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? "A creator who experiments with image prompts and wants a private library of reusable prompt ideas, outputs, tags, and notes.",
+    jobToBeDone: "When I find or write a useful image prompt, I want to save it with context, find it later, reuse variations, and copy it into my image tool quickly.",
+    currentAlternatives: ["notes apps", "spreadsheets", "Discord messages", "prompt marketplaces", "image generator history"],
+    differentiatedWedge: "Focus on prompt organization and reuse first: tags, examples, notes, favorites, variants, and copy/export instead of trying to generate images in v1.",
+    primaryWorkflow: [
+      "User saves a prompt with title, prompt text, model/tool, tags, and optional output image reference.",
+      "User groups prompts by project, style, subject, or client.",
+      "User searches and filters prompts by tags, model, style, or favorite status.",
+      "User opens a prompt, edits variants and notes, then copies it to another AI tool.",
+      "User exports or backs up the prompt library."
+    ],
+    keyScreens: ["Prompt capture", "Prompt library", "Prompt detail", "Tag/style filters", "Favorites", "Variant editor", "Export/backup"],
+    coreDataObjects: ["Prompt", "PromptVariant", "Tag", "Project", "ModelTool", "OutputReference", "Favorite", "Export"],
+    userActions: ["save prompt", "tag prompt", "search prompts", "edit variant", "copy prompt", "favorite prompt", "export library"],
+    systemStates: {
+      empty: "No prompts saved; show a simple prompt capture form and sample tag suggestions.",
+      loading: "Searching or saving prompt data; keep the current prompt visible.",
+      error: "Save/search failed; preserve the prompt text and allow retry/export fallback.",
+      noResult: "No prompts match filters; offer filter reset and new prompt capture.",
+      partialSuccess: "Prompt saved but image/reference metadata missing; let the user add it later."
+    },
+    mvpRequirements: ["Prompt save/edit", "Tagging and project grouping", "Search/filter library", "Copy prompt action", "Favorites", "Export/backup"],
+    explicitNonGoals: ["No image generation engine in v1", "No paid prompt marketplace", "No public social feed", "No claims about prompt ownership or model output rights without review"],
+    trustPrivacySafety: ["Keep prompts exportable", "Document whether prompts stay local", "Avoid storing API keys in prompt metadata", "Do not assume generated images are licensed for reuse"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the prompt-library loop: save an image prompt, tag it, find it with search/filter, copy a variant, and export the library.",
+    successMetrics: ["A user can save and retrieve a prompt in under one minute.", "Prompt copy works from detail and list views.", "Saved prompt data survives refresh and exports cleanly."],
+    wowDemoScript: ["Save a cinematic image prompt.", "Tag it by style and subject.", "Find it through filters.", "Create a variant.", "Copy and export it."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
+function sportsScheduleBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  return {
+    productKind: "sports-schedule",
+    confidence: 74,
+    productThesis: `${name || "The app"} should help parents keep kids' sports practices, games, locations, teams, and reminders organized in one practical schedule.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? "Parents juggling multiple kids, teams, practices, games, locations, and last-minute schedule changes.",
+    jobToBeDone: "When a sports schedule changes, I want to know where each kid needs to be, when to leave, what to bring, and whether anything conflicts.",
+    currentAlternatives: ["team emails", "group chats", "paper calendars", "Google Calendar", "TeamSnap-style apps", "school/league websites"],
+    differentiatedWedge: "Focus on the parent dashboard: all kids, teams, games, practices, locations, reminders, conflicts, and export/share from one calm view.",
+    primaryWorkflow: [
+      "Parent creates child, team, and season records.",
+      "Parent adds games, practices, locations, uniforms, and notes.",
+      "App shows a combined calendar and flags conflicts.",
+      "Parent sets reminders and marks what to bring.",
+      "Parent exports or shares the weekly schedule."
+    ],
+    keyScreens: ["Family dashboard", "Calendar", "Add event", "Child/team profile", "Conflict view", "Reminder checklist", "Export/share"],
+    coreDataObjects: ["Child", "Team", "Season", "SportsEvent", "Location", "Reminder", "GearChecklist", "ScheduleExport"],
+    userActions: ["add child", "add team", "add practice", "add game", "set reminder", "check conflict", "share schedule"],
+    systemStates: {
+      empty: "No teams or events yet; guide parent to add one child and one upcoming game.",
+      loading: "Loading schedule; keep the week visible.",
+      error: "Event save failed; preserve details and offer retry.",
+      noResult: "No events for this filter; show the next empty week and add-event action.",
+      partialSuccess: "Event saved but reminder/export failed; keep schedule accurate and mark reminder status."
+    },
+    mvpRequirements: ["Child/team setup", "Practice/game event creation", "Combined family calendar", "Conflict detection", "Reminder/checklist notes", "Export/share weekly schedule"],
+    explicitNonGoals: ["No league-wide management system", "No payments or registration", "No public roster with children's private details", "No real-time chat in v1"],
+    trustPrivacySafety: ["Keep children's personal details minimal", "Make export/share intentional", "Avoid public URLs for private family schedules by default", "Document local vs synced storage"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the family schedule loop: add two kids, two teams, practices/games, conflict detection, reminders, and a share/export weekly view.",
+    successMetrics: ["Parent can see the next seven days across all kids.", "Conflicts are visible before saving or sharing.", "Schedule data survives refresh and exports cleanly."],
+    wowDemoScript: ["Add two kids and teams.", "Add a practice and game with locations.", "Show a conflict or reminder.", "Export/share the weekly schedule."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
+function petIdentificationBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  return {
+    productKind: "pet-identification",
+    confidence: 68,
+    productThesis: `${name || "The app"} should help cat owners or cat-loving clients identify a cat or breed, save a pet profile, and keep useful notes without confusing the product with Unix cat tools.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? "Cat owners, rescues, or pet lovers who want a friendly way to identify cats and save pet details.",
+    jobToBeDone: "When I see or add a cat, I want to capture a photo or details, get an identification or breed estimate, and save the result with notes I can revisit.",
+    currentAlternatives: ["image search", "breed guides", "vet/rescue records", "notes apps", "pet profile apps"],
+    differentiatedWedge: "Use image-recognition or pet-profile foundations only where they help, then build a clear identify-save-profile loop with estimate language.",
+    primaryWorkflow: ["User adds a cat photo or description.", "App returns breed/identity suggestions with confidence/estimate wording.", "User saves a cat profile with name, notes, traits, and photos.", "User reviews saved cats and exports or shares a profile."],
+    keyScreens: ["Identify cat", "Result/detail", "Cat profile", "Saved cats", "Notes/photos", "Export/share"],
+    coreDataObjects: ["CatProfile", "Photo", "IdentificationResult", "BreedEstimate", "Trait", "Note", "Export"],
+    userActions: ["upload photo", "enter cat details", "review estimate", "save profile", "edit notes", "export profile"],
+    systemStates: {
+      empty: "No cats saved; show photo upload/manual profile actions.",
+      loading: "Identifying cat details; keep the photo visible.",
+      error: "Identification failed; allow manual profile creation.",
+      noResult: "No confident breed match; label as unknown and let the user save notes.",
+      partialSuccess: "Profile saved but breed estimate missing; mark estimate as unavailable."
+    },
+    mvpRequirements: ["Photo/manual profile input", "Identification result with estimate wording", "Saved cat profiles", "Notes and traits", "Export/share profile"],
+    explicitNonGoals: ["No medical diagnosis", "No guaranteed breed claims", "No public lost-pet network in v1", "No protected dataset/image use without checking terms"],
+    trustPrivacySafety: ["Label breed results as estimates", "Do not claim medical accuracy", "Document image storage", "Make sharing/export intentional"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the cat ID loop: add a cat photo or details, show estimated identification, save a cat profile, edit notes, and export/share it.",
+    successMetrics: ["A user can create and save a cat profile in under one minute.", "Estimate wording is clear.", "Saved profiles survive refresh and export correctly."],
+    wowDemoScript: ["Add a cat photo/details.", "Show breed/identity estimate language.", "Save the profile.", "Edit notes.", "Export/share the profile."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
 function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const name = stringPreference(input.preferences, "productName");
   const repo = input.selectedRepo;
@@ -344,6 +491,18 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
   }
   if (/\b(grocery|groceries|supermarket|shopping list|shopping lists|food shopping)\b/i.test(directSignal)) {
     return groceryShoppingBlueprint(input);
+  }
+  if (/\b(salon|spa|barber|barbershop|booking|appointment|appointments|scheduling|scheduler)\b/i.test(directSignal)) {
+    return appointmentBookingBlueprint(input);
+  }
+  if (/\b(prompt organizer|prompt manager|prompt library|prompt collection|prompt database|prompt gallery|image prompt organizer|ai prompt organizer|save prompts?|organize prompts?)\b/i.test(directSignal)) {
+    return promptLibraryBlueprint(input);
+  }
+  if (/\b(kids?|children|parents?|family|families|team|teams|youth)\b.*\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b|\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b.*\b(kids?|children|parents?|family|families|team|teams|youth)\b/i.test(directSignal)) {
+    return sportsScheduleBlueprint(input);
+  }
+  if (/\b(cat id|cat identifier|cat identification|cat breed|cat scanner|identify cat|identify cats|pet id|pet identification|pet identifier|animal identification|animal image recognition)\b/i.test(directSignal)) {
+    return petIdentificationBlueprint(input);
   }
   if (/\b(recipe|recipes|grocery list|meal plan|ingredients?|cookbook|cooking|bookmark manager)\b/i.test(signal)) {
     return recipeBookmarkBlueprint(input);

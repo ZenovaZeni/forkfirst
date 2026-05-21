@@ -4037,6 +4037,25 @@ input, textarea, select { font: inherit; color: inherit; }
   display: grid; place-items: center;
   color: var(--ink); font-size: 10px; font-weight: 700;
 }
+.loading-card .ls .ind {
+  flex: 0 0 16px;
+}
+.loading-card .ls.done .ind::after {
+  content: " ";
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  display: block;
+  box-sizing: border-box;
+  width: 4px;
+  height: 7px;
+  border: solid var(--ink);
+  border-width: 0 1.5px 1.5px 0;
+  font-size: 0;
+  font-weight: 400;
+  transform: translate(-50%, -58%) rotate(45deg);
+}
 .loading-card .ls.done { color: var(--paper); }
 @keyframes spin { to { transform: rotate(360deg); } }
 

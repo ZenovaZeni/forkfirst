@@ -84,6 +84,32 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(cat id|cat identifier|cat identification|cat breed|cat scanner|identify cat|identify cats|pet id|pet identification|pet identifier|animal identification|animal image recognition)\b/i,
+    label: "pet-identification",
+    meaning: "Find open-source cat, pet, breed-identification, animal-recognition, or pet-profile apps.",
+    queries: [
+      "cat breed identifier app in:name,description,readme",
+      "pet identification app in:name,description,readme",
+      "animal image recognition app in:name,description,readme",
+      "cat scanner app in:name,description,readme",
+      "pet profile app in:name,description,readme",
+      "cat breed classifier in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(prompt organizer|prompt manager|prompt library|prompt collection|prompt database|prompt gallery|image prompt organizer|ai prompt organizer|save prompts?|organize prompts?)\b/i,
+    label: "prompt-library",
+    meaning: "Find open-source prompt managers, prompt libraries, image-prompt organizers, and reusable prompt workspaces.",
+    queries: [
+      "ai prompt manager app in:name,description,readme",
+      "prompt library app in:name,description,readme",
+      "image prompt organizer in:name,description,readme",
+      "prompt collection manager in:name,description,readme",
+      "prompt gallery app in:name,description,readme",
+      "prompt management tool in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(healthcare|health care|medical|clinic|clinics|patient|patients|hipaa)\b/i,
     label: "healthcare",
     meaning: "Find open-source healthcare, clinic, compliance, or medical-practice tools that match the user's specific workflow.",
@@ -119,6 +145,19 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(salon|spa|barber|barbershop)\b.*\b(booking|appointment|appointments|scheduling|scheduler)\b|\b(booking|appointment|appointments|scheduling|scheduler)\b.*\b(salon|spa|barber|barbershop)\b/i,
+    label: "salon-booking",
+    meaning: "Find open-source salon, barber, spa, appointment-booking, and service scheduling apps.",
+    queries: [
+      "salon booking app in:name,description,readme",
+      "appointment booking app in:name,description,readme",
+      "salon appointment scheduler in:name,description,readme",
+      "service booking app in:name,description,readme",
+      "barbershop booking app in:name,description,readme",
+      "staff scheduling appointment app in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(booking|appointment|appointments|scheduling|scheduler|salon|spa|barber|barbershop)\b/i,
     label: "appointment-booking",
     meaning: "Find open-source appointment, booking, scheduling, salon, or service-business apps.",
@@ -129,6 +168,20 @@ const VERTICAL_SEARCH_PLANS = [
       "appointment scheduler in:name,description,readme",
       "service booking app in:name,description,readme",
       "barbershop booking app in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(kids?|children|parents?|family|families|team|teams|youth)\b.*\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b|\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b.*\b(kids?|children|parents?|family|families|team|teams|youth)\b/i,
+    label: "sports-schedule",
+    meaning: "Find open-source youth sports, team scheduling, family calendar, and practice/game organizer apps.",
+    queries: [
+      "youth sports team schedule app in:name,description,readme",
+      "team management app in:name,description,readme",
+      "family calendar app in:name,description,readme",
+      "event scheduling app in:name,description,readme",
+      "sports team management app in:name,description,readme",
+      "family sports calendar app in:name,description,readme",
+      "coach team schedule app in:name,description,readme"
     ]
   },
   {

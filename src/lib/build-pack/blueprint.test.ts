@@ -132,4 +132,68 @@ describe("handoff blueprint", () => {
     expect(blueprint.coreDataObjects.join(" ")).toMatch(/PriceSnapshot|Store|Deal/i);
     expect(blueprint.productThesis).not.toMatch(/recipe links|recipe bookmark/i);
   });
+
+  test("turns salon booking prompts into a booking blueprint instead of a generic workflow", () => {
+    const selectedRepo = repo({
+      owner: "thunderbird",
+      name: "appointment",
+      fullName: "thunderbird/appointment",
+      description: "Invite others to grab times on your calendar. Choose a date. Make appointments easy.",
+      topics: ["appointment", "booking", "calendar"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "Appointment booking, booker page, subscriber dashboard, Docker setup, calendar scheduling."
+      }
+    });
+
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want to make a booking app for a small salon",
+      researchContext: null,
+      chatContext: null,
+      queries: ["salon booking app in:name,description,readme"],
+      selectedRepo,
+      candidateRepos: [selectedRepo],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("appointment-booking");
+    expect(blueprint.productThesis).toMatch(/salon|booking|appointments/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/service|staff|availability|appointment/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/Service|StaffMember|Appointment/i);
+    expect(blueprint.productThesis).not.toMatch(/one working product loop|selected repo/i);
+  });
+
+  test("turns prompt organizer prompts into a prompt-library blueprint", () => {
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want to make an AI image prompt organizer",
+      researchContext: null,
+      chatContext: null,
+      queries: ["ai prompt manager app in:name,description,readme"],
+      selectedRepo: undefined,
+      candidateRepos: [],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("prompt-library");
+    expect(blueprint.productThesis).toMatch(/prompt|organize|reuse/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/save|tag|search|copy/i);
+    expect(blueprint.productThesis).not.toMatch(/generate beautiful artwork/i);
+  });
+
+  test("turns kids sports schedule prompts into a team-calendar blueprint", () => {
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want to build a thing that helps parents organize kids sports schedules",
+      researchContext: null,
+      chatContext: null,
+      queries: ["youth sports team schedule app in:name,description,readme"],
+      selectedRepo: undefined,
+      candidateRepos: [],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("sports-schedule");
+    expect(blueprint.productThesis).toMatch(/parents|sports|schedule/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/practice|game|calendar|reminder/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/Child|Team|Event|Reminder/i);
+  });
 });

@@ -157,9 +157,9 @@ describe("search planner", () => {
 
   test("plans booking and restaurant prompts around reservation products", () => {
     expect(planSearches("I want to build a booking app for a small salon").slice(0, 3)).toEqual([
-      "appointment booking app in:name,description,readme",
       "salon booking app in:name,description,readme",
-      "scheduling app in:name,description,readme"
+      "appointment booking app in:name,description,readme",
+      "salon appointment scheduler in:name,description,readme"
     ]);
     expect(planSearches("I want to build a restaurant reservation app").slice(0, 3)).toEqual([
       "restaurant reservation app in:name,description,readme",
@@ -225,5 +225,42 @@ describe("search planner", () => {
     expect(queries[0]).toBe("trading card collection manager in:name,description,readme");
     expect(queries).toContain("sports card collection tracker in:name,description,readme");
     expect(queries).not.toContain("tcgdex collection app in:name,description,readme");
+  });
+
+  test("plans short cat ID prompts as pet identification, not Unix cat tools", () => {
+    const refinement = planPromptRefinement("cat id app");
+
+    expect(refinement.bestQuery).toBe("cat breed identifier app in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "cat breed identifier app in:name,description,readme",
+      "pet identification app in:name,description,readme",
+      "animal image recognition app in:name,description,readme",
+      "cat scanner app in:name,description,readme"
+    ]);
+    expect(refinement.queries.join(" ")).not.toMatch(/\bcat github\b|\bcat open source\b/);
+  });
+
+  test("plans prompt organizer prompts around prompt libraries before image generators", () => {
+    const refinement = planPromptRefinement("I want to make an AI image prompt organizer");
+
+    expect(refinement.bestQuery).toBe("ai prompt manager app in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "ai prompt manager app in:name,description,readme",
+      "prompt library app in:name,description,readme",
+      "image prompt organizer in:name,description,readme",
+      "prompt collection manager in:name,description,readme"
+    ]);
+  });
+
+  test("plans family sports schedule prompts around team calendars", () => {
+    const refinement = planPromptRefinement("I want to build a thing that helps parents organize kids sports schedules");
+
+    expect(refinement.bestQuery).toBe("youth sports team schedule app in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "youth sports team schedule app in:name,description,readme",
+      "team management app in:name,description,readme",
+      "family calendar app in:name,description,readme",
+      "event scheduling app in:name,description,readme"
+    ]);
   });
 });

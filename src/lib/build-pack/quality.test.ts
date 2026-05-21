@@ -86,4 +86,64 @@ describe("Build Pack quality audit", () => {
       expect.arrayContaining(["generic-filler", "raw-html"])
     );
   });
+
+  test("flags app handoffs that treat a CLI/library repo as a clone foundation", () => {
+    const audit = auditBuildPackQuality({
+      idea: "cat id app",
+      markdown: [
+        "# STARTER_REPO",
+        "- Repo: sharkdp/bat",
+        "- Foundation mode: clone/fork candidate",
+        "# PRD",
+        "## Product Thesis",
+        "The app should turn the user's idea into one working product loop.",
+        "## Primary Workflow",
+        "1. User starts the primary task from a clear first screen.",
+        "## Core Data Objects",
+        "- PrimaryItem",
+        "- UserInput",
+        "- Result",
+        "# BUILD_PLAN",
+        "## Implementation Phases",
+        "# REPO_STARTER_NOTES",
+        "- Type: Library / Tool",
+        "- What it does: A cat(1) clone with wings.",
+        "## License And Reuse",
+        "# AGENTS"
+      ].join("\n")
+    });
+
+    expect(audit.passed).toBe(false);
+    expect(audit.issues.map((issue) => issue.id)).toEqual(
+      expect.arrayContaining(["generic-handoff", "app-tool-mismatch"])
+    );
+  });
+
+  test("flags keep-all preferences and malformed heading markup", () => {
+    const audit = auditBuildPackQuality({
+      idea: "I want to make a grocery app",
+      markdown: [
+        "# STARTER_REPO",
+        "- Keep: keep all",
+        "# PRD",
+        "## Product Thesis",
+        "The app should help shoppers build grocery lists and compare deals.",
+        "## Core Data Objects",
+        "- GroceryItem",
+        "- PriceSnapshot",
+        "# BUILD_PLAN",
+        "## Implementation Phases",
+        "# REPO_STARTER_NOTES",
+        '## Architecture Evidence',
+        '| UI | <h4 align="center" | | | </h4 <h4 align="center" |',
+        "## License And Reuse",
+        "# AGENTS"
+      ].join("\n")
+    });
+
+    expect(audit.passed).toBe(false);
+    expect(audit.issues.map((issue) => issue.id)).toEqual(
+      expect.arrayContaining(["generic-filler", "raw-html"])
+    );
+  });
 });

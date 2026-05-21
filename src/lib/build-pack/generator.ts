@@ -661,8 +661,10 @@ function cleanRepoContent(text: string | null | undefined): string {
     .replace(/<\/?UNTRUSTED_REPO_CONTENT>/gi, "")
     .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
     .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
-    .replace(/<\/?(?:a|img|picture|source|div|span|h1|h2|p|br)\b[^<>\n|]*/gi, " ")
+    .replace(/<\/?[a-z][a-z0-9-]*\b[^<>\n|]*/gi, " ")
     .replace(/<[^>]*>/g, " ")
+    .replace(/(?:^|\s)>+(?=\s|$)/g, " ")
+    .replace(/\|{2,}/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/\s+/g, " ")
@@ -964,6 +966,7 @@ function cleanEvidenceSnippet(line: string | null | undefined): string | null {
     .replace(/\s+/g, " ")
     .trim();
   if (!cleaned || cleaned.length < 4) return null;
+  if (!/[a-z0-9]/i.test(cleaned)) return null;
   if (/shields\.io|github\/stars|github\/license|docker pulls/i.test(cleaned)) return null;
   return cleaned.slice(0, 220);
 }
