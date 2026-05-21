@@ -15,6 +15,10 @@ export type BuildPackQualityInput = {
   markdown: string;
 };
 
+export function hasBuildPackBlocker(audit: BuildPackQualityAudit): boolean {
+  return audit.issues.some((issue) => issue.severity === "blocker");
+}
+
 const REQUIRED_MARKERS = [
   "# STARTER_REPO",
   "# PRD",

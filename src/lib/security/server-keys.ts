@@ -2,6 +2,7 @@ const TRUE_VALUES = new Set(["1", "true", "yes", "on"]);
 
 export const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
 export const GROQ_OPENAI_BASE_URL = "https://api.groq.com/openai/v1";
+export const OPENAI_BASE_URL = "https://api.openai.com/v1";
 
 export type ServerAiConfig = {
   provider: "groq" | "openai";

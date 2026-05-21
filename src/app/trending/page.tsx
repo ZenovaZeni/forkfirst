@@ -13,13 +13,13 @@ import {
 } from "@/lib/redesign/feature-model";
 
 export default function TrendingPage() {
-  const [theme, setTheme] = useState<"paper" | "ink" | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
   const [githubToken, setGithubToken] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Read theme
     const storedTheme = window.localStorage.getItem("forkfirst:theme") ?? window.localStorage.getItem("open-repo:theme");
-    setTheme(storedTheme === "ink" ? "ink" : "paper");
+    setTheme(storedTheme === "ink" || storedTheme === "dark" ? "dark" : "light");
 
     // Read GitHub token from the same session-by-default storage path as Settings.
     try {

@@ -1469,3 +1469,43 @@ body {
   font-weight: 400;
   transform: translate(-50%, -58%) rotate(45deg);
 }
+
+/* Launch QA polish: keep mobile chat controls readable and recent chat history usable. */
+.recent-chat-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .workspace {
+    scroll-padding-top: 84px;
+  }
+
+  .settings,
+  .handoff-library {
+    padding-top: max(28px, env(safe-area-inset-top));
+  }
+
+  .chat-composer-bar {
+    padding: 10px 12px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .chat-composer-bar .composer-inner {
+    align-items: center;
+    min-height: 54px;
+    padding: 8px 8px 8px 14px;
+  }
+
+  .chat-composer-bar textarea {
+    min-height: 32px;
+    max-height: 110px;
+    padding: 5px 0;
+    line-height: 1.35;
+  }
+
+  .smart-search input::placeholder {
+    color: transparent;
+  }
+}

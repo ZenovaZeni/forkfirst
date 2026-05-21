@@ -1766,6 +1766,7 @@ input, textarea, select { font: inherit; color: inherit; }
   margin-bottom: 8px;
   flex: 1 1 auto;
   min-height: 0;
+  max-height: none;
   overflow-y: auto;
   scrollbar-gutter: stable;
 }
@@ -5387,6 +5388,19 @@ input, textarea, select { font: inherit; color: inherit; }
   .voice-status,
   .chat-composer-bar .composer-helpers {
     padding-right: 112px;
+  }
+
+  .chat-composer-bar .composer-inner {
+    align-items: center;
+    min-height: 54px;
+    padding: 8px 8px 8px 14px;
+  }
+
+  .chat-composer-bar textarea {
+    min-height: 32px;
+    max-height: 110px;
+    padding: 5px 0;
+    line-height: 1.35;
   }
 }
 

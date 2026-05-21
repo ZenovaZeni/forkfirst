@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { auditBuildPackQuality } from "./quality";
+import { auditBuildPackQuality, hasBuildPackBlocker } from "./quality";
 
 describe("Build Pack quality audit", () => {
   test("flags grocery savings handoffs that drift into recipe bookmarking", () => {
@@ -28,6 +28,7 @@ describe("Build Pack quality audit", () => {
 
     expect(audit.passed).toBe(false);
     expect(audit.issues.map((issue) => issue.id)).toContain("grocery-price-drift");
+    expect(hasBuildPackBlocker(audit)).toBe(true);
   });
 
   test("passes a grocery savings handoff with price and store-plan language", () => {
@@ -85,6 +86,7 @@ describe("Build Pack quality audit", () => {
     expect(audit.issues.map((issue) => issue.id)).toEqual(
       expect.arrayContaining(["generic-filler", "raw-html"])
     );
+    expect(hasBuildPackBlocker(audit)).toBe(false);
   });
 
   test("flags app handoffs that treat a CLI/library repo as a clone foundation", () => {

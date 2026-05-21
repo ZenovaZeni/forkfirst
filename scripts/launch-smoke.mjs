@@ -266,8 +266,11 @@ async function runUiHandoffSmoke(testCase, outputDir) {
 }
 
 async function inspectZipWithPowerShell(zipPath) {
-  if (!zipPath || process.platform !== "win32") {
-    return { ok: false, warning: "Zip inspection is currently implemented for Windows PowerShell runs." };
+  if (!zipPath) {
+    return { ok: false, warning: "No Build Pack zip was downloaded." };
+  }
+  if (process.platform !== "win32") {
+    return { ok: true, skipped: true, warning: "Zip inspection is currently implemented for Windows PowerShell runs." };
   }
   const extractDir = `${zipPath.replace(/\.zip$/i, "")}-unzipped`;
   await fs.rm(extractDir, { recursive: true, force: true });

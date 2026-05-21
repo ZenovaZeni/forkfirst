@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
+import { providerBaseUrl } from "@/lib/security/provider-base-url";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
-import { GROQ_OPENAI_BASE_URL } from "@/lib/security/server-keys";
 
 export const runtime = "nodejs";
 
@@ -17,13 +17,6 @@ const RequestSchema = z.object({
 });
 
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
-
-function providerBaseUrl(provider?: string, baseUrl?: string): string {
-  if (provider === "groq") return GROQ_OPENAI_BASE_URL;
-  if (provider === "deepseek") return "https://api.deepseek.com";
-  if (provider === "custom") return baseUrl || "";
-  return GROQ_OPENAI_BASE_URL;
-}
 
 async function verifyGithub(token?: string): Promise<boolean | null> {
   if (!token?.trim()) return null;

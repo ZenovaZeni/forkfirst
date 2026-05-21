@@ -210,12 +210,21 @@ export function readJsonValueWithFallback<T>(storage: JsonStorage | null | undef
 
 export function writeJsonValue<T>(storage: JsonStorage | null | undefined, key: string, value: T): void {
   if (!storage) return;
-  storage.setItem(key, JSON.stringify(value));
+  try {
+    storage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Browser storage can fail in private mode or when quota is full.
+    // The visible app state should keep working even if persistence is unavailable.
+  }
 }
 
 export function removeJsonValue(storage: JsonStorage | null | undefined, key: string): void {
   if (!storage) return;
-  storage.removeItem(key);
+  try {
+    storage.removeItem(key);
+  } catch {
+    // Ignore unavailable storage; callers reset in-memory state separately.
+  }
 }
 
 export function readFeatureStorage(storage: JsonStorage | null | undefined): RedesignFeatureStorage {

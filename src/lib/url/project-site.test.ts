@@ -11,6 +11,12 @@ describe("project site URL filtering", () => {
     expect(safeProjectSiteUrl("javascript:alert(1)")).toBeNull();
     expect(safeProjectSiteUrl("http://localhost:3000")).toBeNull();
     expect(safeProjectSiteUrl("http://127.0.0.1:3000")).toBeNull();
+    expect(safeProjectSiteUrl("http://10.0.0.5:3000")).toBeNull();
+    expect(safeProjectSiteUrl("http://172.16.0.5:3000")).toBeNull();
+    expect(safeProjectSiteUrl("http://172.31.255.5:3000")).toBeNull();
+    expect(safeProjectSiteUrl("http://192.168.1.4:3000")).toBeNull();
+    expect(safeProjectSiteUrl("http://169.254.1.4:3000")).toBeNull();
+    expect(safeProjectSiteUrl("http://[fe80::1]/")).toBeNull();
     expect(safeProjectSiteUrl("https://example.com")).toBeNull();
     expect(safeProjectSiteUrl("#")).toBeNull();
   });

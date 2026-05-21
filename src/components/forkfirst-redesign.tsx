@@ -34,7 +34,7 @@ import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import { buildProjectBuildPack, type BuildPackPreferences, type BuildTarget } from "@/lib/build-pack/generator";
-import { auditBuildPackQuality, type BuildPackQualityAudit } from "@/lib/build-pack/quality";
+import { auditBuildPackQuality, hasBuildPackBlocker, type BuildPackQualityAudit } from "@/lib/build-pack/quality";
 import { decodeHandoff } from "@/lib/handoff/share-url";
 import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-status";
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
@@ -215,7 +215,11 @@ function themeToStorage(value: Theme) {
   return value === "dark" ? "ink" : "paper";
 }
 
-function initialTheme() {
+function initialTheme(): Theme {
+  if (typeof document !== "undefined") {
+    const bootTheme = document.documentElement.getAttribute("data-theme");
+    if (bootTheme === "dark" || bootTheme === "light") return bootTheme;
+  }
   if (typeof window === "undefined") return "light";
   return themeFromStorage(window.localStorage.getItem(THEME_STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY));
 }
@@ -546,14 +550,19 @@ function BuildPackQualityDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const hasBlocker = hasBuildPackBlocker(audit);
   return (
     <div className="branded-dialog-backdrop" role="presentation" onMouseDown={onCancel}>
       <div className="branded-dialog quality-warning-dialog" role="dialog" aria-modal="true" aria-labelledby="quality-warning-title" onMouseDown={(event) => event.stopPropagation()}>
         <div className="dialog-head">
           <span className="dialog-icon warn"><AlertTriangle size={16} /></span>
           <div>
-            <strong id="quality-warning-title">Build Pack could be sharper</strong>
-            <span>This is not a crash. ForkFirst noticed the handoff may still be too generic for a builder.</span>
+            <strong id="quality-warning-title">{hasBlocker ? "Build Pack needs one fix" : "Build Pack could be sharper"}</strong>
+            <span>
+              {hasBlocker
+                ? "ForkFirst found a blocker that should be fixed before exporting."
+                : "This is not a crash. ForkFirst noticed the handoff may still be too generic for a builder."}
+            </span>
           </div>
           <button className="icon-btn" type="button" onClick={onCancel} aria-label="Close quality warning">
             <X size={16} />
@@ -564,10 +573,14 @@ function BuildPackQualityDialog({
             <p key={line}>{line}</p>
           ))}
         </div>
-        <p className="dialog-copy">Best move: preview/edit the handoff and add concrete screens, actions, data objects, or repo evidence. You can still export if you intentionally want to continue.</p>
+        <p className="dialog-copy">
+          {hasBlocker
+            ? "Best move: preview/edit the handoff or choose a better foundation before handing this to a builder."
+            : "Best move: preview/edit the handoff and add concrete screens, actions, data objects, or repo evidence. You can still export if you intentionally want to continue."}
+        </p>
         <div className="dialog-actions">
           <button className="btn ghost" type="button" onClick={onCancel}>Keep editing</button>
-          <button className="btn accent" type="button" onClick={onConfirm}>Export anyway</button>
+          {hasBlocker ? null : <button className="btn accent" type="button" onClick={onConfirm}>Export anyway</button>}
         </div>
       </div>
     </div>
@@ -1467,12 +1480,15 @@ function repoNext(repo: ClassifiedRepo, idea = "") {
 function TopNav({
   go,
   theme,
+  themeReady,
   onToggleTheme
 }: {
   go: (screen: Screen) => void;
   theme: Theme;
+  themeReady: boolean;
   onToggleTheme: () => void;
 }) {
+  const displayedTheme = themeReady ? theme : "light";
   return (
     <header className="top-nav" data-screen-label="00 Landing nav">
       <button className="brand-row brand-home" type="button" onClick={() => go("landing")} aria-label="Go to ForkFirst landing page">
@@ -1495,10 +1511,10 @@ function TopNav({
         className="landing-theme-toggle"
         type="button"
         onClick={onToggleTheme}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={displayedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        title={displayedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       >
-        {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+        {displayedTheme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
       </button>
     </header>
   );
@@ -1555,11 +1571,13 @@ function AboutModal({ onClose }: { onClose: () => void }) {
 function Landing({
   go,
   theme,
+  themeReady,
   onToggleTheme,
   onStartWithPrompt
 }: {
   go: (screen: Screen) => void;
   theme: Theme;
+  themeReady: boolean;
   onToggleTheme: () => void;
   onStartWithPrompt: (prompt: string) => void;
 }) {
@@ -1647,7 +1665,7 @@ function Landing({
 
   return (
     <div className="landing" data-screen-label="01 Landing">
-      <TopNav go={go} theme={theme} onToggleTheme={onToggleTheme} />
+      <TopNav go={go} theme={theme} themeReady={themeReady} onToggleTheme={onToggleTheme} />
 
       <section className="hero">
         <p className="hero-eyebrow">Chat first. Build from something real.</p>
@@ -2205,7 +2223,6 @@ function useLongPress(onLongPress: () => void, delay = 380) {
   }, [startAt]);
 
   const startTouch = useCallback((event: TouchEvent<HTMLElement>) => {
-    if (window.PointerEvent) return;
     const touch = event.touches[0];
     if (!touch) return;
     startAt(touch.clientX, touch.clientY);
@@ -2223,13 +2240,16 @@ function useLongPress(onLongPress: () => void, delay = 380) {
   }, [move]);
 
   const moveTouch = useCallback((event: TouchEvent<HTMLElement>) => {
-    if (window.PointerEvent) return;
     const touch = event.touches[0];
     if (!touch) return;
     move(touch.clientX, touch.clientY);
   }, [move]);
 
-  const wasLongPress = useCallback(() => firedRef.current, []);
+  const wasLongPress = useCallback(() => {
+    const fired = firedRef.current;
+    firedRef.current = false;
+    return fired;
+  }, []);
   const preventContextMenu = useCallback((event: MouseEvent<HTMLElement>) => {
     event.preventDefault();
   }, []);
@@ -2442,17 +2462,20 @@ function MobileNav({
 function Topbar({
   title,
   theme,
+  themeReady,
   onToggleTheme,
   go,
   screen
 }: {
   title: string;
   theme: Theme;
+  themeReady: boolean;
   onToggleTheme: () => void;
   go: (screen: Screen) => void;
   screen: Screen;
 }) {
   const inChat = ["results", "more", "branding", "generating", "ready"].includes(screen);
+  const displayedTheme = themeReady ? theme : "light";
   return (
     <header className="ws-topbar">
       <div className="crumbs">
@@ -2470,7 +2493,7 @@ function Topbar({
           </button>
         ) : null}
         <button className="icon-btn" type="button" onClick={onToggleTheme} title="Toggle theme">
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          {displayedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <button className="icon-btn" type="button" onClick={() => go("settings")} title="Settings">
           <SettingsIcon size={16} />
@@ -5106,6 +5129,7 @@ function ChatComposerBar({
 export function ForkFirstRedesignApp() {
   const [screen, setScreen] = useState<Screen>("landing");
   const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [themeReady, setThemeReady] = useState(false);
   const [accent, setAccent] = useState<RedesignAccent>(initialAccent);
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [result, setResult] = useState<IdeaCheckResult | null>(null);
@@ -5147,6 +5171,10 @@ export function ForkFirstRedesignApp() {
   useEffect(() => {
     applyDocumentVisualPrefs(theme, accent);
   }, [accent, theme]);
+
+  useEffect(() => {
+    setThemeReady(true);
+  }, []);
 
   useEffect(() => {
     const storage = readFeatureStorage(window.localStorage);
@@ -5987,6 +6015,7 @@ export function ForkFirstRedesignApp() {
         <Landing
           go={go}
           theme={theme}
+          themeReady={themeReady}
           onToggleTheme={toggleTheme}
           onStartWithPrompt={(value) => {
             setPrompt(value);
@@ -6027,6 +6056,7 @@ export function ForkFirstRedesignApp() {
             <Topbar
               title={title}
               theme={theme}
+              themeReady={themeReady}
               onToggleTheme={toggleTheme}
               go={go}
               screen={screen}

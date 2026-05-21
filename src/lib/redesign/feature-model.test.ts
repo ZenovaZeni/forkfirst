@@ -89,6 +89,20 @@ describe("redesign feature model", () => {
     expect(storage.getItem(REDESIGN_STORAGE_KEYS.keys)).toBeNull();
   });
 
+  test("storage write failures do not crash visible app state", () => {
+    const brokenStorage: JsonStorage = {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error("quota exceeded");
+      },
+      removeItem: () => {
+        throw new Error("storage unavailable");
+      }
+    };
+
+    expect(() => writeFeatureStorage(brokenStorage, { chats: [] })).not.toThrow();
+  });
+
   test("keeps a deep recent chat history ordered newest first", () => {
     const chats = Array.from({ length: MAX_RECENT_CHATS + 5 }, (_, index) => ({
       id: `chat-${index}`,

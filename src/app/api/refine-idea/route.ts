@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
+import { providerBaseUrl } from "@/lib/security/provider-base-url";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
-import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
+import { DEFAULT_GROQ_MODEL, optionalServerAiConfig } from "@/lib/security/server-keys";
 
 export const runtime = "nodejs";
 
@@ -69,16 +70,6 @@ const FALLBACK_QUESTIONS: WizardQuestion[] = [
     kind: "select"
   }
 ];
-
-// ---------------------------------------------------------------------------
-// Provider helpers (mirrors verify-keys pattern)
-// ---------------------------------------------------------------------------
-function providerBaseUrl(provider?: string, baseUrl?: string): string {
-  if (provider === "groq") return GROQ_OPENAI_BASE_URL;
-  if (provider === "deepseek") return "https://api.deepseek.com";
-  if (provider === "custom") return baseUrl || "";
-  return GROQ_OPENAI_BASE_URL;
-}
 
 const SYSTEM_PROMPT = `You are a senior product engineer helping a builder scope a project before they fork a GitHub repo. The user has shared a one-line idea. Generate 3-4 highly relevant follow-up questions that will help tailor the build plan.
 
