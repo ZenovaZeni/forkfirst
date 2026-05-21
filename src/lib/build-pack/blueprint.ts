@@ -447,8 +447,45 @@ function petIdentificationBlueprint(input: HandoffSignalInput): HandoffBlueprint
 
 function serviceBusinessCrmBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const name = stringPreference(input.preferences, "productName");
-  const roofingFocused = /\b(roofing|roofer|roofers)\b/i.test(directTextFrom(input));
-  const trade = roofingFocused ? "roofing" : "service";
+  const directSignal = directTextFrom(input);
+  const roofingFocused = /\b(roofing|roofer|roofers)\b/i.test(directSignal);
+  const cleaningFocused = /\b(cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping|house cleaner|commercial cleaning|residential cleaning)\b/i.test(directSignal);
+  const trade = roofingFocused ? "roofing" : cleaningFocused ? "cleaning" : "service";
+  if (cleaningFocused) {
+    return {
+      productKind: "service-business-crm",
+      confidence: 80,
+      productThesis: `${name || "The app"} should help a cleaning company manage quote requests, accepted jobs, crew assignments, job notes, and follow-ups without becoming a generic CRM or invoice-only tool.`,
+      targetUserSegment: stringPreference(input.preferences, "audience") ?? "A cleaning company owner, dispatcher, office manager, or crew lead who needs quotes, scheduled jobs, crews, and follow-ups in one practical workflow.",
+      jobToBeDone: "When a cleaning request comes in, the business should capture the customer/property, create a quote, turn accepted work into scheduled jobs, assign the right crew, and know which follow-up is due next.",
+      currentAlternatives: ["spreadsheets", "paper schedules", "shared calendars", "phone notes", "generic CRMs", "field-service platforms", "invoice-only apps"],
+      differentiatedWedge: "Use invoice or CRM foundations only for contacts, quotes, status, and persistence, then specialize the product around cleaning jobs, crew scheduling, service checklists, and follow-up discipline.",
+      primaryWorkflow: [
+        "Office adds a customer/property and quote request with service type, location, frequency, access notes, and requested date.",
+        "Estimator creates a cleaning quote with scope, rooms/areas, checklist items, price, and quote status.",
+        "Dispatcher converts an accepted quote into one-time or recurring jobs and assigns a crew, date/time window, and supplies/checklist.",
+        "Crew lead updates job status, completion notes, photos or issues, and any follow-up needed.",
+        "Owner reviews quote follow-ups, upcoming jobs, completed work, and exportable customer/job history."
+      ],
+      keyScreens: ["Quote intake", "Customer/property detail", "Quote builder", "Job schedule", "Crew dispatch", "Crew job view", "Follow-up queue", "Export/report"],
+      coreDataObjects: ["Customer", "Property", "Quote", "Job", "Crew", "CrewMember", "ServiceChecklist", "FollowUpTask", "JobNote", "Attachment"],
+      userActions: ["add customer/property", "create quote", "convert quote to job", "assign crew", "update job status", "record job notes", "schedule follow-up", "export jobs"],
+      systemStates: {
+        empty: "No customers, quotes, or jobs yet; guide the user to create the first quote request.",
+        loading: "Loading schedule, crew assignments, and follow-ups; keep the current day/week visible.",
+        error: "Save or scheduling action failed; preserve quote/job details and explain retry.",
+        noResult: "No jobs or quotes match the filter; offer reset and create-quote actions.",
+        partialSuccess: "Quote or job saved but crew assignment, attachment, or follow-up failed; flag what still needs attention."
+      },
+      mvpRequirements: ["Customer/property intake", "Quote builder", "Job scheduling", "Crew assignment", "Crew job checklist/notes", "Follow-up queue", "CSV/JSON export or report"],
+      explicitNonGoals: ["No full accounting, payroll, or tax workflow in v1", "No automated SMS/email follow-ups before consent and provider limits are designed", "No route optimization before crew scheduling works", "No multi-branch enterprise permissions before the owner/dispatcher workflow is proven"],
+      trustPrivacySafety: ["Protect customer addresses, phone numbers, access notes, and job photos", "Do not log private customer/job notes", "Label exported customer/job data clearly", "Document where attachments and local backups are stored"],
+      firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the cleaning ops loop: add a customer/property, create a quote, convert it into a scheduled job, assign a crew, update job status, and show the follow-up queue.",
+      successMetrics: ["A dispatcher can create a quote and schedule a crew in under two minutes.", "Every scheduled job shows customer, property, crew, checklist, and next follow-up.", "Customer/job data survives refresh and exports cleanly."],
+      wowDemoScript: ["Add a cleaning quote request.", "Convert the accepted quote into a scheduled job.", "Assign a crew and checklist.", "Mark the job complete with notes.", "Show the follow-up queue and export/report."],
+      inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+    };
+  }
   return {
     productKind: "service-business-crm",
     confidence: roofingFocused ? 78 : 72,
@@ -627,7 +664,7 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
   ) {
     return realEstateLeadsBlueprint(input);
   }
-  if (/\b(roofing|roofer|roofers|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing))\b/i.test(directSignal) && /\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|invoice|follow[-\s]?up)\b/i.test(directSignal)) {
+  if (/\b(roofing|roofer|roofers|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing)|cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping|commercial cleaning|residential cleaning)\b/i.test(directSignal) && /\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|quote|quotes|invoice|crew|crews|schedule|scheduling|follow[-\s]?up)\b/i.test(directSignal)) {
     return serviceBusinessCrmBlueprint(input);
   }
   if (/\bcrm\b/i.test(directSignal) && !/\b(realtors?|real estate|realty|broker|mls|property|properties)\b/i.test(directSignal)) {

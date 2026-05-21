@@ -146,6 +146,16 @@ describe("search planner", () => {
     ]);
   });
 
+  test("plans cleaning company ops prompts around field service and crew scheduling", () => {
+    expect(planSearches("I want an app for a cleaning company to manage quotes, jobs, crews, and follow-ups").slice(0, 5)).toEqual([
+      "cleaning business management app in:name,description,readme",
+      "cleaning company scheduling app in:name,description,readme",
+      "janitorial service management app in:name,description,readme",
+      "field service job scheduling app in:name,description,readme",
+      "quote job crew management app in:name,description,readme"
+    ]);
+  });
+
   test("plans Shopify analytics prompts around profit, ad spend, and inventory dashboards", () => {
     expect(planSearches("I want a dashboard for tracking Shopify store profit, ad spend, and inventory").slice(0, 4)).toEqual([
       "shopify analytics dashboard in:name,description,readme",

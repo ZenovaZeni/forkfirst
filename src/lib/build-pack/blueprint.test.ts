@@ -192,6 +192,36 @@ describe("handoff blueprint", () => {
     expect(blueprint.coreDataObjects.join(" ")).not.toMatch(/PrimaryItem|UserInput/i);
   });
 
+  test("turns cleaning company operations prompts into a quote, job, crew, and follow-up blueprint", () => {
+    const selectedRepo = repo({
+      owner: "invoicerr-app",
+      name: "invoicerr",
+      fullName: "invoicerr-app/invoicerr",
+      description: "Invoicing app with quotes, invoices, payments, signatures, and customer workflows.",
+      topics: ["invoices", "quotes", "customers"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "Create quotes, generate invoices, track payments, collect signatures, REST API backend, Docker setup."
+      }
+    });
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want an app for a cleaning company to manage quotes, jobs, crews, and follow-ups",
+      researchContext: null,
+      chatContext: null,
+      queries: ["cleaning business management app in:name,description,readme"],
+      selectedRepo,
+      candidateRepos: [selectedRepo],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("service-business-crm");
+    expect(blueprint.productThesis).toMatch(/cleaning|quote|job|crew|follow/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/quote|job|crew|follow/i);
+    expect(blueprint.keyScreens.join(" ")).toMatch(/quote|job|crew|follow/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/Customer|Quote|Job|Crew|FollowUpTask/i);
+    expect(blueprint.coreDataObjects.join(" ")).not.toMatch(/PrimaryItem|UserInput/i);
+  });
+
   test("turns realtor lead scraping prompts into a lead workflow, not an image workflow", () => {
     const selectedRepo = repo({
       owner: "omkarcloud",

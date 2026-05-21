@@ -145,7 +145,20 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
-    pattern: /\b(roofing|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing))\b.*\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|invoice|follow[-\s]?up)\b|\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|invoice|follow[-\s]?up)\b.*\b(roofing|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing))\b/i,
+    pattern: /\b(cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping|commercial cleaning|residential cleaning)\b.*\b(quote|quotes|job|jobs|crew|crews|schedule|scheduling|dispatch|follow[-\s]?up|crm|customer|customers)\b|\b(quote|quotes|job|jobs|crew|crews|schedule|scheduling|dispatch|follow[-\s]?up|crm|customer|customers)\b.*\b(cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping|commercial cleaning|residential cleaning)\b/i,
+    label: "cleaning-company-ops",
+    meaning: "Find open-source cleaning, janitorial, field-service, quote, job, crew, scheduling, and follow-up apps.",
+    queries: [
+      "cleaning business management app in:name,description,readme",
+      "cleaning company scheduling app in:name,description,readme",
+      "janitorial service management app in:name,description,readme",
+      "field service job scheduling app in:name,description,readme",
+      "quote job crew management app in:name,description,readme",
+      "cleaning service crm in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(roofing|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing)|cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping)\b.*\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|quote|quotes|invoice|crew|crews|follow[-\s]?up)\b|\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|quote|quotes|invoice|crew|crews|follow[-\s]?up)\b.*\b(roofing|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing)|cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping)\b/i,
     label: "service-business-crm",
     meaning: "Find open-source contractor, home-service, field-service, and small-business CRM apps with leads, customers, jobs, estimates, and follow-ups.",
     queries: [

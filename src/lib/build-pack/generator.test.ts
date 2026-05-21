@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import type { IdeaCheckResult } from "@/types/idea-check";
 import { buildProjectBuildPack, notToBuildInV1 } from "./generator";
+import { auditBuildPackQuality } from "./quality";
 
 const REQUIRED_SECTIONS = [
   "# STARTER_REPO",
@@ -367,6 +368,43 @@ describe("build pack generator", () => {
     expect(markdown).toMatch(/roofing|contractor|service business/i);
     expect(markdown).toMatch(/lead|estimate|job|follow-up|customer/i);
     expect(markdown).not.toMatch(/repo evidence|PrimaryItem|UserInput|one working product loop/i);
+  });
+
+  test("cleaning company operations prompt produces a domain-specific Build Pack", () => {
+    const idea = "I want an app for a cleaning company to manage quotes, jobs, crews, and follow-ups";
+    const markdown = buildProjectBuildPack(
+      makeResult(
+        {
+          prompt: `Original idea: ${idea}`,
+          queries: [
+            "cleaning business management app in:name,description,readme",
+            "cleaning company scheduling app in:name,description,readme"
+          ],
+          verdictLabel: "Needs more focused research",
+          confidence: 55
+        },
+        {
+          owner: "invoicerr-app",
+          name: "invoicerr",
+          fullName: "invoicerr-app/invoicerr",
+          description: "Invoicerr is an invoicing application for quotes, invoices, payments, customers, and signatures.",
+          topics: ["invoices", "quotes", "customers"],
+          score: { ...repo().score, total: 64, fit: 14 },
+          readme: {
+            ...repo().readme!,
+            excerpt: "Create quotes, generate invoices, track payments, collect signatures, REST API backend, Docker setup."
+          }
+        }
+      ),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toMatch(/cleaning company|cleaning business/i);
+    expect(markdown).toMatch(/quote|job|crew|follow-up/i);
+    expect(markdown).toMatch(/Customer|Quote|Job|Crew|FollowUpTask/i);
+    expect(markdown).not.toMatch(/PrimaryItem|UserInput|one working product loop|User starts the primary task/i);
+    expect(auditBuildPackQuality({ idea, markdown }).issues.map((issue) => issue.id)).not.toContain("generic-handoff");
   });
 
   test("realtor scraping prompt produces lead follow-up Build Pack instead of image workflow", () => {
