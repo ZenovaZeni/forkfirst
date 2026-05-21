@@ -5,6 +5,7 @@ import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import { useSlideDismiss } from "@/components/use-slide-dismiss";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
 import { defaultBoard, repoBoards } from "@/lib/repos/boards";
+import { safeProjectSiteUrl } from "@/lib/url/project-site";
 
 type SavedRepoModalProps = {
   repo: ClassifiedRepo;
@@ -38,6 +39,7 @@ export function SavedRepoModal({ repo, onClose, board, isSaved = false, onBoardC
   const currentBoard = board ?? defaultBoard(repo);
   const steps = inspectionSteps(repo);
   const slideDismiss = useSlideDismiss(onClose);
+  const projectSite = safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName });
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -148,8 +150,8 @@ export function SavedRepoModal({ repo, onClose, board, isSaved = false, onBoardC
               <ExternalLink size={14} />
             </a>
           ) : null}
-          {repo.homepage ? (
-            <a className="github-action secondary-action" href={repo.homepage} target="_blank" rel="noreferrer">
+          {projectSite ? (
+            <a className="github-action secondary-action" href={projectSite} target="_blank" rel="noreferrer">
               <Home size={14} />
               Open homepage
               <ExternalLink size={14} />

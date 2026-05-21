@@ -1,4 +1,5 @@
 import type { ClassifiedRepo } from "@/lib/analysis/types";
+import { safeProjectSiteUrl } from "../url/project-site";
 
 export function cleanChatText(value: string | null | undefined, max = 220) {
   const cleaned = (value ?? "")
@@ -33,21 +34,9 @@ export function repoWatchOut(repo: ClassifiedRepo) {
   return "Confirm setup, license, and recent issues before reuse.";
 }
 
-function safeProjectUrl(value: string | null | undefined) {
-  const cleaned = cleanChatText(value, 400);
-  if (!cleaned) return null;
-  try {
-    const url = new URL(cleaned);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
 export function projectLinks(repos: ClassifiedRepo[]) {
   return repos
-    .map((repo) => ({ repo, url: safeProjectUrl(repo.homepage) }))
+    .map((repo) => ({ repo, url: safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) }))
     .filter((item): item is { repo: ClassifiedRepo; url: string } => Boolean(item.url))
     .slice(0, 5)
     .map(({ repo, url }) => ({

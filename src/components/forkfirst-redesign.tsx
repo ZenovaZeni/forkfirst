@@ -40,6 +40,7 @@ import { getSavedKeyState, type KeyVerificationState } from "@/lib/keys/key-stat
 import { buildConversationalRepoFallback } from "@/lib/research-chat/fallback";
 import { defaultBoard, repoBoards } from "@/lib/repos/boards";
 import { inferRepoSetupFit, type SetupFit } from "@/lib/repos/setup-fit";
+import { safeExternalUrl, safeProjectSiteUrl } from "@/lib/url/project-site";
 import {
   buildIdeaCheckRequestBody,
   buildKeyVerificationRequestBody,
@@ -790,7 +791,7 @@ function clientChatFallbackReply(message: string, result: IdeaCheckResult, messa
   const repoNames = repos.map((repo) => repo.fullName).join(", ");
   const best = repos[0];
   const projectSites = repos
-    .map((repo) => ({ name: repo.fullName, url: safeExternalUrl(repo.homepage) }))
+    .map((repo) => ({ name: repo.fullName, url: safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) }))
     .filter((item): item is { name: string; url: string } => Boolean(item.url));
 
   if (lower.includes("opportunity gap")) {
@@ -906,8 +907,18 @@ function foundationFromTrendingRepo(repo: TrendingRepo): FoundationDraft {
   };
 }
 
-function RepoSiteLink({ url, className = "btn ghost" }: { url: string | null | undefined; className?: string }) {
-  const safeUrl = safeExternalUrl(url);
+function RepoSiteLink({
+  url,
+  repoUrl,
+  fullName,
+  className = "btn ghost"
+}: {
+  url: string | null | undefined;
+  repoUrl?: string | null;
+  fullName?: string | null;
+  className?: string;
+}) {
+  const safeUrl = safeProjectSiteUrl(url, { repoUrl, fullName });
   if (!safeUrl) return null;
   return (
     <a className={className} href={safeUrl} target="_blank" rel="noreferrer">
@@ -1091,18 +1102,6 @@ function stripRepoContent(value: string | null | undefined) {
     .replaceAll("<UNTRUSTED_REPO_CONTENT>", "")
     .replaceAll("</UNTRUSTED_REPO_CONTENT>", "")
     .trim();
-}
-
-function safeExternalUrl(value: string | null | undefined) {
-  const trimmed = stripRepoContent(value);
-  if (!trimmed) return null;
-  try {
-    const url = new URL(trimmed);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
 }
 
 function cleanReadmeText(value: string | null | undefined) {
@@ -2961,7 +2960,7 @@ function FeaturedRepo({
         <a className="btn ghost" href={repo.url} target="_blank" rel="noreferrer">
           <ExternalLink size={13} /> Open on GitHub
         </a>
-        <RepoSiteLink url={repo.homepage} />
+        <RepoSiteLink url={repo.homepage} repoUrl={repo.url} fullName={repo.fullName} />
         <button className="icon-btn" title={saved ? "Saved" : "Save"} type="button" onClick={() => onSave(repo)}>
           {saved ? <Check size={15} /> : <Bookmark size={15} />}
         </button>
@@ -2996,8 +2995,8 @@ function FeaturedRepo({
               }}>
                 Copy repo name
               </button>
-              {safeExternalUrl(repo.homepage) ? (
-                <a role="menuitem" href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">
+              {safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) ? (
+                <a role="menuitem" href={safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) ?? "#"} target="_blank" rel="noreferrer">
                   Open project site
                 </a>
               ) : null}
@@ -3040,7 +3039,7 @@ function CompactRepo({
           <span className="lbl">Fit</span>
         </div>
         <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
-        <RepoSiteLink url={repo.homepage} />
+        <RepoSiteLink url={repo.homepage} repoUrl={repo.url} fullName={repo.fullName} />
         <button className="btn ghost" type="button" onClick={() => onUse(repo)}>Use</button>
       </div>
     </article>
@@ -3923,14 +3922,14 @@ function RepoDrawer({
               <div className="kv"><span className="k">Forks</span><span className="v">{repo.forks.toLocaleString()}</span></div>
               <div className="kv"><span className="k">Language</span><span className="v">{repo.language ?? "Mixed"}</span></div>
               <div className="kv"><span className="k">License</span><span className="v">{repo.license ?? "Inspect"}</span></div>
-              {safeExternalUrl(repo.homepage) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">{safeExternalUrl(repo.homepage)}</a></span></div> : null}
+              {safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) ?? "#"} target="_blank" rel="noreferrer">{safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName })}</a></span></div> : null}
               <div className="kv"><span className="k">Last commit</span><span className="v">{repo.pushedAt ? new Date(repo.pushedAt).toLocaleDateString() : "Inspect"}</span></div>
             </div>
           ) : null}
         </div>
         <div className="drawer-foot">
           <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use</button>
-          <RepoSiteLink url={repo.homepage} />
+          <RepoSiteLink url={repo.homepage} repoUrl={repo.url} fullName={repo.fullName} />
           <a className="btn ghost" href={repo.url} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open on GitHub</a>
           <button className="btn ghost" type="button" onClick={() => onSave(repo)}>{saved ? <Check size={14} /> : <Bookmark size={14} />} {saved ? "Saved" : "Save"}</button>
         </div>
@@ -4411,7 +4410,7 @@ function LibraryScreen({
             <div className="lib-actions">
               <button className="btn accent" type="button" onClick={() => onUseRepo(repo)}>Use</button>
               <button className="btn ghost" type="button" onClick={() => onOpen(repo)}>Details</button>
-              <RepoSiteLink url={repo.homepage} />
+              <RepoSiteLink url={repo.homepage} repoUrl={repo.url} fullName={repo.fullName} />
               <a className="btn ghost icon-only" href={repo.url} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}>
                 <ExternalLink size={13} />
               </a>
@@ -4882,7 +4881,7 @@ function LiveTrendingScreen({
               </div>
               <div className="actions">
                 <button className="btn accent" type="button" onClick={() => onSelectFoundation(foundationFromTrendingRepo(repo))}>Use</button>
-                <RepoSiteLink url={repo.homepage} />
+                <RepoSiteLink url={repo.homepage} repoUrl={repo.htmlUrl} fullName={repo.fullName} />
                 <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.fullName} on GitHub`}><ExternalLink size={12} /> GitHub</a>
               </div>
             </article>
@@ -4989,7 +4988,7 @@ function TrendingRepoDrawer({
             <div className="kv"><span className="k">Language</span><span className="v">{repo.language ?? "Mixed"}</span></div>
             <div className="kv"><span className="k">License</span><span className="v">{repo.license ?? "Inspect"}</span></div>
             <div className="kv"><span className="k">Setup fit</span><span className="v">{setupFit.label}</span></div>
-            {safeExternalUrl(repo.homepage) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeExternalUrl(repo.homepage) ?? "#"} target="_blank" rel="noreferrer">{safeExternalUrl(repo.homepage)}</a></span></div> : null}
+            {safeProjectSiteUrl(repo.homepage, { repoUrl: repo.htmlUrl, fullName: repo.fullName }) ? <div className="kv"><span className="k">Project site</span><span className="v"><a href={safeProjectSiteUrl(repo.homepage, { repoUrl: repo.htmlUrl, fullName: repo.fullName }) ?? "#"} target="_blank" rel="noreferrer">{safeProjectSiteUrl(repo.homepage, { repoUrl: repo.htmlUrl, fullName: repo.fullName })}</a></span></div> : null}
             <div className="kv"><span className="k">Updated</span><span className="v">{repo.updatedAt ? new Date(repo.updatedAt).toLocaleDateString() : "Inspect"}</span></div>
             <div className="kv"><span className="k">Created</span><span className="v">{repo.createdAt ? new Date(repo.createdAt).toLocaleDateString() : "Inspect"}</span></div>
           </div>
@@ -5007,7 +5006,7 @@ function TrendingRepoDrawer({
           <button className={`btn ghost ${saved ? "is-saved" : ""}`} type="button" onClick={() => onSave(repo)}>
             <Bookmark size={14} /> {saved ? "Saved" : "Save"}
           </button>
-          <RepoSiteLink url={repo.homepage} />
+          <RepoSiteLink url={repo.homepage} repoUrl={repo.htmlUrl} fullName={repo.fullName} />
           <a className="btn ghost" href={repo.htmlUrl} target="_blank" rel="noreferrer"><ExternalLink size={14} /> GitHub</a>
         </div>
       </aside>

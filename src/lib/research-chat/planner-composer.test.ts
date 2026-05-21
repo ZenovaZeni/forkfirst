@@ -234,16 +234,17 @@ describe("research chat planner and composer", () => {
   });
 
   test("project-site requests return project link actions", () => {
+    const repoWithSite = repo({ homepage: "https://billing-demo.dev" });
     const response = composeResearchChatResponse(
       planResearchChat({
         prompt: "Show me the project sites",
         idea: "billing portal for freelancers",
-        repos: [repo()]
+        repos: [repoWithSite]
       }),
       {
         prompt: "Show me the project sites",
         idea: "billing portal for freelancers",
-        repos: [repo()]
+        repos: [repoWithSite]
       }
     );
 
@@ -252,7 +253,7 @@ describe("research chat planner and composer", () => {
     expect(linksAction?.links).toEqual([
       {
         repoFullName: "vteams/open-source-billing",
-        url: "https://billing.example.com/",
+        url: "https://billing-demo.dev/",
         label: "vteams/open-source-billing"
       }
     ]);
@@ -273,6 +274,36 @@ describe("research chat planner and composer", () => {
     );
 
     expect(response.actions.some((action) => action.type === "project_links")).toBe(false);
+  });
+
+  test("project links hide GitHub self-links and localhost placeholders", () => {
+    const githubSelfLink = composeResearchChatResponse(
+      planResearchChat({
+        prompt: "Show me the project sites",
+        idea: "billing portal for freelancers",
+        repos: [repo({ homepage: "https://github.com/vteams/open-source-billing" })]
+      }),
+      {
+        prompt: "Show me the project sites",
+        idea: "billing portal for freelancers",
+        repos: [repo({ homepage: "https://github.com/vteams/open-source-billing" })]
+      }
+    );
+    const localhostLink = composeResearchChatResponse(
+      planResearchChat({
+        prompt: "Show me the project sites",
+        idea: "billing portal for freelancers",
+        repos: [repo({ homepage: "http://localhost:3000" })]
+      }),
+      {
+        prompt: "Show me the project sites",
+        idea: "billing portal for freelancers",
+        repos: [repo({ homepage: "http://localhost:3000" })]
+      }
+    );
+
+    expect(githubSelfLink.actions.some((action) => action.type === "project_links")).toBe(false);
+    expect(localhostLink.actions.some((action) => action.type === "project_links")).toBe(false);
   });
 
   test("handoff action requires confirmation before generation", () => {

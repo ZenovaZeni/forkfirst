@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Bookmark, Check, ChevronDown, ChevronUp, ExternalLink, GitFork, Star } from "lucide-react";
 import { buildRepoNarrative } from "@/lib/analysis/human-answer";
 import type { ClassifiedRepo } from "@/lib/analysis/types";
+import { safeProjectSiteUrl } from "@/lib/url/project-site";
 
 const categoryLabels = {
   already_exists: "Already built",
@@ -34,21 +35,10 @@ export function nextStepFor(repo: ClassifiedRepo): string {
   return buildRepoNarrative(repo).next;
 }
 
-function safeHomepage(value: string | null | undefined) {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
 export function RepoCard({ repo, rank, featured = false, compact = false, saved = false, onSave }: RepoCardProps) {
   const narrative = buildRepoNarrative(repo);
   const [expanded, setExpanded] = useState(false);
-  const homepage = safeHomepage(repo.homepage);
+  const homepage = safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName });
 
   return (
     <article className={`repo-card ${repo.category} ${featured ? "featured-repo" : ""} ${compact ? "compact-repo" : ""}`}>

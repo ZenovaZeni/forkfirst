@@ -1,5 +1,6 @@
 import type { ChatUiAction, ResearchChatContext, ResearchChatPlan, ResearchChatResponseV2 } from "./types";
 import { cleanChatText, projectLinks, repoDescription, repoUseLabel, repoWatchOut, suggestedPromptsForIdea, topRepos } from "./tools";
+import { safeProjectSiteUrl } from "../url/project-site";
 
 function reposForPlan(plan: ResearchChatPlan, context: ResearchChatContext) {
   if (plan.targetRepoFullNames.length === 0) return topRepos(context.repos, 3);
@@ -35,7 +36,7 @@ function compareTableAction(repos: ReturnType<typeof reposForPlan>): ChatUiActio
       category: repo.category,
       language: repo.language,
       license: repo.license,
-      projectSite: repo.homepage,
+      projectSite: safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }),
       bestFor: repoUseLabel(repo),
       watchOut: repoWatchOut(repo)
     }))

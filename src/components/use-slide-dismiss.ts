@@ -11,15 +11,17 @@ type SlideState = {
   x: number;
   y: number;
   dragging: boolean;
+  cancelled: boolean;
   target: HTMLElement;
   pointerId: number;
 };
 
-const HORIZONTAL_LOCK_RATIO = 1.15;
-const START_SLOP = 12;
+const HORIZONTAL_LOCK_RATIO = 1.7;
+const VERTICAL_SCROLL_RATIO = 1.2;
+const START_SLOP = 24;
 
 export function useSlideDismiss(onDismiss: () => void, options: SlideDismissOptions = {}) {
-  const threshold = options.threshold ?? 84;
+  const threshold = options.threshold ?? 118;
   const maxOffset = options.maxOffset ?? 220;
   const stateRef = useRef<SlideState | null>(null);
   const resetTimerRef = useRef<number | null>(null);
@@ -61,6 +63,7 @@ export function useSlideDismiss(onDismiss: () => void, options: SlideDismissOpti
       x: event.clientX,
       y: event.clientY,
       dragging: false,
+      cancelled: false,
       target: event.currentTarget,
       pointerId: event.pointerId
     };
@@ -74,6 +77,16 @@ export function useSlideDismiss(onDismiss: () => void, options: SlideDismissOpti
     const dy = event.clientY - state.y;
     if (!state.dragging) {
       if (Math.abs(dx) < START_SLOP && Math.abs(dy) < START_SLOP) return;
+      if (Math.abs(dy) > Math.abs(dx) * VERTICAL_SCROLL_RATIO) {
+        state.cancelled = true;
+        stateRef.current = null;
+        try {
+          state.target.releasePointerCapture?.(state.pointerId);
+        } catch {
+          // The pointer may already be released if the browser cancelled the gesture.
+        }
+        return;
+      }
       if (dx <= 0 || Math.abs(dx) < Math.abs(dy) * HORIZONTAL_LOCK_RATIO) return;
       state.dragging = true;
       state.target.classList.add("is-slide-dismissing");
@@ -101,6 +114,11 @@ export function useSlideDismiss(onDismiss: () => void, options: SlideDismissOpti
     const dy = event.clientY - state.y;
     const shouldClose = state.dragging && dx > threshold && Math.abs(dx) > Math.abs(dy) * HORIZONTAL_LOCK_RATIO;
 
+    if (!state.dragging || state.cancelled) {
+      clearStyles(state.target);
+      return;
+    }
+
     if (shouldClose) {
       state.target.style.setProperty("--slide-dismiss-x", `${maxOffset}px`);
       state.target.style.setProperty("--slide-dismiss-opacity", "0.58");
@@ -109,13 +127,15 @@ export function useSlideDismiss(onDismiss: () => void, options: SlideDismissOpti
     }
 
     resetTarget(state.target);
-  }, [maxOffset, onDismiss, resetTarget, threshold]);
+  }, [clearStyles, maxOffset, onDismiss, resetTarget, threshold]);
 
   const cancel = useCallback(() => {
     const state = stateRef.current;
     stateRef.current = null;
-    if (state) resetTarget(state.target);
-  }, [resetTarget]);
+    if (!state) return;
+    if (state.dragging) resetTarget(state.target);
+    else clearStyles(state.target);
+  }, [clearStyles, resetTarget]);
 
   return {
     onPointerDown,
