@@ -58,3 +58,29 @@ Latest smoke highlights:
 - The parent sports prompt still returns a lower-confidence match than the other launch prompts. It is acceptable as a "lead" result, but it is the prompt family to keep improving after launch.
 - The Build Pack quality guard should stay visible and branded in future work. Avoid browser-native alerts for quality warnings.
 - Continue testing real prompts that mix domain, platform, and must-have workflow details, because the product's core value depends on idea-plus-repo fit.
+
+## Follow-Up Verification
+
+After the first audit commit, the remaining native browser dialogs were replaced with branded or inline UI:
+
+- Clear all local data now uses a ForkFirst confirmation dialog.
+- Custom prompt pack deletion now uses a ForkFirst confirmation dialog.
+- PWA install help now renders inline guidance instead of `alert`.
+- Settings install fallback now renders inline guidance instead of `alert`.
+
+Additional checks passed:
+
+```bash
+npm run test:launch-evals
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm run smoke:launch
+```
+
+Live deployment check against `https://forkfirst.vercel.app` also passed:
+
+- Landing loaded with title `ForkFirst - don't make your AI builder start from zero`.
+- No browser console errors or 500 responses.
+- No-key `/api/idea-check` for `I want a local-first receipt scanner that tracks expenses and exports CSV` returned `vas3k/TaxHacker` at 89 fit in demo mode.
