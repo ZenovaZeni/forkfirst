@@ -591,6 +591,47 @@ describe("build pack generator", () => {
     expect(markdown).toMatch(/values as estimates/i);
   });
 
+  test("Build Pack includes typed alignment decisions before builder instructions", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build a Pokemon card collection tracker like Pokemon Collector.",
+        repos: [
+          {
+            ...repo(),
+            fullName: "cards/pokemon-collector",
+            url: "https://github.com/cards/pokemon-collector",
+            description: "Pokemon TCG collection manager with card search, binder, pricing, and export.",
+            topics: ["pokemon", "tcg", "cards", "collection", "pricing"],
+            readme: {
+              ...repo().readme!,
+              excerpt: "Card search, binder management, wishlist, TCGPlayer prices, CSV export, backup and restore.",
+              evidence: {
+                fetchStatus: "ok",
+                fetchedAt: "2026-05-21T00:00:00Z",
+                setupSnippets: ["pnpm install and pnpm dev"],
+                commandSnippets: ["pnpm test"],
+                featureSnippets: ["card search, binder management, wishlist, price history, CSV export"],
+                integrationSnippets: ["TCGPlayer price integration"],
+                licenseSnippets: ["MIT"]
+              }
+            }
+          }
+        ]
+      }),
+      "codex"
+    );
+
+    const alignment = markdown.split("## Alignment Decisions")[1]?.split("## Foundation Coverage Map")[0] ?? "";
+    expect(alignment).toContain("| Decision | Product Need | Repo Capability | Evidence | Builder Instruction |");
+    expect(alignment).toMatch(/\|\s*Keep\s*\|/i);
+    expect(alignment).toMatch(/\|\s*Replace\s*\|/i);
+    expect(alignment).toMatch(/\|\s*Add\s*\|/i);
+    expect(alignment).toMatch(/\|\s*Remove\s*\|/i);
+    expect(alignment).toMatch(/\|\s*Inspect\s*\|/i);
+    expect(alignment).toMatch(/card search|binder|TCGPlayer/i);
+    expect(alignment).not.toMatch(/PrimaryItem|UserInput/);
+  });
+
   test("generic trading-card prompts avoid Pokemon-specific product copy", () => {
     const markdown = buildProjectBuildPack(
       makeResult({

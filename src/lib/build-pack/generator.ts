@@ -1,6 +1,7 @@
 import { buildRepoNarrative } from "../analysis/human-answer";
 import type { IdeaCheckResult } from "../../types/idea-check";
 import { buildHandoffBlueprint, isGenericBuildPackPreference, type HandoffBlueprint, type ProductKind } from "./blueprint";
+import { buildAlignmentDecisionTable, buildBuildPackIR } from "./ir";
 
 type BuildPackRepo = IdeaCheckResult["repos"][number];
 
@@ -1270,9 +1271,20 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   });
   const userProfileSignal = [originalIdea, researchContext, chatContext].filter(Boolean).join(" ");
   const legacyProfile = profileWithPreferences(productProfileFor(userProfileSignal || originalIdea), wizardAnswers);
-  const blueprint = inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
+  const resolvedBlueprint = inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
     ? blueprintFromProfile(legacyProfile, "workflow-app", ["user idea", "legacy product profile", bestRepo ? "selected repo metadata" : "search result"])
     : inferredBlueprint;
+  const ir = buildBuildPackIR({
+    originalIdea,
+    researchContext,
+    chatContext,
+    queries: result.queries,
+    selectedRepo: bestRepo,
+    candidateRepos: topRepos,
+    preferences: wizardAnswers,
+    blueprint: resolvedBlueprint
+  });
+  const blueprint = ir.blueprint;
   const profile = profileFromBlueprint(blueprint);
   const projectName = preferredProjectName(originalIdea, wizardAnswers);
   const preferenceBullets = preferenceLines(wizardAnswers);
@@ -1379,6 +1391,11 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ``,
     `## Repo-To-Product Adaptation Map`,
     ...adaptationMap(bestRepo, profile, wizardAnswers),
+    ``,
+    `## Alignment Decisions`,
+    ir.alignment.summary,
+    ``,
+    ...buildAlignmentDecisionTable(ir.alignment.decisions),
     ``,
     `## Foundation Coverage Map`,
     ...foundationCoverageMap(bestRepo, profile, originalIdea),
