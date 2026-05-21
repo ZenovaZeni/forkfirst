@@ -4629,6 +4629,7 @@ function SettingsScreen({
   chatCount: number;
 }) {
   const [installStatus, setInstallStatus] = useState<"installed" | "ready" | "ios" | "unavailable">("unavailable");
+  const [installMessage, setInstallMessage] = useState<string | null>(null);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("appearance");
   const backupInputRef = useRef<HTMLInputElement | null>(null);
   const usageSummary = summarizeUsage(usageEntries);
@@ -4668,12 +4669,13 @@ function SettingsScreen({
     restoreInstallPrompt();
     const outcome = await requestPwaInstall();
     if (outcome === "ios") {
-      window.alert("Tap the Share button below, then select 'Add to Home Screen'.");
+      setInstallMessage("Tap Share, then choose Add to Home Screen.");
     } else if (outcome === "unavailable") {
-      window.alert("Your browser has not made install available yet. Try Chrome/Edge, or use the browser menu to install this app.");
+      setInstallMessage("Your browser has not made install available yet. Try Chrome or Edge, or use the browser menu to install this app.");
     }
     if (outcome === "accepted" || outcome === "installed") {
       setInstallStatus("installed");
+      setInstallMessage(null);
     }
   };
 
@@ -4797,6 +4799,7 @@ function SettingsScreen({
               <button className="btn ghost" type="button" onClick={handleInstallFromSettings} disabled={installStatus === "installed"}>
                 {installStatus === "installed" ? "Installed" : installStatus === "ios" ? "Show how" : "Install"}
               </button>
+              {installMessage ? <p className="help install-message">{installMessage}</p> : null}
             </section>
           ) : null}
         </div>

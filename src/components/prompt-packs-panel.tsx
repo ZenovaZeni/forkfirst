@@ -61,6 +61,7 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
   const [addingNew, setAddingNew] = useState(false);
   const [newForm, setNewForm] = useState<EditForm>(EMPTY_FORM);
   const [query, setQuery] = useState("");
+  const [deletePackId, setDeletePackId] = useState<string | null>(null);
 
   const resolved = resolvePacks(state);
   const recommendationById = new Map(recommendations.map((item) => [item.id, item]));
@@ -115,8 +116,13 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
   }
 
   function handleDelete(id: string) {
-    if (!window.confirm("Delete this custom pack?")) return;
-    onChange(deleteCustomPack(state, id));
+    setDeletePackId(id);
+  }
+
+  function confirmDeletePack() {
+    if (!deletePackId) return;
+    onChange(deleteCustomPack(state, deletePackId));
+    setDeletePackId(null);
   }
 
   function commitAdd() {
@@ -446,6 +452,27 @@ export function PromptPacksPanel({ state, onChange, recommendations = [] }: Prom
               </section>
             </div>
           </section>
+        </div>
+      ) : null}
+      {deletePackId ? (
+        <div className="branded-dialog-backdrop" role="presentation" onMouseDown={() => setDeletePackId(null)}>
+          <div className="branded-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-pack-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="dialog-head">
+              <span className="dialog-icon warn">!</span>
+              <div>
+                <strong id="delete-pack-title">Delete custom pack?</strong>
+                <span>This removes the pack from this browser. Built-in packs are not affected.</span>
+              </div>
+              <button className="icon-btn" type="button" onClick={() => setDeletePackId(null)} aria-label="Close delete pack dialog">
+                x
+              </button>
+            </div>
+            <p className="dialog-copy">{resolved.find((pack) => pack.id === deletePackId)?.name ?? "Custom prompt pack"}</p>
+            <div className="dialog-actions">
+              <button className="btn ghost" type="button" onClick={() => setDeletePackId(null)}>Keep pack</button>
+              <button className="btn danger" type="button" onClick={confirmDeletePack}>Delete pack</button>
+            </div>
+          </div>
         </div>
       ) : null}
     </section>

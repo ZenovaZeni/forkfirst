@@ -39,6 +39,7 @@ export function KeySettings({
   onShowWelcome
 }: KeySettingsProps) {
   const [draftKeys, setDraftKeys] = useState(keys);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
   const providerDefaults = {
     openai: { label: "OpenAI", model: "gpt-4.1-nano", baseUrl: "" },
     groq: { label: "Groq", model: "llama-3.1-8b-instant", baseUrl: "https://api.groq.com/openai/v1" },
@@ -296,17 +297,43 @@ export function KeySettings({
           <button
             className="clear-data-button"
             type="button"
-            onClick={() => {
-              if (window.confirm("Clear saved keys, chats, saved repos, handoffs, prompt packs, usage estimates, and appearance settings from this browser? This cannot be undone.")) {
-                onClearAllData();
-              }
-            }}
+            onClick={() => setConfirmClearAll(true)}
           >
             <Trash2 size={14} />
             Clear all saved data
           </button>
         </section>
       </div>
+      {confirmClearAll ? (
+        <div className="branded-dialog-backdrop" role="presentation" onMouseDown={() => setConfirmClearAll(false)}>
+          <div className="branded-dialog" role="dialog" aria-modal="true" aria-labelledby="clear-data-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="dialog-head">
+              <span className="dialog-icon warn"><AlertTriangle size={16} /></span>
+              <div>
+                <strong id="clear-data-title">Clear all local data?</strong>
+                <span>This removes saved keys, chats, repos, handoffs, prompt packs, usage estimates, and appearance settings from this browser.</span>
+              </div>
+              <button className="icon-btn" type="button" onClick={() => setConfirmClearAll(false)} aria-label="Close clear data dialog">
+                x
+              </button>
+            </div>
+            <p className="dialog-copy">This cannot be undone. Export a backup first if you want to keep your saved work.</p>
+            <div className="dialog-actions">
+              <button className="btn ghost" type="button" onClick={() => setConfirmClearAll(false)}>Keep data</button>
+              <button
+                className="btn danger"
+                type="button"
+                onClick={() => {
+                  setConfirmClearAll(false);
+                  onClearAllData();
+                }}
+              >
+                Clear all data
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </details>
   );
 }

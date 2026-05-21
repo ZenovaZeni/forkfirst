@@ -117,6 +117,15 @@
   white-space: nowrap;
 }
 
+.hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--install-muted);
+  font-size: 0.74rem;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
 .actions {
   display: flex;
   flex-shrink: 0;

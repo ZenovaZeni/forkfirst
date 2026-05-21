@@ -36,6 +36,7 @@ export function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [visualState, setVisualState] = useState({ theme: "light", accent: "cobalt" });
+  const [installHint, setInstallHint] = useState<string | null>(null);
 
   useEffect(() => {
     if (wasInstallDismissed()) {
@@ -109,8 +110,7 @@ export function PWAInstallPrompt() {
     if (outcome === "accepted" || outcome === "installed") {
       setShowPrompt(false);
     } else if (outcome === "ios" || isIOS) {
-      alert("Tap the Share button below, then select 'Add to Home Screen'");
-      handleDismiss();
+      setInstallHint("Tap Share, then choose Add to Home Screen.");
     }
   };
 
@@ -130,8 +130,11 @@ export function PWAInstallPrompt() {
       </button>
       <div className={styles.content}>
         <span className={styles.badge}>Optional</span>
-        <span className={styles.text}>
-          {isIOS ? "Add to Home Screen" : "Install app"}
+        <span>
+          <span className={styles.text}>
+            {isIOS ? "Add to Home Screen" : "Install app"}
+          </span>
+          {installHint ? <span className={styles.hint}>{installHint}</span> : null}
         </span>
       </div>
       <div className={styles.actions}>
