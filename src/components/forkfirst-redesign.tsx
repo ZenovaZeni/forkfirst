@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type ReactNode, type TouchEvent } from "react";
 import { ForkFirstLogo } from "@/components/forkfirst-logo";
 import {
+  AlertTriangle,
   ArrowRight,
   Bookmark,
   Check,
@@ -46,6 +47,7 @@ import {
   clearFeatureStorage,
   DEFAULT_REDESIGN_USER_KEYS,
   LEGACY_REDESIGN_STORAGE_KEYS,
+  orderRecentChats,
   readFeatureStorage,
   readJsonValue,
   REDESIGN_STORAGE_KEYS,
@@ -528,16 +530,47 @@ function qualityScore(items: Array<{ done: boolean }>) {
   return Math.round((items.filter((item) => item.done).length / Math.max(1, items.length)) * 100);
 }
 
-function buildPackQualityMessage(audit: BuildPackQualityAudit): string {
-  const lines = audit.issues.slice(0, 4).map((issue) => `- ${issue.title}: ${issue.detail}`);
-  const more = audit.issues.length > 4 ? `\n- ${audit.issues.length - 4} more issue${audit.issues.length - 4 === 1 ? "" : "s"}.` : "";
-  return `ForkFirst found ${audit.issues.length} Build Pack issue${audit.issues.length === 1 ? "" : "s"}:\n\n${lines.join("\n")}${more}\n\nExport anyway?`;
+function buildPackQualityLines(audit: BuildPackQualityAudit): string[] {
+  const lines = audit.issues.slice(0, 4).map((issue) => `${issue.title}: ${issue.detail}`);
+  const remaining = audit.issues.length - lines.length;
+  return remaining > 0 ? [...lines, `${remaining} more issue${remaining === 1 ? "" : "s"} to review.`] : lines;
 }
 
-function confirmBuildPackQuality(audit: BuildPackQualityAudit): boolean {
-  if (audit.passed) return true;
-  if (typeof window === "undefined") return false;
-  return window.confirm(buildPackQualityMessage(audit));
+function BuildPackQualityDialog({
+  audit,
+  onCancel,
+  onConfirm
+}: {
+  audit: BuildPackQualityAudit;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="branded-dialog-backdrop" role="presentation" onMouseDown={onCancel}>
+      <div className="branded-dialog quality-warning-dialog" role="dialog" aria-modal="true" aria-labelledby="quality-warning-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="dialog-head">
+          <span className="dialog-icon warn"><AlertTriangle size={16} /></span>
+          <div>
+            <strong id="quality-warning-title">Build Pack could be sharper</strong>
+            <span>This is not a crash. ForkFirst noticed the handoff may still be too generic for a builder.</span>
+          </div>
+          <button className="icon-btn" type="button" onClick={onCancel} aria-label="Close quality warning">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="quality-warning-list">
+          {buildPackQualityLines(audit).map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+        <p className="dialog-copy">Best move: preview/edit the handoff and add concrete screens, actions, data objects, or repo evidence. You can still export if you intentionally want to continue.</p>
+        <div className="dialog-actions">
+          <button className="btn ghost" type="button" onClick={onCancel}>Keep editing</button>
+          <button className="btn accent" type="button" onClick={onConfirm}>Export anyway</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function buildPackTargetLabel(pack: SavedBuildPack) {
@@ -1970,7 +2003,7 @@ function Sidebar({
   onDeleteChat: (chatId: string) => void;
 }) {
   const firstRecentIsActive = ["app", "loading", "results", "more", "branding", "generating", "ready"].includes(active);
-  const visibleChats = recentChats.slice(0, 6);
+  const visibleChats = recentChats;
   const handoffLabel = `${savedBuildPackCount.toLocaleString()} saved handoff${savedBuildPackCount === 1 ? "" : "s"}`;
   const repoLabel = `${savedRepoCount.toLocaleString()} repo${savedRepoCount === 1 ? "" : "s"} saved for later`;
   const [menuChatId, setMenuChatId] = useState<string | null>(null);
@@ -1994,57 +2027,59 @@ function Sidebar({
         New idea check
       </button>
       <div className="rail-label">Recent</div>
-      {visibleChats.length ? visibleChats.map((item) => (
-        <div key={item.id} className={`rail-item recent-chat-row ${activeChatId === item.id && firstRecentIsActive ? "active" : ""}`}>
-          <button className="recent-open" type="button" onClick={() => onOpenChat(item)} title={displayChatTitle(item.title)}>
-            <span className="ttl">{displayChatTitle(item.title)}</span>
-            <span className="when">{relativeChatTime(item.updatedAt)}</span>
-          </button>
-          <div className="recent-menu-wrap">
-            <button
-              className="recent-action"
-              type="button"
-              title="Chat options"
-              aria-haspopup="menu"
-              aria-expanded={menuChatId === item.id}
-              onClick={(event) => {
-                event.stopPropagation();
-                setMenuChatId((current) => current === item.id ? null : item.id);
-              }}
-            >
-              <MoreHorizontal size={14} />
+      <div className="recent-chat-list" aria-label="Recent chats">
+        {visibleChats.length ? visibleChats.map((item) => (
+          <div key={item.id} className={`rail-item recent-chat-row ${activeChatId === item.id && firstRecentIsActive ? "active" : ""}`}>
+            <button className="recent-open" type="button" onClick={() => onOpenChat(item)} title={displayChatTitle(item.title)}>
+              <span className="ttl">{displayChatTitle(item.title)}</span>
+              <span className="when">{relativeChatTime(item.updatedAt)}</span>
             </button>
-            {menuChatId === item.id ? (
-              <div className="recent-menu" role="menu" onClick={(event) => event.stopPropagation()}>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setRenameChat(item);
-                    setRenameValue(item.title);
-                    setMenuChatId(null);
-                  }}
-                >
-                  Rename
-                </button>
-                <button
-                  className="danger"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setDeleteChat(item);
-                    setMenuChatId(null);
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            ) : null}
+            <div className="recent-menu-wrap">
+              <button
+                className="recent-action"
+                type="button"
+                title="Chat options"
+                aria-haspopup="menu"
+                aria-expanded={menuChatId === item.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setMenuChatId((current) => current === item.id ? null : item.id);
+                }}
+              >
+                <MoreHorizontal size={14} />
+              </button>
+              {menuChatId === item.id ? (
+                <div className="recent-menu" role="menu" onClick={(event) => event.stopPropagation()}>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setRenameChat(item);
+                      setRenameValue(item.title);
+                      setMenuChatId(null);
+                    }}
+                  >
+                    Rename
+                  </button>
+                  <button
+                    className="danger"
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setDeleteChat(item);
+                      setMenuChatId(null);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
-      )) : (
-        <div className="rail-empty">Your idea checks will appear here.</div>
-      )}
+        )) : (
+          <div className="rail-empty">Your idea checks will appear here.</div>
+        )}
+      </div>
       <div className="nav-foot">
         <div className="tokens-card build-progress-card">
           <div className="lbl">Build progress</div>
@@ -2271,7 +2306,7 @@ function RecentChatsDrawer({
           New idea check
         </button>
         <div className="topbar-chat-list">
-          {recentChats.slice(0, 10).length ? recentChats.slice(0, 10).map((chat) => (
+          {recentChats.length ? recentChats.map((chat) => (
             <button
               key={chat.id}
               type="button"
@@ -3572,10 +3607,21 @@ function BrandRecap({ brand }: { brand: BrandAnswers | null }) {
 
 function StreamingDoc({ step, brand, result, selectedStarterRepo }: { step: number; brand: BrandAnswers | null; result?: IdeaCheckResult; selectedStarterRepo?: ClassifiedRepo | null }) {
   const starter = selectedStarterRepo?.fullName ?? result?.repos[0]?.fullName ?? "the recommended starter repo";
+  const intent = result?.productIntent;
+  const productName = brand?.name || intent?.productPhrase || "Your app";
+  const productGoal =
+    brand?.productGoal ||
+    intent?.coreGoal ||
+    "Build the product described by the user's idea from the selected repo foundation.";
+  const productAudience = brand?.audience || intent?.targetUser || "the intended user from the idea";
+  const firstMilestone =
+    brand?.firstMilestone ||
+    intent?.firstMilestone ||
+    "Clone the repo, inspect the core flows, and ship the smallest useful workflow.";
   const sections = [
     { h: "## STARTER_REPO", body: `**Foundation** - ${starter}\n**First move** - clone it, inspect setup and license, then write the handoff files in the repo root.` },
-    { h: "## PRD", body: `**Name** - ${brand?.name || "Your app"}\n**Goal** - ${brand?.productGoal || "Turn the selected repo into the user's product idea."}\n**For** - ${brand?.audience || "the target user from the idea"}\n**Verdict** - ${result?.verdictLabel || "Strong fit"}. Start from ${starter}.` },
-    { h: "## Build plan", body: `Phase 1 - ${brand?.firstMilestone || "Clone the repo, inspect the core flows, and ship the smallest useful workflow."}\nPhase 2 - Replace repo-specific assumptions with the user's product direction.\nPhase 3 - Add differentiators only after phase 1 works.` },
+    { h: "## PRD", body: `**Name** - ${productName}\n**Goal** - ${productGoal}\n**For** - ${productAudience}\n**Verdict** - ${result?.verdictLabel || "Strong fit"}. Start from ${starter}.` },
+    { h: "## Build plan", body: `Phase 1 - ${firstMilestone}\nPhase 2 - Replace repo-specific assumptions with the user's product direction.\nPhase 3 - Add differentiators only after phase 1 works.` },
     { h: "## Brand", body: `**Vibe** - ${brand?.vibe || "calm"}.\n**Color** - ${brand?.color || "#2647F0"}.\n**Design notes** - ${brand?.designNotes || "Keep it simple, clear, and built around the first useful workflow."}` },
     { h: "## Don't build in v1", body: (brand?.notList.length ? brand.notList : ["User accounts", "Email digests"]).map((item) => `- ${item}`).join("\n") },
     { h: "## Agent rules", body: "Inspect before editing. Match existing code style. Keep the phase checklist current. Run verification before expanding scope." }
@@ -3904,6 +3950,7 @@ function HandoffView({
   activeBuildPack,
   onCopy,
   onPrepareMarkdown,
+  onConfirmBuildPackQuality,
   preparing,
   onDownloadZip,
   onSaveBuildPack
@@ -3918,6 +3965,7 @@ function HandoffView({
   activeBuildPack: SavedBuildPack | null;
   onCopy: (text: string) => void;
   onPrepareMarkdown?: (target: BuildTarget) => Promise<string>;
+  onConfirmBuildPackQuality: (audit: BuildPackQualityAudit) => Promise<boolean>;
   preparing?: boolean;
   onDownloadZip: (filename: string, docs: HandoffDocuments, markdown: string) => void;
   onSaveBuildPack: (pack: SavedBuildPack) => void;
@@ -4016,7 +4064,7 @@ function HandoffView({
             <button className="btn accent" type="button" disabled={!canExport || preparing} title={preparing ? "Preparing repo evidence..." : "Download Build Pack zip"} onClick={async () => {
               const preparedMarkdown = onPrepareMarkdown ? await onPrepareMarkdown(target) : markdown;
               const preparedAudit = auditBuildPackQuality({ idea: result?.prompt || activeBuildPack?.idea || prompt, markdown: preparedMarkdown });
-              if (!confirmBuildPackQuality(preparedAudit)) return;
+              if (!(await onConfirmBuildPackQuality(preparedAudit))) return;
               const preparedDocs = createHandoffDocuments(preparedMarkdown);
               setDocs(preparedDocs);
               const preparedPack: SavedBuildPack = {
@@ -5093,6 +5141,8 @@ export function ForkFirstRedesignApp() {
   const [chatSending, setChatSending] = useState(false);
   const [handoffPreparing, setHandoffPreparing] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [qualityWarningAudit, setQualityWarningAudit] = useState<BuildPackQualityAudit | null>(null);
+  const qualityWarningResolverRef = useRef<((confirmed: boolean) => void) | null>(null);
   const didPersistSessionRef = useRef(false);
 
   useEffect(() => {
@@ -5261,15 +5311,14 @@ export function ForkFirstRedesignApp() {
   }, [keys]);
 
   const persistChats = useCallback((next: ResearchChat[]) => {
-    setChats(next);
-    writeFeatureStorage(window.localStorage, { chats: next });
+    const ordered = orderRecentChats(next);
+    setChats(ordered);
+    writeFeatureStorage(window.localStorage, { chats: ordered });
   }, []);
 
   const upsertChat = useCallback((chat: ResearchChat) => {
     setChats((current) => {
-      const next = [chat, ...current.filter((item) => item.id !== chat.id)]
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 30);
+      const next = orderRecentChats([chat, ...current.filter((item) => item.id !== chat.id)]);
       writeFeatureStorage(window.localStorage, { chats: next });
       return next;
     });
@@ -5295,9 +5344,7 @@ export function ForkFirstRedesignApp() {
           prompt: result.prompt || prompt
         }
       };
-      const next = [nextChat, ...current.filter((chat) => chat.id !== activeChatId)]
-        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-        .slice(0, 30);
+      const next = orderRecentChats([nextChat, ...current.filter((chat) => chat.id !== activeChatId)]);
       writeFeatureStorage(window.localStorage, { chats: next });
       return next;
     });
@@ -5514,8 +5561,26 @@ export function ForkFirstRedesignApp() {
     setToast("Build Pack deleted");
   }, []);
 
-  const downloadBuildPack = useCallback((pack: SavedBuildPack) => {
+  const confirmBuildPackQuality = useCallback((audit: BuildPackQualityAudit): Promise<boolean> => {
+    if (audit.passed) return Promise.resolve(true);
+    setToast(`${audit.issues.length} handoff issue${audit.issues.length === 1 ? "" : "s"} found`);
+    return new Promise((resolve) => {
+      qualityWarningResolverRef.current = resolve;
+      setQualityWarningAudit(audit);
+    });
+  }, []);
+
+  const resolveBuildPackQualityWarning = useCallback((confirmed: boolean) => {
+    const resolve = qualityWarningResolverRef.current;
+    qualityWarningResolverRef.current = null;
+    setQualityWarningAudit(null);
+    resolve?.(confirmed);
+  }, []);
+
+  const downloadBuildPack = useCallback(async (pack: SavedBuildPack) => {
     const filename = `${pack.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "forkfirst-build-pack"}.md`;
+    const audit = auditBuildPackQuality({ idea: pack.idea, markdown: pack.markdown });
+    if (!(await confirmBuildPackQuality(audit))) return;
     try {
       downloadTextFile(filename, pack.markdown);
       saveBuildPack(withBuildPackVersion({ ...pack, status: "exported" }, "Exported .md"));
@@ -5524,7 +5589,7 @@ export function ForkFirstRedesignApp() {
     } catch {
       setToast("Download failed");
     }
-  }, [saveBuildPack]);
+  }, [confirmBuildPackQuality, saveBuildPack]);
 
   const copyText = useCallback(async (text: string) => {
     try {
@@ -5671,12 +5736,10 @@ export function ForkFirstRedesignApp() {
     );
   }, [brand, followUps, keys.githubToken, promptPackState, result, selectedStarterRepo]);
 
-  const confirmPreparedHandoffQuality = useCallback((markdown: string) => {
+  const confirmPreparedHandoffQuality = useCallback(async (markdown: string) => {
     const audit = auditBuildPackQuality({ idea: result?.prompt || prompt, markdown });
-    if (audit.passed) return true;
-    setToast(`${audit.issues.length} handoff issue${audit.issues.length === 1 ? "" : "s"} found`);
     return confirmBuildPackQuality(audit);
-  }, [prompt, result?.prompt]);
+  }, [confirmBuildPackQuality, prompt, result?.prompt]);
 
   const promptPackRecommendations = useMemo(() => recommendPromptPacks({
     idea: prompt,
@@ -6006,7 +6069,7 @@ export function ForkFirstRedesignApp() {
                     setHandoffPreparing(true);
                     try {
                       const markdown = await buildPreparedHandoffMarkdown();
-                      if (!confirmPreparedHandoffQuality(markdown)) return;
+                      if (!(await confirmPreparedHandoffQuality(markdown))) return;
                       copyText(markdown);
                     } finally {
                       setHandoffPreparing(false);
@@ -6017,7 +6080,7 @@ export function ForkFirstRedesignApp() {
                     setHandoffPreparing(true);
                     try {
                       const markdown = await buildPreparedHandoffMarkdown();
-                      if (!confirmPreparedHandoffQuality(markdown)) return;
+                      if (!(await confirmPreparedHandoffQuality(markdown))) return;
                       downloadHandoff("forkfirst-builder-handoff.md", markdown);
                     } finally {
                       setHandoffPreparing(false);
@@ -6027,7 +6090,7 @@ export function ForkFirstRedesignApp() {
                     setHandoffPreparing(true);
                     try {
                       const markdown = await buildPreparedHandoffMarkdown();
-                      if (!confirmPreparedHandoffQuality(markdown)) return;
+                      if (!(await confirmPreparedHandoffQuality(markdown))) return;
                       downloadHandoffZip("forkfirst-build-pack.zip", createHandoffDocuments(markdown), markdown);
                     } finally {
                       setHandoffPreparing(false);
@@ -6085,6 +6148,7 @@ export function ForkFirstRedesignApp() {
                         setHandoffPreparing(false);
                       }
                     } : undefined}
+                    onConfirmBuildPackQuality={confirmBuildPackQuality}
                     preparing={handoffPreparing}
                     onDownloadZip={downloadHandoffZip}
                     onSaveBuildPack={saveBuildPack}
@@ -6179,6 +6243,13 @@ export function ForkFirstRedesignApp() {
             saveRepo(repo);
             setSavedModalRepo(null);
           }}
+        />
+      ) : null}
+      {qualityWarningAudit ? (
+        <BuildPackQualityDialog
+          audit={qualityWarningAudit}
+          onCancel={() => resolveBuildPackQualityWarning(false)}
+          onConfirm={() => resolveBuildPackQualityWarning(true)}
         />
       ) : null}
       {toast ? <div className="toast">{toast}</div> : null}

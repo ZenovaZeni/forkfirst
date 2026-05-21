@@ -490,9 +490,9 @@ export const LAUNCH_EVAL_CASES: LaunchEvalCase[] = [
       expectedTopRepo: "paperless-ngx/paperless-ngx",
       expectedTopCategory: ["already_exists", "forkable"],
       minFit: 70,
-      productKind: "workflow-app",
-      handoffMustContain: ["Receipt", "ExpenseRecord", "CsvExport", "local-first"],
-      handoffMustNotContain: ["PrimaryItem", "UserInput", "one working product loop"],
+      productKind: "receipt-expense",
+      handoffMustContain: ["Receipt", "ParsedReceipt", "ExpenseRecord", "CsvExport", "local-first", "review parsed receipt"],
+      handoffMustNotContain: ["PrimaryItem", "UserInput", "one working product loop", "receipt, expense, and parsed", "taxes who"],
       qualityAuditPass: true
     }
   }

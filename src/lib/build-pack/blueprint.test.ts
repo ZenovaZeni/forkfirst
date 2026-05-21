@@ -321,4 +321,27 @@ describe("handoff blueprint", () => {
     expect(blueprint.keyScreens.join(" ")).toMatch(/Podcast|Search|Export/i);
     expect(blueprint.coreDataObjects.join(" ")).not.toMatch(/PrimaryItem|UserInput/);
   });
+
+  test("treats recipe scanner with expenses and CSV as receipt scanner intent", () => {
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want a recipe scanner that tracks expenses and exports CSV for taxes",
+      researchContext: null,
+      chatContext: null,
+      queries: ["receipt scanner expense tracker csv in:name,description,readme"],
+      selectedRepo: undefined,
+      candidateRepos: [],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("receipt-expense");
+    expect(blueprint.productThesis).toMatch(/receipt|expense|csv/i);
+    expect(blueprint.productThesis).toMatch(/tax prep|receipts/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/receipt|parsed|expense|CSV/i);
+    expect(blueprint.keyScreens.join(" ")).toMatch(/Receipt capture|Parsed receipt review|Expense ledger|CSV export/i);
+    expect(blueprint.coreDataObjects).toEqual(expect.arrayContaining(["Receipt", "ReceiptImage", "ParsedReceipt", "ExpenseRecord", "ExpenseCategory", "CsvExport", "LocalBackup"]));
+    expect(blueprint.explicitNonGoals.join(" ")).toMatch(/tax filing|OCR|cloud sync/i);
+    expect(blueprint.productThesis).not.toMatch(/home cooks|recipe links|grocery-list/i);
+    expect(`${blueprint.productThesis} ${blueprint.primaryWorkflow.join(" ")} ${blueprint.coreDataObjects.join(" ")}`).not.toMatch(/receipt, expense, and parsed|taxes who|Recipe|Ingredient|GroceryList|Invoice/i);
+    expect(blueprint.coreDataObjects).not.toContain("For");
+  });
 });

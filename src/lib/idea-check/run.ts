@@ -5,6 +5,7 @@ import { classifyRepositories } from "@/lib/scoring/scoring";
 import { saveIdeaCheck } from "@/lib/db/research-cases";
 import type { IdeaCheckResult } from "@/types/idea-check";
 import { enrichTopCandidateReadmes } from "./enrich-candidates";
+import { buildMergePlan, buildRepoInspections, deriveProductIntent } from "./workflow";
 
 export type RunIdeaCheckInput = {
   prompt: string;
@@ -22,6 +23,12 @@ export async function runIdeaCheck(input: RunIdeaCheckInput): Promise<IdeaCheckR
   const search = await searchGithubRepositories(input.prompt, input.githubToken);
   const enrichedRepos = await enrichTopCandidateReadmes(search.repos, input.prompt, input.githubToken);
   const classified = classifyRepositories(enrichedRepos, input.prompt);
+  const productIntent = deriveProductIntent({
+    prompt: input.prompt,
+    refinement: search.refinement,
+    repos: classified,
+    selectedRepo: classified[0]
+  });
 
   // Wrap untrusted repo content to mitigate prompt injection
   const wrappedRepos = classified.map((repo) => ({
@@ -41,8 +48,16 @@ export async function runIdeaCheck(input: RunIdeaCheckInput): Promise<IdeaCheckR
     model: input.aiModel,
     baseUrl: input.aiBaseUrl
   });
+  const cleanRepoByName = new Map(classified.map((repo) => [repo.fullName.toLowerCase(), repo]));
+  const analysisOrderedRepos = analysis.repos
+    .map((repo) => cleanRepoByName.get(repo.fullName.toLowerCase()))
+    .filter((repo): repo is (typeof classified)[number] => Boolean(repo));
+  const inspectionRepos = analysisOrderedRepos.length ? analysisOrderedRepos : classified;
+  const repoInspections = buildRepoInspections(inspectionRepos);
+  const mergePlan = buildMergePlan(productIntent, repoInspections[0] ?? null);
 
   const result: IdeaCheckResult = {
+    ...analysis,
     id: crypto.randomUUID(),
     prompt: input.prompt,
     createdAt: new Date().toISOString(),
@@ -50,7 +65,9 @@ export async function runIdeaCheck(input: RunIdeaCheckInput): Promise<IdeaCheckR
     refinement: search.refinement,
     warnings: search.warnings,
     recovery: buildSearchRecovery({ prompt: input.prompt, repos: analysis.repos, warnings: search.warnings }),
-    ...analysis
+    productIntent,
+    repoInspections,
+    mergePlan
   };
 
   if (input.save) {

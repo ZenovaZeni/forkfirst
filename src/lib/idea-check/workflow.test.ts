@@ -1,0 +1,115 @@
+import { describe, expect, test } from "vitest";
+import type { ClassifiedRepo } from "@/lib/analysis/types";
+import { buildMergePlan, deriveProductIntent, inspectRepoForBuildPack } from "./workflow";
+
+function repo(overrides: Partial<ClassifiedRepo> = {}): ClassifiedRepo {
+  return {
+    id: 1,
+    owner: "simonwep",
+    name: "ocular",
+    fullName: "simonwep/ocular",
+    url: "https://github.com/simonwep/ocular",
+    description: "Open-source budgeting app with expense tracking, imports, exports, and Docker setup.",
+    language: "Vue",
+    topics: ["budget", "expenses", "csv", "self-hosted"],
+    stars: 510,
+    forks: 40,
+    openIssues: 3,
+    license: "MIT",
+    pushedAt: "2026-05-01T00:00:00Z",
+    createdAt: "2025-01-01T00:00:00Z",
+    updatedAt: "2026-05-01T00:00:00Z",
+    archived: false,
+    homepage: null,
+    category: "forkable",
+    score: { total: 86, fit: 82, activity: 80, popularity: 55, license: 100, docs: 92, reasons: ["Strong keyword fit", "README/docs look useful"] },
+    summary: "Useful budgeting starter",
+    readme: {
+      excerpt: "Track budgets and expenses, import data from sheets, export JSON or CSV, and self-host with Docker.",
+      url: "https://github.com/simonwep/ocular#readme",
+      hasSetup: true,
+      hasExamples: true,
+      hasApiDetails: false,
+      hasLocalDevelopment: true,
+      hasLicenseText: true,
+      qualityScore: 90,
+      reasons: ["Setup path found", "Examples found"],
+      evidence: {
+        fetchStatus: "ok",
+        fetchedAt: "2026-05-21T00:00:00Z",
+        setupSnippets: ["Deploy with Docker compose"],
+        commandSnippets: ["docker compose up"],
+        featureSnippets: ["budget tracking, expense history, CSV export"],
+        integrationSnippets: ["Google Sheets import"],
+        licenseSnippets: ["MIT"]
+      }
+    },
+    ...overrides
+  };
+}
+
+describe("idea-check workflow artifacts", () => {
+  test("turns arbitrary ideas into concrete product intent without placeholder nouns", () => {
+    const intent = deriveProductIntent({
+      prompt: "I want to build a local-first receipt scanner that tracks expenses and exports to CSV for taxes",
+      repos: [repo()]
+    });
+
+    expect(intent.productPhrase).toBe("local-first receipt scanner");
+    expect(intent.targetUser).toMatch(/tax prep|receipts/i);
+    expect(intent.dataObjects).toEqual(expect.arrayContaining(["Receipt", "ExpenseRecord", "CsvExport"]));
+    expect(intent.screens.join(" ")).toMatch(/Receipt capture|Expense review|CSV export/i);
+    expect(intent.actions.join(" ")).toMatch(/scan receipts|export expenses to CSV/i);
+    expect(JSON.stringify(intent)).not.toMatch(/PrimaryItem|UserInput|one working product loop|main thing|taxes who|receipt, expense, and parsed/i);
+  });
+
+  test("normalizes recipe scanner expense wording into receipt intent", () => {
+    const intent = deriveProductIntent({
+      prompt: "I want a recipe scanner that tracks expenses and exports CSV",
+      repos: [repo()]
+    });
+
+    expect(intent.productPhrase).toMatch(/receipt scanner/i);
+    expect(intent.dataObjects).toEqual(expect.arrayContaining(["Receipt", "ExpenseRecord", "CsvExport"]));
+    expect(intent.screens.join(" ")).toMatch(/Receipt capture|Expense review|CSV export/i);
+    expect(intent.actions.join(" ")).toMatch(/scan receipts|export expenses to CSV/i);
+    expect(JSON.stringify(intent)).not.toMatch(/Recipe|Ingredient|GroceryList/i);
+  });
+
+  test("keeps unknown-domain ideas concrete without a named blueprint", () => {
+    const intent = deriveProductIntent({
+      prompt: "I want a plant care tracker that logs watering, photos, reminders, and exports PDF",
+      repos: [repo({ description: "Simple local-first tracker with reminders and export support." })]
+    });
+
+    expect(intent.dataObjects.join(" ")).toMatch(/Plant|Watering|Photo|Reminder|PdfExport/i);
+    expect(intent.screens.join(" ")).toMatch(/plant|watering|PDF export/i);
+    expect(intent.actions.join(" ")).toMatch(/manage plant|export to PDF/i);
+    expect(JSON.stringify(intent)).not.toMatch(/PrimaryItem|UserInput|one working product loop|main thing/i);
+  });
+
+  test("inspects repo evidence into one reusable adapter object", () => {
+    const inspection = inspectRepoForBuildPack(repo());
+
+    expect(inspection.repo.fullName).toBe("simonwep/ocular");
+    expect(inspection.classification.foundationMode).toBe("clone");
+    expect(inspection.classification.setupFit.label).toMatch(/Docker/i);
+    expect(inspection.readme.evidence.features.join(" ")).toMatch(/expense history|CSV export/i);
+    expect(inspection.buildPack.firstInspectionFiles).toEqual(expect.arrayContaining(["README.md", "LICENSE"]));
+  });
+
+  test("builds a merge plan that separates keep, replace, add, remove, and inspect work", () => {
+    const intent = deriveProductIntent({
+      prompt: "I want to build a local-first receipt scanner that tracks expenses and exports to CSV",
+      repos: [repo()]
+    });
+    const inspection = inspectRepoForBuildPack(repo());
+    const plan = buildMergePlan(intent, inspection);
+
+    expect(plan.fitSummary).toMatch(/simonwep\/ocular/i);
+    expect(plan.keep.map((item) => item.item).join(" ")).toMatch(/expense|CSV|working setup/i);
+    expect(plan.replace.join(" ")).toMatch(/product identity|sample data|domain assumptions/i);
+    expect(plan.add.join(" ")).toMatch(/Receipt|ReceiptImage|save\/export/i);
+    expect(plan.inspect).toEqual(expect.arrayContaining(["README.md", "LICENSE", "package files / lockfiles"]));
+  });
+});

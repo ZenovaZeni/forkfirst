@@ -3,6 +3,7 @@ import type { ClassifiedRepo } from "@/lib/analysis/types";
 import type { IdeaCheckResult } from "@/types/idea-check";
 import { buildProjectBuildPack, notToBuildInV1 } from "./generator";
 import { auditBuildPackQuality } from "./quality";
+import { buildMergePlan, deriveProductIntent, inspectRepoForBuildPack } from "../idea-check/workflow";
 
 const REQUIRED_SECTIONS = [
   "# STARTER_REPO",
@@ -635,18 +636,18 @@ describe("build pack generator", () => {
   test("receipt scanner expense prompt produces a concrete local-first handoff", () => {
     const markdown = buildProjectBuildPack(
       makeResult({
-        prompt: "Original idea: I want to build a local-first receipt scanner that tracks expenses and exports to CSV",
+        prompt: "Original idea: I want to build a local-first receipt scanner that tracks expenses, lets me review parsed receipts, and exports CSV for taxes.",
         queries: ["receipt scanner expense tracker csv in:name,description,readme"],
         repos: [
           {
             ...repo(),
             fullName: "simonwep/ocular",
             url: "https://github.com/simonwep/ocular",
-            description: "Ocular is an open-source budgeting tracking app to track your budget across the years.",
+            description: "Self-hosted AI accounting app. LLM analyzer for receipts, invoices, transactions with custom prompts and categories.",
             topics: ["budget", "expense", "csv", "self-hosted"],
             readme: {
               ...repo().readme!,
-              excerpt: "Self-hosted budgeting app. Import data from Google Sheets annual planner and export as json.",
+              excerpt: "Self-hosted accounting app with receipt analysis, transactions, custom prompts, document OCR, import/export, and Docker setup.",
               evidence: {
                 fetchStatus: "ok",
                 fetchedAt: "2026-05-21T00:00:00Z",
@@ -665,10 +666,10 @@ describe("build pack generator", () => {
 
     expect(markdown).toMatch(/receipt/i);
     expect(markdown).toMatch(/OCR|manual entry/i);
-    expect(markdown).toMatch(/ExpenseRecord|ReceiptImage|CsvExport/i);
+    expect(markdown).toMatch(/ExpenseRecord|ReceiptImage|ParsedReceipt|CsvExport/i);
     expect(markdown).toMatch(/local-first|browser storage|CSV/i);
     expect(markdown).toMatch(/Review parsed receipt|expense list|CSV export/i);
-    expect(markdown).not.toMatch(/PrimaryItem|UserInput|User starts the primary task|one working product loop/i);
+    expect(markdown).not.toMatch(/PrimaryItem|UserInput|User starts the primary task|one working product loop|receipt, expense, and parsed|taxes who needs|\n- For\b/i);
     expect(auditBuildPackQuality({ idea: "I want to build a local-first receipt scanner that tracks expenses and exports to CSV", markdown }).passed).toBe(true);
   });
 
@@ -698,6 +699,102 @@ describe("build pack generator", () => {
     expect(markdown).not.toContain("Pokemon Collector");
     expect(markdown).not.toContain("official Pokemon logos");
     expect(markdown).not.toContain("Pokemon TCG or trading-card collector");
+  });
+
+  test("uses product intent and merge plan when the idea-check pipeline provides them", () => {
+    const baseRepo = {
+      ...repo(),
+      fullName: "simonwep/ocular",
+      url: "https://github.com/simonwep/ocular",
+      description: "Open-source budgeting app with expense tracking, CSV export, and Docker setup.",
+      topics: ["budget", "expense", "csv", "self-hosted"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "Track budgets and expenses, import data, export CSV, and self-host with Docker.",
+        evidence: {
+          fetchStatus: "ok" as const,
+          fetchedAt: "2026-05-21T00:00:00Z",
+          setupSnippets: ["Deploy with Docker compose"],
+          commandSnippets: ["docker compose up"],
+          featureSnippets: ["budget tracking, expense history, CSV export"],
+          integrationSnippets: ["Google Sheets import"],
+          licenseSnippets: ["MIT"]
+        }
+      }
+    };
+    const prompt = "I want to build a local-first receipt scanner that tracks expenses and exports to CSV";
+    const productIntent = deriveProductIntent({ prompt, repos: [baseRepo] });
+    const repoInspections = [inspectRepoForBuildPack(baseRepo)];
+    const mergePlan = buildMergePlan(productIntent, repoInspections[0]);
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt,
+        repos: [baseRepo],
+        productIntent,
+        repoInspections,
+        mergePlan
+      }),
+      "codex"
+    );
+
+    expect(markdown).toContain("## Product/Repo Merge Plan");
+    expect(markdown).toMatch(/Receipt capture|Expense review|CSV export/);
+    expect(markdown).toMatch(/Receipt|ExpenseRecord|CsvExport/);
+    expect(markdown).toMatch(/ReceiptImage data model|save\/export path/);
+    expect(markdown).not.toMatch(/PrimaryItem|UserInput|one working product loop|main thing/i);
+    expect(auditBuildPackQuality({ idea: prompt, markdown }).passed).toBe(true);
+  });
+
+  test("rebuilds the merge plan for the focused starter repo", () => {
+    const primaryRepo = {
+      ...repo(),
+      fullName: "alpha/original-starter",
+      owner: "alpha",
+      name: "original-starter",
+      url: "https://github.com/alpha/original-starter",
+      description: "General starter app with dashboards and setup docs."
+    };
+    const focusedRepo = {
+      ...repo(),
+      fullName: "focus/receipt-foundation",
+      owner: "focus",
+      name: "receipt-foundation",
+      url: "https://github.com/focus/receipt-foundation",
+      description: "Receipt and expense app with CSV export and Docker setup.",
+      readme: {
+        ...repo().readme!,
+        excerpt: "Receipt capture, expense review, CSV export, and Docker setup.",
+        evidence: {
+          fetchStatus: "ok" as const,
+          fetchedAt: "2026-05-21T00:00:00Z",
+          setupSnippets: ["Docker setup"],
+          commandSnippets: ["docker compose up"],
+          featureSnippets: ["Receipt capture and expense review with CSV export"],
+          integrationSnippets: [],
+          licenseSnippets: ["MIT"]
+        }
+      }
+    };
+    const prompt = "I want to build a local-first receipt scanner that tracks expenses and exports to CSV";
+    const productIntent = deriveProductIntent({ prompt, repos: [primaryRepo, focusedRepo] });
+    const repoInspections = [inspectRepoForBuildPack(primaryRepo)];
+    const mergePlan = buildMergePlan(productIntent, repoInspections[0]);
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt,
+        repos: [primaryRepo, focusedRepo],
+        productIntent,
+        repoInspections,
+        mergePlan
+      }),
+      "codex",
+      focusedRepo
+    );
+    const mergePlanSection = markdown.split("## Product/Repo Merge Plan")[1]?.split("## Alignment Decisions")[0] ?? "";
+
+    expect(markdown).toContain("- Repo: focus/receipt-foundation");
+    expect(mergePlanSection).toContain("focus/receipt-foundation");
+    expect(mergePlanSection).not.toContain("alpha/original-starter");
   });
 
   test("cleans untrusted repo tags and adds a foundation coverage map", () => {

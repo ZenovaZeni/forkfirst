@@ -1,4 +1,5 @@
 import type { IdeaCheckResult } from "@/types/idea-check";
+import { isLikelyReceiptScannerTypo, normalizeLikelyReceiptScannerTypo } from "../intent/normalize";
 import type { BuildPackPreferences } from "./generator";
 
 type BuildPackRepo = IdeaCheckResult["repos"][number];
@@ -12,6 +13,7 @@ export type ProductKind =
   | "knowledge-base"
   | "developer-tool"
   | "recipe-bookmark"
+  | "receipt-expense"
   | "grocery-shopping"
   | "appointment-booking"
   | "prompt-library"
@@ -90,6 +92,7 @@ function directTextFrom(input: HandoffSignalInput): string {
     ...input.queries
   ]
     .filter(Boolean)
+    .map((value) => normalizeLikelyReceiptScannerTypo(String(value)))
     .join(" ")
     .toLowerCase();
 }
@@ -111,6 +114,7 @@ function textFrom(input: HandoffSignalInput): string {
     repo?.readme?.reasons.join(" ")
   ]
     .filter(Boolean)
+    .map((value) => normalizeLikelyReceiptScannerTypo(String(value)))
     .join(" ")
     .toLowerCase();
 }
@@ -231,6 +235,75 @@ function recipeBookmarkBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   };
 }
 
+function receiptExpenseBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  const repo = input.selectedRepo;
+  return {
+    productKind: "receipt-expense",
+    confidence: 86,
+    productThesis: `${name || "The app"} should help people capture receipts, review parsed expense details, keep a local-first expense record, and export a clean CSV for tax prep.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? "People organizing receipts and expenses for tax prep without wanting a heavy accounting suite.",
+    jobToBeDone: "When I have receipts to organize, I want to capture or upload them, review the parsed merchant/date/amount/category fields, save corrected expense records, and export a predictable CSV for taxes.",
+    currentAlternatives: ["paper receipts", "camera roll albums", "spreadsheet trackers", "bank exports", "full accounting apps"],
+    differentiatedWedge: `Use ${repo?.fullName ?? "the selected repo"} as foundation evidence for receipt analysis, expense data, import/export, setup, or app structure, then narrow the final product around one trustworthy receipt review and CSV export loop.`,
+    primaryWorkflow: [
+      "User captures, uploads, or manually adds a receipt.",
+      "System extracts merchant, date, total, tax, category, notes, and optional raw OCR/AI output.",
+      "User reviews the parsed receipt fields, fixes mistakes, and marks the expense as ready.",
+      "User sees saved expenses in a searchable local ledger with filters for date, category, merchant, and tax status.",
+      "User exports selected expenses to CSV with documented headers for tax prep or spreadsheet review."
+    ],
+    keyScreens: ["Receipt capture", "Parsed receipt review", "Expense ledger", "Expense detail", "CSV export", "Local data and backup settings"],
+    coreDataObjects: ["Receipt", "ReceiptImage", "ParsedReceipt", "ExpenseRecord", "Merchant", "ExpenseCategory", "CsvExport", "LocalBackup"],
+    userActions: ["capture or upload receipts", "review parsed receipt fields", "edit merchant, date, total, tax, and category", "save corrected expenses", "filter the expense ledger", "export selected expenses to CSV"],
+    systemStates: {
+      empty: "No receipts yet; show upload/capture/manual-entry options and a sample CSV preview.",
+      loading: "Parsing receipt data; keep the original image/file visible and show progress.",
+      error: "Receipt parsing failed; preserve the upload and offer retry plus manual expense entry.",
+      noResult: "No expenses match the current filters; offer filter reset and CSV export guidance.",
+      partialSuccess: "Some receipt fields were parsed; flag missing merchant/date/amount/category fields for manual review."
+    },
+    mvpRequirements: [
+      "Receipt capture/upload/manual-entry flow.",
+      "Parsed receipt review before anything is saved as final.",
+      "ExpenseRecord model with merchant, date, total, tax, category, notes, source receipt, and reviewed status.",
+      "Local-first persistence with backup, export, and clear-data controls.",
+      "Expense ledger with search/filter by date, merchant, category, reviewed status, and tax status.",
+      "CSV export with stable documented headers and selected-date-range support.",
+      "Clear empty/loading/error/partial-success states for parsing and export."
+    ],
+    explicitNonGoals: [
+      "No full accounting, payroll, invoicing, or business tax filing in v1.",
+      "No claim that OCR/AI parsing is always correct; user review is required.",
+      "No cloud sync before local storage, backup, and clear-data behavior is reliable.",
+      "No hidden export fields or undocumented CSV format.",
+      "No private receipt image uploads to third-party services unless the user explicitly configures that provider."
+    ],
+    trustPrivacySafety: [
+      "Document where receipt images, parsed text, and expense records are stored.",
+      "Make local-first behavior, backup, export, and clear-data controls visible.",
+      "Treat OCR/AI results as drafts until reviewed by the user.",
+      "Never include API keys, raw provider responses, or hidden fields in CSV exports.",
+      repo?.license ? `Confirm ${repo.fullName}'s ${repo.license} license, notices, assets, and dependency terms before copying code.` : "Confirm license, notices, assets, and dependency terms before copying code."
+    ],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the receipt-to-CSV loop: add one receipt, parse or manually enter fields, review and correct the expense, save it locally, filter it in the ledger, and export a CSV.",
+    successMetrics: [
+      "A user can add and review one receipt in under two minutes.",
+      "Saved expense records survive refresh and can be backed up or cleared.",
+      "CSV export contains stable headers and only the selected expense fields.",
+      "The UI makes parsed data feel reviewable, not magically guaranteed."
+    ],
+    wowDemoScript: [
+      "Start with an empty local receipt workspace.",
+      "Upload or manually add a sample receipt.",
+      "Show parsed fields and correct one mistake.",
+      "Save the reviewed expense and find it in the ledger.",
+      "Export a CSV and show the headers."
+    ],
+    inferredFrom: ["user idea", repo ? "selected repo metadata" : "receipt/expense blueprint", "search queries"]
+  };
+}
+
 function groceryShoppingBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const name = stringPreference(input.preferences, "productName");
   const signal = directTextFrom(input);
@@ -300,6 +373,12 @@ function groceryShoppingBlueprint(input: HandoffSignalInput): HandoffBlueprint {
       : ["Create a grocery list.", "Add favorite or recurring items.", "Group by section.", "Save and export/copy the list."],
     inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
   };
+}
+
+function isReceiptExpenseIntent(signal: string, recipeScannerMeansReceipt: boolean): boolean {
+  const hasReceiptOrExpense = /\b(receipts?|receipt scanner|expenses?|expense tracker|bookkeeping|reimbursement)\b/i.test(signal);
+  const hasReceiptWorkflow = /\b(receipts?|receipt scanner|scanner|scan|ocr|parsed|parse|expenses?|expense tracker|csv|export|tax(?:es)?|bookkeeping|reimbursement)\b/i.test(signal);
+  return recipeScannerMeansReceipt || (hasReceiptOrExpense && hasReceiptWorkflow);
 }
 
 function appointmentBookingBlueprint(input: HandoffSignalInput): HandoffBlueprint {
@@ -610,6 +689,7 @@ const SYNTHESIS_STOP_WORDS = new Set([
   "can",
   "could",
   "every",
+  "for",
   "from",
   "have",
   "help",
@@ -701,7 +781,7 @@ const FEATURE_OBJECT_MAP: Array<[RegExp, string]> = [
   [/\breceipts?\b/, "Receipt"],
   [/\bexpenses?\b/, "ExpenseRecord"],
   [/\bcsv\b|\bspreadsheet\b/, "CsvExport"],
-  [/\bocr\b|\bparse[dr]?\b|\bscanner?\b/, "ParsedResult"],
+  [/\bocr\b|\bparse[dr]?\b|\bscanner?\b/, "ParsedReceipt"],
   [/\blocal[-\s]?first\b|\blocal\b|\bbackup\b/, "LocalBackup"],
   [/\bphotos?\b|\bimages?\b|\bupload\b/, "UploadedFile"],
   [/\btranscripts?\b/, "Transcript"],
@@ -748,7 +828,7 @@ function uniqueStrings(values: string[]): string[] {
 }
 
 function cleanForSynthesis(text: string): string {
-  return text
+  return normalizeLikelyReceiptScannerTypo(text)
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -759,6 +839,8 @@ function cleanForSynthesis(text: string): string {
 }
 
 function singularTerm(term: string): string {
+  if (term === "taxes") return "tax";
+  if (term === "parsed" || term === "parsing") return "parse";
   if (term === "tracks" || term === "tracking") return "track";
   if (term === "exports" || term === "exporting") return "export";
   if (term === "scans" || term === "scanning") return "scan";
@@ -824,8 +906,9 @@ function pascalCaseTerm(term: string): string {
 function objectNameFromTerm(term: string): string | null {
   const normalized = cleanForSynthesis(term);
   if (!normalized || SYNTHESIS_STOP_WORDS.has(normalized) || PRODUCT_WORDS.has(normalized) || ACTION_WORDS.has(normalized)) return null;
+  if (["csv", "ocr", "tax", "taxes", "taxe", "receipt", "expense"].includes(normalized)) return null;
   if (normalized === "csv") return "CsvExport";
-  if (normalized === "ocr") return "ParsedResult";
+  if (normalized === "ocr") return "ParsedReceipt";
   if (normalized === "local" || normalized === "local-first") return "LocalBackup";
   return pascalCaseTerm(normalized);
 }
@@ -860,6 +943,7 @@ function productPhraseFrom(text: string, terms: string[], phrases: string[]): st
 }
 
 function extractTargetUser(text: string, objectLabel: string): string {
+  if (/\bfor\s+tax(?:es)?\b/i.test(text)) return "people organizing receipts for tax prep";
   const forMatch = text.match(/\bfor\s+(?:a|an|the)?\s*([a-z0-9+#.\s-]{4,70}?)(?:\s+who|\s+that|\s+where|\s+to\s+|\s+with\s+|,|\.|$)/i);
   const candidate = forMatch?.[1]?.trim();
   if (candidate && !/\b(track|scan|export|manage|build|make|create)\b/i.test(candidate)) {
@@ -896,6 +980,7 @@ function synthesizeIngredients(input: HandoffSignalInput): SynthesizedIngredient
     input.selectedRepo?.topics.join(" "),
     input.selectedRepo?.readme?.excerpt
   ].filter(Boolean).join(" "));
+  const ideaSignalText = cleanForSynthesis(ideaText || input.originalIdea);
   const terms = tokenizeForSynthesis(ideaText || input.originalIdea);
   const phrases = phraseCandidates(ideaText || input.originalIdea);
   const actions = detectActions(signalText);
@@ -904,11 +989,13 @@ function synthesizeIngredients(input: HandoffSignalInput): SynthesizedIngredient
     terms
       .filter((term) => !PRODUCT_WORDS.has(term))
       .filter((term) => !ACTION_WORDS.has(term))
-      .filter((term) => !["local", "local-first", "first", "source", "github", "starter", "template"].includes(term))
+      .filter((term) => !["local", "local-first", "first", "source", "github", "starter", "template", "csv", "ocr", "tax", "taxes"].includes(term))
   ).slice(0, 6);
   const primaryObject = titleCaseTerm(productPhrase);
-  const objectLabel = humanList(objectTerms.slice(0, 3), productPhrase || "the core records");
-  const dataObjects = deriveDataObjects(signalText, objectTerms, actions);
+  const objectLabel = /\breceipts?\b/i.test(ideaSignalText) && /\bexpenses?\b/i.test(ideaSignalText)
+    ? "receipts and expenses"
+    : humanList(objectTerms.slice(0, 3), productPhrase || "the core records");
+  const dataObjects = deriveDataObjects(ideaSignalText, objectTerms, actions);
   return { ideaText, signalText, terms, objectTerms, productPhrase, objectLabel, primaryObject, dataObjects, actions };
 }
 
@@ -1121,10 +1208,14 @@ function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
 export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const directSignal = directTextFrom(input);
   const signal = textFrom(input);
+  const recipeScannerMeansReceipt = isLikelyReceiptScannerTypo(input.originalIdea);
   if (/\b(pokemon|pok[eé]mon|tcg|trading[-\s]?card|card collector|card collection|collector album|card binder|card value|tcgdex|tcgplayer|cardmarket)\b/i.test(signal)) {
     return cardCollectorBlueprint(input);
   }
-  if (/\b(recipe|recipes|meal plan|meal planning|ingredients?|cookbook|cooking|recipe bookmark|bookmark manager)\b/i.test(directSignal)) {
+  if (isReceiptExpenseIntent(directSignal, recipeScannerMeansReceipt)) {
+    return receiptExpenseBlueprint(input);
+  }
+  if (!recipeScannerMeansReceipt && /\b(recipe|recipes|meal plan|meal planning|ingredients?|cookbook|cooking|recipe bookmark|bookmark manager)\b/i.test(directSignal)) {
     return recipeBookmarkBlueprint(input);
   }
   if (/\b(grocery|groceries|supermarket|shopping list|shopping lists|food shopping)\b/i.test(directSignal)) {
@@ -1158,7 +1249,7 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
   if (/\b(shopify|ecommerce|e-commerce|retail|store|storefront|merchant)\b/i.test(directSignal) && /\b(dashboard|analytics|profit|profits|margin|margins|ad spend|ads?|inventory|orders?|metrics?)\b/i.test(directSignal)) {
     return ecommerceDashboardBlueprint(input);
   }
-  if (/\b(recipe|recipes|grocery list|meal plan|ingredients?|cookbook|cooking|bookmark manager)\b/i.test(signal)) {
+  if (!recipeScannerMeansReceipt && /\b(recipe|recipes|grocery list|meal plan|ingredients?|cookbook|cooking|bookmark manager)\b/i.test(signal)) {
     return recipeBookmarkBlueprint(input);
   }
   const synthesized = synthesizedWorkflowBlueprint(input);

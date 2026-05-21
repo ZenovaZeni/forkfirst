@@ -169,6 +169,8 @@ export const DEFAULT_SAVINGS_LOG: SavingsLog = {
   totalHandoffTokens: 0
 };
 
+export const MAX_RECENT_CHATS = 100;
+
 export const DEFAULT_REDESIGN_FEATURE_STORAGE: RedesignFeatureStorage = {
   keys: DEFAULT_REDESIGN_USER_KEYS,
   rememberKeys: false,
@@ -182,6 +184,12 @@ export const DEFAULT_REDESIGN_FEATURE_STORAGE: RedesignFeatureStorage = {
   savingsLog: DEFAULT_SAVINGS_LOG,
   accent: "cobalt"
 };
+
+export function orderRecentChats(chats: ResearchChat[], limit = MAX_RECENT_CHATS): ResearchChat[] {
+  return [...chats]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, limit);
+}
 
 export function readJsonValue<T>(storage: JsonStorage | null | undefined, key: string, fallback: T): T {
   if (!storage) return fallback;
@@ -214,7 +222,7 @@ export function readFeatureStorage(storage: JsonStorage | null | undefined): Red
   return {
     keys: normalizeUserKeys(readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.keys, LEGACY_REDESIGN_STORAGE_KEYS.keys, DEFAULT_REDESIGN_USER_KEYS)),
     rememberKeys: readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.rememberKeys, LEGACY_REDESIGN_STORAGE_KEYS.rememberKeys, DEFAULT_REDESIGN_FEATURE_STORAGE.rememberKeys),
-    chats: readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.chats, LEGACY_REDESIGN_STORAGE_KEYS.chats, []),
+    chats: orderRecentChats(readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.chats, LEGACY_REDESIGN_STORAGE_KEYS.chats, [])),
     folders: readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.folders, LEGACY_REDESIGN_STORAGE_KEYS.folders, []),
     savedRepos: readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.savedRepos, LEGACY_REDESIGN_STORAGE_KEYS.savedRepos, []),
     savedRepoBoards: readJsonValueWithFallback(storage, REDESIGN_STORAGE_KEYS.savedRepoBoards, LEGACY_REDESIGN_STORAGE_KEYS.savedRepoBoards, {}),

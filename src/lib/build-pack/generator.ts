@@ -2,6 +2,7 @@ import { buildRepoNarrative } from "../analysis/human-answer";
 import type { IdeaCheckResult } from "../../types/idea-check";
 import { buildHandoffBlueprint, isGenericBuildPackPreference, type HandoffBlueprint, type ProductKind } from "./blueprint";
 import { buildAlignmentDecisionTable, buildBuildPackIR } from "./ir";
+import { buildMergePlan, inspectRepoForBuildPack, productIntentToBlueprint, type MergePlan, type RepoInspection } from "../idea-check/workflow";
 
 type BuildPackRepo = IdeaCheckResult["repos"][number];
 
@@ -953,6 +954,48 @@ function profileWithPreferences(profile: ProductProfile, preferences?: BuildPack
   };
 }
 
+function blueprintWithIntentPreferences(blueprint: HandoffBlueprint, preferences?: BuildPackPreferences): HandoffBlueprint {
+  const productGoal = stringPreference(preferences, "productGoal");
+  const audience = stringPreference(preferences, "audience");
+  const firstMilestone = stringPreference(preferences, "firstMilestone");
+  if (!productGoal && !audience && !firstMilestone) return blueprint;
+  return {
+    ...blueprint,
+    productThesis: productGoal ?? blueprint.productThesis,
+    targetUserSegment: audience ?? blueprint.targetUserSegment,
+    firstMilestone: firstMilestone ?? blueprint.firstMilestone
+  };
+}
+
+function mergePlanItemText(item: { item: string; evidence: string[] }): string {
+  const evidence = item.evidence.length ? ` Evidence: ${item.evidence.slice(0, 2).join("; ")}` : "";
+  return `${item.item}${evidence}`;
+}
+
+function mergePlanSectionLines(plan: MergePlan | undefined): string[] {
+  if (!plan) return [];
+  return [
+    `- Fit summary: ${plan.fitSummary}`,
+    `- Foundation mode: ${plan.foundationMode === "clone" ? "clone/fork candidate after inspection" : plan.foundationMode === "inspect" ? "inspect/reference first" : "no foundation selected"}`,
+    `- Keep from the repo: ${plan.keep.length ? plan.keep.slice(0, 4).map(mergePlanItemText).join(" | ") : "Nothing confirmed yet; inspect before reusing."}`,
+    `- Replace: ${plan.replace.slice(0, 4).join(" | ")}`,
+    `- Add/build for the user's product: ${plan.add.slice(0, 6).join(" | ")}`,
+    `- Remove/defer: ${plan.remove.slice(0, 5).join(" | ")}`,
+    `- Inspect first: ${plan.inspect.slice(0, 7).join(" | ")}`,
+    `- Missing product needs to verify: ${plan.missingProductNeeds.length ? plan.missingProductNeeds.slice(0, 8).join(", ") : "No obvious missing needs from metadata; still verify in the repo."}`,
+    `- Warnings: ${plan.warnings.slice(0, 5).join(" | ")}`
+  ];
+}
+
+function mergePlanForActiveRepo(result: IdeaCheckResult, repo: BuildPackRepo | undefined): MergePlan | undefined {
+  if (!result.productIntent) return result.mergePlan;
+  const matchingInspection = repo
+    ? result.repoInspections?.find((inspection: RepoInspection) => inspection.repo.fullName.toLowerCase() === repo.fullName.toLowerCase())
+    : undefined;
+  const activeInspection = repo ? matchingInspection ?? inspectRepoForBuildPack(repo) : null;
+  return buildMergePlan(result.productIntent, activeInspection);
+}
+
 function foundationMode(repo: BuildPackRepo | undefined): "clone" | "inspect" | "none" {
   if (!repo) return "none";
   if (repo.score.fit >= 45 && (repo.category === "forkable" || repo.category === "already_exists")) return "clone";
@@ -1381,9 +1424,12 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   });
   const userProfileSignal = [originalIdea, researchContext, chatContext].filter(Boolean).join(" ");
   const legacyProfile = profileWithPreferences(productProfileFor(userProfileSignal || originalIdea), wizardAnswers);
-  const resolvedBlueprint = inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
+  const intentBlueprint = result.productIntent
+    ? blueprintWithIntentPreferences(productIntentToBlueprint(result.productIntent, inferredBlueprint), wizardAnswers)
+    : null;
+  const resolvedBlueprint = intentBlueprint ?? (inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
     ? blueprintFromProfile(legacyProfile, "workflow-app", ["user idea", "product profile", bestRepo ? "selected repo metadata" : "search result"])
-    : inferredBlueprint;
+    : inferredBlueprint);
   const ir = buildBuildPackIR({
     originalIdea,
     researchContext,
@@ -1473,6 +1519,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const agentHeading = target === "codex" ? "AGENTS" : target === "claude-code" ? "CLAUDE" : "AI_BUILDER_NOTES";
   const cloneCommands = foundationCommands(bestRepo, projectName);
   const foundationModeLabel = foundationMode(bestRepo);
+  const mergePlanLines = mergePlanSectionLines(mergePlanForActiveRepo(result, bestRepo));
 
   const notToBuild = notToBuildInV1(result);
 
@@ -1502,6 +1549,13 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `## Repo-To-Product Adaptation Map`,
     ...adaptationMap(bestRepo, profile, wizardAnswers),
     ``,
+    ...(mergePlanLines.length
+      ? [
+          `## Product/Repo Merge Plan`,
+          ...mergePlanLines,
+          ``
+        ]
+      : []),
     `## Alignment Decisions`,
     ir.alignment.summary,
     ``,

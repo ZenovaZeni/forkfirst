@@ -2,8 +2,10 @@ import { describe, expect, test } from "vitest";
 import {
   DEFAULT_REDESIGN_USER_KEYS,
   LEGACY_REDESIGN_STORAGE_KEYS,
+  MAX_RECENT_CHATS,
   REDESIGN_STORAGE_KEYS,
   buildIdeaCheckRequestBody,
+  orderRecentChats,
   readFeatureStorage,
   readJsonValue,
   writeFeatureStorage,
@@ -85,6 +87,23 @@ describe("redesign feature model", () => {
     expect(readJsonValue(storage, REDESIGN_STORAGE_KEYS.accent, "cobalt")).toBe("forest");
     expect(readJsonValue(storage, REDESIGN_STORAGE_KEYS.folders, [])).toEqual(patch.folders);
     expect(storage.getItem(REDESIGN_STORAGE_KEYS.keys)).toBeNull();
+  });
+
+  test("keeps a deep recent chat history ordered newest first", () => {
+    const chats = Array.from({ length: MAX_RECENT_CHATS + 5 }, (_, index) => ({
+      id: `chat-${index}`,
+      title: `Chat ${index}`,
+      createdAt: new Date(2026, 0, 1, 0, index).toISOString(),
+      updatedAt: new Date(2026, 0, 1, 0, index).toISOString(),
+      result: null,
+      messages: []
+    }));
+
+    const ordered = orderRecentChats(chats);
+
+    expect(ordered).toHaveLength(MAX_RECENT_CHATS);
+    expect(ordered[0]?.id).toBe(`chat-${MAX_RECENT_CHATS + 4}`);
+    expect(ordered.at(-1)?.id).toBe("chat-5");
   });
 
   test("builds the existing idea-check request body from prompt, keys, and case id", () => {

@@ -118,7 +118,7 @@ export function LeftSidebar({
         </div>
       ) : (
         <div className="rail-root-drop">
-          {chats.slice(0, 5).map(renderChat)}
+          {chats.map(renderChat)}
         </div>
       )}
       <div className="left-sidebar-bottom" aria-label="ForkFirst utilities">

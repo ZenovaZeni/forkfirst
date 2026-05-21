@@ -301,4 +301,15 @@ describe("search planner", () => {
     expect(refinement.queries.slice(0, 4).join(" ")).toMatch(/scanner|ocr/);
     expect(refinement.queries.slice(0, 4).join(" ")).toMatch(/csv|export/);
   });
+
+  test("treats recipe scanner with expenses and CSV as likely receipt scanner wording", () => {
+    const refinement = planPromptRefinement("I want a recipe scanner that tracks expenses and exports CSV");
+    const earlyQueries = refinement.queries.slice(0, 4).join(" ");
+
+    expect(refinement.bestQuery).toBe("receipt scanner expense tracker csv in:name,description,readme");
+    expect(earlyQueries).toMatch(/receipt/);
+    expect(earlyQueries).toMatch(/expense/);
+    expect(earlyQueries).toMatch(/csv|export/);
+    expect(earlyQueries).not.toMatch(/\brecipe manager\b|meal planner|cookbook/i);
+  });
 });

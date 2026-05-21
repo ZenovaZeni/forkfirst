@@ -1696,6 +1696,7 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 18px 14px 18px 18px;
   overflow-y: auto;
   display: flex; flex-direction: column; gap: 4px;
+  min-height: 0;
 }
 .sidebar .brand-row {
   display: flex; align-items: center; gap: 10px;
@@ -1755,6 +1756,18 @@ input, textarea, select { font: inherit; color: inherit; }
   color: var(--ink);
   border-color: color-mix(in srgb, var(--accent) 32%, var(--line));
   font-weight: 600;
+}
+
+.recent-chat-list {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 0 0 14px;
+  margin-bottom: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .recent-chat-row {
@@ -1921,6 +1934,32 @@ input, textarea, select { font: inherit; color: inherit; }
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+.dialog-icon.warn {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--signal-fork);
+  background: color-mix(in srgb, var(--signal-fork) 14%, transparent);
+}
+.quality-warning-dialog {
+  width: min(560px, calc(100vw - 32px));
+}
+.quality-warning-list {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  border-radius: 14px;
+  background: var(--paper-2);
+}
+.quality-warning-list p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .rail-empty {
@@ -4042,8 +4081,9 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .loading-card .ls.done .ind::after {
   content: " ";
+  position: absolute;
   left: 50%;
-  top: 50%;
+  top: 48%;
   right: auto;
   bottom: auto;
   display: block;
@@ -4054,7 +4094,8 @@ input, textarea, select { font: inherit; color: inherit; }
   border-width: 0 1.5px 1.5px 0;
   font-size: 0;
   font-weight: 400;
-  transform: translate(-50%, -58%) rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
+  transform-origin: center;
 }
 .loading-card .ls.done { color: var(--paper); }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -4796,10 +4837,11 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .generating-card .gcs.done .gci::after {
   content: ""; position: absolute;
-  left: 4px; top: 6px;
+  left: 50%; top: 48%;
   width: 4px; height: 7px;
   border: solid var(--ink); border-width: 0 1.5px 1.5px 0;
-  transform: rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
+  transform-origin: center;
 }
 
 /* Handoff ready card */

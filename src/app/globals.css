@@ -8349,6 +8349,10 @@ body,
 .left-sidebar .rail-root-drop {
   display: grid !important;
   gap: 4px !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable !important;
 }
 
 .left-sidebar .case {
@@ -9434,6 +9438,10 @@ body,
 .left-sidebar .rail-root-drop {
   display: grid !important;
   gap: 4px !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable !important;
 }
 
 .left-sidebar .case {
