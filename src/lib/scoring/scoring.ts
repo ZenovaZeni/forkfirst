@@ -80,6 +80,79 @@ function valueFeatureBoost(prompt: string, normalizedHaystack: string): number {
   return Math.min(22, valueFeatureSignal(normalizedHaystack) * 6);
 }
 
+function isAppointmentBookingPrompt(prompt: string): boolean {
+  return /\b(salon|spa|barber|barbershop|booking|appointment|appointments|scheduling|scheduler)\b/i.test(prompt);
+}
+
+function isCardCollectorPrompt(prompt: string): boolean {
+  return /\b(pokemon|pok[e\u00e9]mon|tcg|trading[-\s]?card|card collector|card collection|collector album|card binder|card value|tcgdex|tcgplayer|cardmarket)\b/i.test(prompt);
+}
+
+function cardCollectorEvidence(normalizedHaystack: string): number {
+  return [
+    /\bpokemon\b/,
+    /\btcg\b/,
+    /\bcard\b/,
+    /\bcards\b/,
+    /\bcollection\b/,
+    /\bcollector\b/,
+    /\bbinder\b/,
+    /\bbinders\b/,
+    /\bprice\b/,
+    /\bprices\b/,
+    /\bvalue\b/,
+    /\bvalues\b/,
+    /\bwishlist\b/,
+    /\bportfolio\b/
+  ].reduce((total, signal) => total + (signal.test(normalizedHaystack) ? 1 : 0), 0);
+}
+
+function appointmentBookingEvidence(normalizedHaystack: string): number {
+  return [
+    /\bbooking\b/,
+    /\bbookings\b/,
+    /\bappointment\b/,
+    /\bappointments\b/,
+    /\bscheduling\b/,
+    /\bscheduler\b/,
+    /\bcalendar\b/,
+    /\bcalendars\b/,
+    /\bslot\b/,
+    /\bslots\b/,
+    /\bavailability\b/,
+    /\bservice booking\b/
+  ].reduce((total, signal) => total + (signal.test(normalizedHaystack) ? 1 : 0), 0);
+}
+
+function verticalCompatibilityBoost(prompt: string, normalizedHaystack: string): number {
+  if (isCardCollectorPrompt(prompt)) {
+    return Math.min(18, cardCollectorEvidence(normalizedHaystack) * 3);
+  }
+  if (isAppointmentBookingPrompt(prompt)) {
+    return Math.min(18, appointmentBookingEvidence(normalizedHaystack) * 5);
+  }
+  return 0;
+}
+
+function isPetIdentificationPrompt(prompt: string): boolean {
+  return /\b(cat id|cat identifier|cat identification|cat breed|cat scanner|identify cat|identify cats|pet id|pet identification|pet identifier|animal identification|animal image recognition)\b/i.test(prompt);
+}
+
+function petIdentificationEvidence(normalizedHaystack: string): boolean {
+  return /\b(breed|breeds|pet|pets|animal|animals|image|images|photo|photos|scanner|identifier|identification|classifier|classification|profile|profiles|upload|recognition)\b/i.test(normalizedHaystack);
+}
+
+function catCommandEvidence(normalizedHaystack: string): boolean {
+  return /\bcat\s*\(?1\)?\s+clone\b|\bcat\s*\(?1\)?\b|\bterminal\b|\bcli\b|\bsyntax highlighting\b|\bcommand line\b/i.test(normalizedHaystack);
+}
+
+function verticalMismatchPenalty(prompt: string, normalizedHaystack: string): number {
+  if (isPetIdentificationPrompt(prompt) && (!petIdentificationEvidence(normalizedHaystack) || catCommandEvidence(normalizedHaystack))) {
+    return 62;
+  }
+  return 0;
+}
+
 function scoringIntentTerms(prompt: string): string[] {
   const refinement = planPromptRefinement(prompt);
   const text = [
@@ -127,7 +200,8 @@ function scoreFit(repo: NormalizedRepo, prompt: string): number {
   const intentScore = intentTerms.length > 0 ? (intentMatches / intentTerms.length) * 100 : 0;
   const exactNameBoost = terms.some((term) => repo.name.toLowerCase() === term || repo.fullName.toLowerCase().includes(`/${term}`)) ? 12 : 0;
   const domainBoost = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 || intentScore >= 55 ? 10 : 0;
-  return clamp(Math.max(rawScore, intentScore) + exactNameBoost + domainBoost + valueFeatureBoost(prompt, normalizedHaystack));
+  const mismatchPenalty = verticalMismatchPenalty(prompt, normalizedHaystack);
+  return clamp(Math.max(rawScore, intentScore) + exactNameBoost + domainBoost + valueFeatureBoost(prompt, normalizedHaystack) + verticalCompatibilityBoost(prompt, normalizedHaystack) - mismatchPenalty);
 }
 
 function isGameBuildPrompt(prompt: string): boolean {

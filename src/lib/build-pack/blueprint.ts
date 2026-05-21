@@ -645,14 +645,20 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
   if (/\b(grocery|groceries|supermarket|shopping list|shopping lists|food shopping)\b/i.test(directSignal)) {
     return groceryShoppingBlueprint(input);
   }
+  if (/\b(roofing|roofer|roofers|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing)|cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping|commercial cleaning|residential cleaning)\b/i.test(directSignal) && /\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|quote|quotes|invoice|crew|crews|schedule|scheduling|follow[-\s]?up)\b/i.test(directSignal)) {
+    return serviceBusinessCrmBlueprint(input);
+  }
+  if (/\bcrm\b/i.test(directSignal) && !/\b(realtors?|real estate|realty|broker|mls|property|properties)\b/i.test(directSignal)) {
+    return serviceBusinessCrmBlueprint(input);
+  }
+  if (/\b(kids?|children|parents?|family|families|team|teams|youth)\b.*\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b|\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b.*\b(kids?|children|parents?|family|families|team|teams|youth)\b/i.test(directSignal)) {
+    return sportsScheduleBlueprint(input);
+  }
   if (/\b(salon|spa|barber|barbershop|booking|appointment|appointments|scheduling|scheduler)\b/i.test(directSignal)) {
     return appointmentBookingBlueprint(input);
   }
   if (/\b(prompt organizer|prompt manager|prompt library|prompt collection|prompt database|prompt gallery|image prompt organizer|ai prompt organizer|save prompts?|organize prompts?)\b/i.test(directSignal)) {
     return promptLibraryBlueprint(input);
-  }
-  if (/\b(kids?|children|parents?|family|families|team|teams|youth)\b.*\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b|\b(sports?|practice|game|games|schedule|schedules|calendar|coach|coaches)\b.*\b(kids?|children|parents?|family|families|team|teams|youth)\b/i.test(directSignal)) {
-    return sportsScheduleBlueprint(input);
   }
   if (/\b(cat id|cat identifier|cat identification|cat breed|cat scanner|identify cat|identify cats|pet id|pet identification|pet identifier|animal identification|animal image recognition)\b/i.test(directSignal)) {
     return petIdentificationBlueprint(input);
@@ -663,12 +669,6 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
     !/\b(image|images|photo|photos|visual|creative|generator|generate|listing media|social post)\b/i.test(directSignal)
   ) {
     return realEstateLeadsBlueprint(input);
-  }
-  if (/\b(roofing|roofer|roofers|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing)|cleaning|cleaner|cleaners|janitorial|maid|maids|housekeeping|commercial cleaning|residential cleaning)\b/i.test(directSignal) && /\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|quote|quotes|invoice|crew|crews|schedule|scheduling|follow[-\s]?up)\b/i.test(directSignal)) {
-    return serviceBusinessCrmBlueprint(input);
-  }
-  if (/\bcrm\b/i.test(directSignal) && !/\b(realtors?|real estate|realty|broker|mls|property|properties)\b/i.test(directSignal)) {
-    return serviceBusinessCrmBlueprint(input);
   }
   if (/\b(shopify|ecommerce|e-commerce|retail|store|storefront|merchant)\b/i.test(directSignal) && /\b(dashboard|analytics|profit|profits|margin|margins|ad spend|ads?|inventory|orders?|metrics?)\b/i.test(directSignal)) {
     return ecommerceDashboardBlueprint(input);
