@@ -62,10 +62,13 @@ function cleanEvidence(text: string | null | undefined): string | null {
   if (!text) return null;
   const cleaned = text
     .replace(/<\/?UNTRUSTED_REPO_CONTENT>/gi, "")
-    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/!\s*\[[^\]]*]\s*\([^)]*\)/g, " ")
+    .replace(/!\s*[a-z0-9_-]+\s+https?:\/\/\S+/gi, " ")
     .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
     .replace(/<\/?[a-z][a-z0-9-]*\b[^<>\n|]*/gi, " ")
     .replace(/<[^>]*>/g, " ")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, " ")
+    .replace(/^#+\s*/gm, "")
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length > 0 ? cleaned.slice(0, 220) : null;

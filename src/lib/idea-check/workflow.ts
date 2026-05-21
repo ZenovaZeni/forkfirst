@@ -165,9 +165,12 @@ function cleanText(value: string | null | undefined): string {
   if (!value) return "";
   return value
     .replace(/<\/?UNTRUSTED_REPO_CONTENT>/gi, "")
-    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/!\s*\[[^\]]*]\s*\([^)]*\)/g, " ")
+    .replace(/!\s*[a-z0-9_-]+\s+https?:\/\/\S+/gi, " ")
     .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
     .replace(/<[^>]*>/g, " ")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, " ")
+    .replace(/^#+\s*/gm, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -252,6 +255,9 @@ function phraseFromPrompt(prompt: string): string {
     .replace(/^\s*(?:an?|the)\s+/i, "")
     .replace(/\s+/g, " ")
     .trim();
+  if (/\b(shopify|ecommerce|e-commerce|store)\b/i.test(cleaned) && /\b(dashboard|profit|ad spend|inventory|orders?|analytics|metrics?)\b/i.test(cleaned)) {
+    return /\bshopify\b/i.test(cleaned) ? "Shopify profit dashboard" : "ecommerce profit dashboard";
+  }
   const explicitProduct = cleaned.match(/\b((?:local[-\s]?first\s+)?(?:[a-z0-9+#.-]+\s+){0,4}(?:scanner|tracker|dashboard|portal|manager|organizer|scheduler|generator|library|crm|app|tool))\b/i)?.[1]?.trim();
   if (explicitProduct && explicitProduct.length >= 6) return explicitProduct;
   return cleaned.length > 8 ? cleaned : prompt.replace(/\s+/g, " ").trim();
@@ -342,11 +348,20 @@ export function deriveProductIntent(input: DeriveProductIntentInput): ProductInt
     selectedRepo: input.selectedRepo,
     candidateRepos: input.repos ?? []
   });
+  const preferBlueprint = blueprint.productKind !== "workflow-app" && blueprint.productKind !== "unknown-app";
   const generatedWorkflow = workflowFromIntent(signals);
-  const primaryWorkflow = concreteList(generatedWorkflow, blueprint.primaryWorkflow, 6);
-  const dataObjects = concreteList(signals.dataObjects, blueprint.coreDataObjects, 9);
-  const screens = concreteList(signals.screens, blueprint.keyScreens, 8);
-  const actions = concreteList(signals.actions, blueprint.userActions, 8);
+  const primaryWorkflow = preferBlueprint
+    ? concreteList(blueprint.primaryWorkflow, generatedWorkflow, 6)
+    : concreteList(generatedWorkflow, blueprint.primaryWorkflow, 6);
+  const dataObjects = preferBlueprint
+    ? concreteList(blueprint.coreDataObjects, signals.dataObjects, 9)
+    : concreteList(signals.dataObjects, blueprint.coreDataObjects, 9);
+  const screens = preferBlueprint
+    ? concreteList(blueprint.keyScreens, signals.screens, 8)
+    : concreteList(signals.screens, blueprint.keyScreens, 8);
+  const actions = preferBlueprint
+    ? concreteList(blueprint.userActions, signals.actions, 8)
+    : concreteList(signals.actions, blueprint.userActions, 8);
   const firstMilestone = isGeneric(blueprint.firstMilestone)
     ? `Build the first usable loop for ${productPhrase}: ${actions.slice(0, 3).join(", ")}, then save or export the result.`
     : blueprint.firstMilestone;

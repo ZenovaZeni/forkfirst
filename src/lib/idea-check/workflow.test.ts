@@ -88,6 +88,43 @@ describe("idea-check workflow artifacts", () => {
     expect(JSON.stringify(intent)).not.toMatch(/PrimaryItem|UserInput|one working product loop|main thing/i);
   });
 
+  test("prefers ecommerce dashboard blueprint workflow over generic generated steps", () => {
+    const intent = deriveProductIntent({
+      prompt: "I want a dashboard for tracking Shopify store profit, ad spend, orders, and inventory.",
+      repos: [repo({
+        fullName: "shopnex-ai/shopnex",
+        description: "Open-source Shopify alternative built with Payload CMS.",
+        topics: ["shopify", "ecommerce", "analytics", "inventory"]
+      })]
+    });
+
+    expect(intent.productPhrase).toBe("Shopify profit dashboard");
+    expect(intent.primaryWorkflow.join(" ")).toMatch(/connects or imports Shopify order data|normalizes the data|exports a daily or weekly store-health report/i);
+    expect(intent.primaryWorkflow.join(" ")).not.toMatch(/created StoreMetric|survives refresh|backup, handoff/i);
+    expect(intent.dataObjects.slice(0, 5)).toEqual(["Order", "Product", "InventoryItem", "AdSpend", "CostOfGoods"]);
+  });
+
+  test("cleans README attachment and mojibake evidence before handoff use", () => {
+    const inspection = inspectRepoForBuildPack(repo({
+      readme: {
+        ...repo().readme!,
+        excerpt: "![shopnex](https://github.com/user-attachments/assets/example) ## \u00e2\u0153\u00a8 Core Features",
+        evidence: {
+          fetchStatus: "ok",
+          fetchedAt: "2026-05-21T00:00:00Z",
+          setupSnippets: ["## \u00f0\u0178\u0161\u20ac Quick Start"],
+          commandSnippets: ["pnpm dev"],
+          featureSnippets: ["- **Analytics Dashboard** - Sales tracking with charts"],
+          integrationSnippets: [],
+          licenseSnippets: ["MIT"]
+        }
+      }
+    }));
+
+    expect(JSON.stringify(inspection)).not.toMatch(/user-attachments|github\.com\/user attachments|\u00e2|\u00f0|â|ð/);
+    expect(inspection.readme.evidence.setup.join(" ")).toMatch(/Quick Start/);
+  });
+
   test("inspects repo evidence into one reusable adapter object", () => {
     const inspection = inspectRepoForBuildPack(repo());
 

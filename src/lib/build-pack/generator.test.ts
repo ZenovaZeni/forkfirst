@@ -462,7 +462,8 @@ describe("build pack generator", () => {
     expectAllRequiredSections(markdown);
     expect(markdown).toMatch(/Shopify|ecommerce|store/i);
     expect(markdown).toMatch(/profit|ad spend|inventory|orders|margin/i);
-    expect(markdown).not.toMatch(/lead source|target customer|outreach|PrimaryItem|UserInput/i);
+    expect(markdown).toMatch(/connects or imports Shopify order data|store-health report/i);
+    expect(markdown).not.toMatch(/lead source|target customer|outreach|PrimaryItem|UserInput|created StoreMetric|survives refresh|github\.com\/user attachments|â|ð/i);
   });
 
   test("open-source Cursor alternative prompt produces a code-editor Build Pack", () => {
