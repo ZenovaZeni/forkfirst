@@ -120,7 +120,117 @@ function isGenericProductProfile(profile: ProductProfile): boolean {
   return profile.goal === "Turn the idea into one narrow workflow that saves the target user time immediately.";
 }
 
+const PROFILE_OBJECT_MAP: Array<[RegExp, string]> = [
+  [/\brepos?\b|\brepositor(?:y|ies)\b/, "RepoLead"],
+  [/\bgithub\b|\bsearch quer(?:y|ies)\b/, "SearchQuery"],
+  [/\bverdict\b|\bdecision\b/, "ReuseDecision"],
+  [/\bhandoff\b|\bmarkdown\b/, "BuilderHandoff"],
+  [/\bcard\b|\bcards\b/, "Card"],
+  [/\bcollection\b|\bvault\b|\balbum\b|\bbinder\b/, "CollectionItem"],
+  [/\bprices?\b|\bvalues?\b|\bworth\b/, "PriceSnapshot"],
+  [/\bleads?\b|\bprospects?\b/, "Lead"],
+  [/\bfollow[-\s]?ups?\b|\btasks?\b/, "FollowUpTask"],
+  [/\bcustomers?\b|\bclients?\b/, "Customer"],
+  [/\bquotes?\b/, "Quote"],
+  [/\bjobs?\b/, "Job"],
+  [/\bcrews?\b/, "Crew"],
+  [/\bappointments?\b|\bbookings?\b/, "Appointment"],
+  [/\bservices?\b/, "Service"],
+  [/\bvoice\b|\baudio\b|\bspeech\b/, "VoiceInput"],
+  [/\btranscripts?\b|\btranscription\b/, "Transcript"],
+  [/\bprompts?\b/, "Prompt"],
+  [/\boutputs?\b|\bresult\b/, "Output"],
+  [/\bprojects?\b/, "Project"],
+  [/\btasks?\b/, "Task"],
+  [/\bnotes?\b|\bnotebook\b/, "Note"],
+  [/\brecipes?\b/, "Recipe"],
+  [/\bingredients?\b/, "Ingredient"],
+  [/\bgrocer(?:y|ies)\b|\bshopping\b/, "GroceryItem"],
+  [/\borders?\b/, "Order"],
+  [/\binventory\b|\bstock\b/, "InventoryItem"],
+  [/\bad spend\b|\bads?\b/, "AdSpend"],
+  [/\bprofit\b|\bmargin\b/, "ProfitMetric"],
+  [/\bexports?\b|\bcsv\b|\bjson\b|\bpdf\b/, "ExportJob"]
+];
+
+const PROFILE_STOP_WORDS = new Set([
+  "about",
+  "across",
+  "after",
+  "apps",
+  "before",
+  "build",
+  "builder",
+  "data",
+  "each",
+  "existing",
+  "first",
+  "from",
+  "help",
+  "into",
+  "main",
+  "manual",
+  "product",
+  "result",
+  "setup",
+  "start",
+  "starter",
+  "system",
+  "their",
+  "tools",
+  "user",
+  "users",
+  "using",
+  "with",
+  "workflow"
+]);
+
+function profilePascalCase(value: string): string {
+  return value
+    .replace(/[^a-z0-9\s-]/gi, " ")
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
+    .join("");
+}
+
+function profileDataObjects(profile: ProductProfile): string[] {
+  const text = [
+    profile.goal,
+    profile.problem,
+    profile.promise,
+    ...profile.coreWorkflow,
+    ...profile.stories,
+    ...profile.mustHave
+  ].join(" ");
+  const mapped = PROFILE_OBJECT_MAP.flatMap(([pattern, objectName]) => pattern.test(text) ? [objectName] : []);
+  const terms = Array.from(new Set(
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .split(/\s+/)
+      .filter((term) => term.length >= 5)
+      .filter((term) => !PROFILE_STOP_WORDS.has(term))
+      .slice(0, 12)
+  )).map(profilePascalCase);
+  return Array.from(new Set([...mapped, ...terms, "SavedRecord", "ExportJob"])).slice(0, 9);
+}
+
+function profileScreens(profile: ProductProfile): string[] {
+  const objects = profileDataObjects(profile);
+  const primary = objects[0]?.replace(/([a-z])([A-Z])/g, "$1 $2") ?? "Workflow";
+  return Array.from(new Set([
+    `${primary} intake`,
+    `${primary} detail`,
+    `${primary} list/library`,
+    /search|filter|discover|find/i.test(profile.coreWorkflow.join(" ")) ? "Search and filters" : null,
+    /dashboard|analytics|report|metric/i.test(profile.goal + profile.problem + profile.mustHave.join(" ")) ? "Dashboard/report" : null,
+    /export|copy|backup|download/i.test(profile.mustHave.join(" ") + profile.coreWorkflow.join(" ")) ? "Export/backup" : "Settings/data"
+  ].filter((item): item is string => Boolean(item)))).slice(0, 7);
+}
+
 function blueprintFromProfile(profile: ProductProfile, productKind: ProductKind, inferredFrom: string[]): HandoffBlueprint {
+  const dataObjects = profileDataObjects(profile);
   return {
     productKind,
     confidence: isGenericProductProfile(profile) ? 45 : 72,
@@ -130,11 +240,11 @@ function blueprintFromProfile(profile: ProductProfile, productKind: ProductKind,
     currentAlternatives: ["existing apps found during repo research", "manual workflows", "generic SaaS tools", "spreadsheets or notes"],
     differentiatedWedge: profile.promise,
     primaryWorkflow: profile.coreWorkflow,
-    keyScreens: ["Start/new item", "Primary workflow", "Result/detail", "Saved library", "Export/share"],
-    coreDataObjects: ["PrimaryItem", "UserInput", "Result", "SavedItem", "Export"],
+    keyScreens: profileScreens(profile),
+    coreDataObjects: dataObjects,
     userActions: profile.stories.map((story) => story.replace(/^As a user, I can\s*/i, "").replace(/^As a builder, I can\s*/i, "inspect and ").replace(/\.$/, "")),
     systemStates: {
-      empty: "No saved work yet; guide the user into the first workflow.",
+      empty: `No ${dataObjects[0] ?? "saved record"} yet; guide the user into the first workflow.`,
       loading: "Show clear progress while preserving the user's input.",
       error: "Explain what failed, preserve input, and offer a retry or manual fallback.",
       noResult: "Explain that nothing matched and suggest a narrower input or alternate route.",
@@ -1272,7 +1382,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const userProfileSignal = [originalIdea, researchContext, chatContext].filter(Boolean).join(" ");
   const legacyProfile = profileWithPreferences(productProfileFor(userProfileSignal || originalIdea), wizardAnswers);
   const resolvedBlueprint = inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
-    ? blueprintFromProfile(legacyProfile, "workflow-app", ["user idea", "legacy product profile", bestRepo ? "selected repo metadata" : "search result"])
+    ? blueprintFromProfile(legacyProfile, "workflow-app", ["user idea", "product profile", bestRepo ? "selected repo metadata" : "search result"])
     : inferredBlueprint;
   const ir = buildBuildPackIR({
     originalIdea,

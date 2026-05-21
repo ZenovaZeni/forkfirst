@@ -595,26 +595,511 @@ function ecommerceDashboardBlueprint(input: HandoffSignalInput): HandoffBlueprin
   };
 }
 
+const SYNTHESIS_STOP_WORDS = new Set([
+  "about",
+  "after",
+  "again",
+  "already",
+  "also",
+  "and",
+  "app",
+  "application",
+  "apps",
+  "build",
+  "building",
+  "can",
+  "could",
+  "every",
+  "from",
+  "have",
+  "help",
+  "helps",
+  "into",
+  "just",
+  "lets",
+  "like",
+  "make",
+  "need",
+  "needs",
+  "one",
+  "own",
+  "repo",
+  "repos",
+  "show",
+  "something",
+  "stuff",
+  "that",
+  "their",
+  "them",
+  "then",
+  "thing",
+  "this",
+  "through",
+  "turn",
+  "use",
+  "user",
+  "users",
+  "want",
+  "whatever",
+  "where",
+  "with",
+  "without",
+  "would",
+  "your"
+]);
+
+const PRODUCT_WORDS = new Set([
+  "assistant",
+  "board",
+  "builder",
+  "dashboard",
+  "generator",
+  "library",
+  "manager",
+  "organizer",
+  "portal",
+  "scanner",
+  "scheduler",
+  "system",
+  "tracker",
+  "tool",
+  "workflow"
+]);
+
+const ACTION_WORDS = new Set([
+  "add",
+  "analyze",
+  "book",
+  "capture",
+  "categorize",
+  "clone",
+  "compare",
+  "create",
+  "edit",
+  "export",
+  "filter",
+  "find",
+  "generate",
+  "import",
+  "log",
+  "manage",
+  "organize",
+  "parse",
+  "review",
+  "save",
+  "scan",
+  "schedule",
+  "search",
+  "share",
+  "sort",
+  "sync",
+  "track",
+  "upload"
+]);
+
+const FEATURE_OBJECT_MAP: Array<[RegExp, string]> = [
+  [/\breceipts?\b/, "Receipt"],
+  [/\bexpenses?\b/, "ExpenseRecord"],
+  [/\bcsv\b|\bspreadsheet\b/, "CsvExport"],
+  [/\bocr\b|\bparse[dr]?\b|\bscanner?\b/, "ParsedResult"],
+  [/\blocal[-\s]?first\b|\blocal\b|\bbackup\b/, "LocalBackup"],
+  [/\bphotos?\b|\bimages?\b|\bupload\b/, "UploadedFile"],
+  [/\btranscripts?\b/, "Transcript"],
+  [/\bclips?\b/, "Clip"],
+  [/\bpodcasts?\b/, "Podcast"],
+  [/\binvoices?\b/, "Invoice"],
+  [/\bmessages?\b|\bmessaging\b/, "Message"],
+  [/\breminders?\b|\bnotifications?\b/, "Reminder"],
+  [/\bappointments?\b|\bbookings?\b/, "Appointment"],
+  [/\bcustomers?\b|\bclients?\b/, "Customer"],
+  [/\binventory\b|\bstock\b/, "InventoryItem"],
+  [/\breports?\b|\banalytics?\b|\bdashboard\b/, "Report"]
+];
+
+type SynthesizedIngredients = {
+  ideaText: string;
+  signalText: string;
+  terms: string[];
+  objectTerms: string[];
+  productPhrase: string;
+  objectLabel: string;
+  primaryObject: string;
+  dataObjects: string[];
+  actions: {
+    capture: boolean;
+    parse: boolean;
+    create: boolean;
+    search: boolean;
+    organize: boolean;
+    schedule: boolean;
+    track: boolean;
+    analyze: boolean;
+    review: boolean;
+    save: boolean;
+    export: boolean;
+    notify: boolean;
+    localFirst: boolean;
+    ai: boolean;
+  };
+};
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
+}
+
+function cleanForSynthesis(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/in:name,description,readme|in:name,description|github|open source/g, " ")
+    .replace(/[^a-z0-9+#.\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function singularTerm(term: string): string {
+  if (term === "tracks" || term === "tracking") return "track";
+  if (term === "exports" || term === "exporting") return "export";
+  if (term === "scans" || term === "scanning") return "scan";
+  if (term === "saves" || term === "saving") return "save";
+  if (term === "organizes" || term === "organizing") return "organize";
+  if (term === "expenses") return "expense";
+  if (term === "receipts") return "receipt";
+  if (term.endsWith("ies") && term.length > 4) return `${term.slice(0, -3)}y`;
+  if (term.endsWith("s") && term.length > 4 && !term.endsWith("ss")) return term.slice(0, -1);
+  return term;
+}
+
+function tokenizeForSynthesis(text: string): string[] {
+  return uniqueStrings(
+    cleanForSynthesis(text)
+      .split(/\s+/)
+      .map(singularTerm)
+      .filter((term) => term.length >= 3)
+      .filter((term) => !SYNTHESIS_STOP_WORDS.has(term))
+  );
+}
+
+function phraseCandidates(text: string): string[] {
+  const words = cleanForSynthesis(text)
+    .split(/\s+/)
+    .map(singularTerm)
+    .filter((term) => term.length >= 3)
+    .filter((term) => !SYNTHESIS_STOP_WORDS.has(term));
+  const phrases: string[] = [];
+  for (let index = 0; index < words.length - 1; index += 1) {
+    const pair = `${words[index]} ${words[index + 1]}`;
+    const triple = words[index + 2] ? `${pair} ${words[index + 2]}` : "";
+    if (PRODUCT_WORDS.has(words[index + 1]) || ACTION_WORDS.has(words[index + 1])) phrases.push(pair);
+    if (triple && (PRODUCT_WORDS.has(words[index + 2]) || ACTION_WORDS.has(words[index + 2]))) phrases.push(triple);
+  }
+  return uniqueStrings(phrases);
+}
+
+function humanList(items: string[], fallback: string): string {
+  if (items.length === 0) return fallback;
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function titleCaseTerm(term: string): string {
+  return term
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
+function pascalCaseTerm(term: string): string {
+  const special = term.toLowerCase();
+  if (special === "csv") return "Csv";
+  if (special === "ocr") return "Ocr";
+  if (special === "api") return "Api";
+  if (special === "crm") return "Crm";
+  return titleCaseTerm(singularTerm(term)).replace(/\s+/g, "");
+}
+
+function objectNameFromTerm(term: string): string | null {
+  const normalized = cleanForSynthesis(term);
+  if (!normalized || SYNTHESIS_STOP_WORDS.has(normalized) || PRODUCT_WORDS.has(normalized) || ACTION_WORDS.has(normalized)) return null;
+  if (normalized === "csv") return "CsvExport";
+  if (normalized === "ocr") return "ParsedResult";
+  if (normalized === "local" || normalized === "local-first") return "LocalBackup";
+  return pascalCaseTerm(normalized);
+}
+
+function detectActions(text: string): SynthesizedIngredients["actions"] {
+  return {
+    capture: /\b(scan|scanner|capture|upload|photo|image|file|record)\b/i.test(text),
+    parse: /\b(ocr|parse|extract|scan|scanner|transcribe|read)\b/i.test(text),
+    create: /\b(create|build|add|new|make|generate)\b/i.test(text),
+    search: /\b(search|find|lookup|discover|browse)\b/i.test(text),
+    organize: /\b(organize|categorize|category|tag|sort|filter|album|binder|folder|library)\b/i.test(text),
+    schedule: /\b(schedule|calendar|booking|appointment|reminder|availability)\b/i.test(text),
+    track: /\b(track|tracking|log|monitor|history|status|progress)\b/i.test(text),
+    analyze: /\b(analyze|summary|summarize|score|rank|insight|analytics|dashboard|report)\b/i.test(text),
+    review: /\b(review|edit|approve|confirm|correct|adjust)\b/i.test(text),
+    save: /\b(save|saved|store|storage|local|collection|library|vault|backup)\b/i.test(text),
+    export: /\b(export|download|csv|pdf|json|share|copy)\b/i.test(text),
+    notify: /\b(notify|notification|reminder|alert|email|message)\b/i.test(text),
+    localFirst: /\b(local[-\s]?first|local|offline|browser|device|csv|backup)\b/i.test(text),
+    ai: /\b(ai|ocr|llm|model|generate|classif|recognition|transcribe)\b/i.test(text)
+  };
+}
+
+function productPhraseFrom(text: string, terms: string[], phrases: string[]): string {
+  const explicitPhrase = phrases.find((phrase) => /\b(scanner|tracker|dashboard|portal|manager|generator|scheduler|organizer|crm|library|album|vault|board)\b/i.test(phrase));
+  if (explicitPhrase) return explicitPhrase;
+  const productWord = terms.find((term) => PRODUCT_WORDS.has(term));
+  const objectTerm = terms.find((term) => !PRODUCT_WORDS.has(term) && !ACTION_WORDS.has(term));
+  if (objectTerm && productWord) return `${objectTerm} ${productWord}`;
+  const appLike = text.match(/\b(?:for|about|with)\s+(?:a|an|the)?\s*([a-z0-9+#.\s-]{4,60}?)(?:\s+that|\s+with|\s+where|,|\.|$)/i)?.[1]?.trim();
+  return appLike || humanList(terms.slice(0, 2), "product workflow");
+}
+
+function extractTargetUser(text: string, objectLabel: string): string {
+  const forMatch = text.match(/\bfor\s+(?:a|an|the)?\s*([a-z0-9+#.\s-]{4,70}?)(?:\s+who|\s+that|\s+where|\s+to\s+|\s+with\s+|,|\.|$)/i);
+  const candidate = forMatch?.[1]?.trim();
+  if (candidate && !/\b(track|scan|export|manage|build|make|create)\b/i.test(candidate)) {
+    return `${candidate.replace(/\s+/g, " ")} who needs a focused ${objectLabel} workflow`;
+  }
+  return `Someone who needs to manage ${objectLabel} without fighting a generic starter app`;
+}
+
+function deriveDataObjects(signalText: string, objectTerms: string[], actions: SynthesizedIngredients["actions"]): string[] {
+  const mapped = FEATURE_OBJECT_MAP.flatMap(([pattern, objectName]) => pattern.test(signalText) ? [objectName] : []);
+  const fromTerms = objectTerms.map(objectNameFromTerm).filter((item): item is string => Boolean(item));
+  const actionObjects = [
+    actions.review ? "ReviewState" : null,
+    actions.search ? "SearchFilter" : null,
+    actions.organize ? "CategoryOrTag" : null,
+    actions.notify ? "Reminder" : null,
+    actions.export ? "ExportJob" : null,
+    actions.save ? "SavedRecord" : null
+  ].filter((item): item is string => Boolean(item));
+  return uniqueStrings([...mapped, ...fromTerms, ...actionObjects]).slice(0, 9);
+}
+
+function synthesizeIngredients(input: HandoffSignalInput): SynthesizedIngredients {
+  const ideaText = [
+    input.originalIdea,
+    input.researchContext,
+    input.chatContext,
+    preferenceText(input.preferences)
+  ].filter(Boolean).join(" ");
+  const signalText = cleanForSynthesis([
+    ideaText,
+    ...input.queries,
+    input.selectedRepo?.description,
+    input.selectedRepo?.topics.join(" "),
+    input.selectedRepo?.readme?.excerpt
+  ].filter(Boolean).join(" "));
+  const terms = tokenizeForSynthesis(ideaText || input.originalIdea);
+  const phrases = phraseCandidates(ideaText || input.originalIdea);
+  const actions = detectActions(signalText);
+  const productPhrase = productPhraseFrom(ideaText, terms, phrases);
+  const objectTerms = uniqueStrings(
+    terms
+      .filter((term) => !PRODUCT_WORDS.has(term))
+      .filter((term) => !ACTION_WORDS.has(term))
+      .filter((term) => !["local", "local-first", "first", "source", "github", "starter", "template"].includes(term))
+  ).slice(0, 6);
+  const primaryObject = titleCaseTerm(productPhrase);
+  const objectLabel = humanList(objectTerms.slice(0, 3), productPhrase || "the core records");
+  const dataObjects = deriveDataObjects(signalText, objectTerms, actions);
+  return { ideaText, signalText, terms, objectTerms, productPhrase, objectLabel, primaryObject, dataObjects, actions };
+}
+
+function workflowFor(ingredients: SynthesizedIngredients): string[] {
+  const { actions, objectLabel, primaryObject } = ingredients;
+  const steps: string[] = [];
+  if (actions.capture) {
+    steps.push(`User captures, uploads, or manually adds ${objectLabel}.`);
+  } else if (actions.search) {
+    steps.push(`User searches or enters the ${objectLabel} they want to work with.`);
+  } else if (actions.schedule) {
+    steps.push(`User creates or selects the ${objectLabel} schedule item.`);
+  } else {
+    steps.push(`User creates the first ${objectLabel} record from a clear entry screen.`);
+  }
+  if (actions.parse || actions.analyze) {
+    steps.push(`App extracts, analyzes, or summarizes the important ${objectLabel} details and shows what it inferred.`);
+  } else {
+    steps.push(`App records the important ${objectLabel} fields and keeps the workflow focused on the user's requested outcome.`);
+  }
+  steps.push(`User reviews and edits the ${objectLabel} details before treating them as final.`);
+  if (actions.organize || actions.track || actions.save) {
+    steps.push(`User saves, tracks, and organizes ${objectLabel} in a ${primaryObject} library or list.`);
+  }
+  if (actions.search || actions.organize || actions.analyze) {
+    steps.push(`User filters, searches, or reviews saved ${objectLabel} to make the product useful after the first entry.`);
+  }
+  if (actions.export || actions.notify) {
+    steps.push(`User exports, copies, shares, or sends the useful ${objectLabel} output in the format the idea requires.`);
+  }
+  return uniqueStrings(steps).slice(0, 6);
+}
+
+function screensFor(ingredients: SynthesizedIngredients): string[] {
+  const { actions, objectLabel, primaryObject } = ingredients;
+  return uniqueStrings([
+    actions.capture || actions.create ? `Add/import ${objectLabel}` : `Start ${objectLabel}`,
+    actions.parse || actions.review ? `Review ${objectLabel} details` : `${primaryObject} detail`,
+    `${primaryObject} list/library`,
+    actions.search || actions.organize ? `Search and filters` : `${primaryObject} status`,
+    actions.analyze ? `Insights/report` : null,
+    actions.export ? `Export/share` : null,
+    actions.notify ? `Reminders/notifications` : null,
+    actions.localFirst ? `Backup and local data settings` : `Settings/data sources`
+  ].filter((item): item is string => Boolean(item))).slice(0, 8);
+}
+
+function actionsFor(ingredients: SynthesizedIngredients): string[] {
+  const { actions, objectLabel } = ingredients;
+  return uniqueStrings([
+    actions.capture ? `capture or upload ${objectLabel}` : `create ${objectLabel}`,
+    actions.parse ? `extract ${objectLabel} details` : null,
+    actions.search ? `search ${objectLabel}` : null,
+    actions.organize ? `categorize and filter ${objectLabel}` : null,
+    actions.review ? `review and edit ${objectLabel}` : `review ${objectLabel}`,
+    actions.track ? `track ${objectLabel} history` : null,
+    actions.save ? `save ${objectLabel}` : `save the record`,
+    actions.export ? `export ${objectLabel}` : null,
+    actions.notify ? `send reminders or alerts` : null
+  ].filter((item): item is string => Boolean(item))).slice(0, 8);
+}
+
+function requirementsFor(ingredients: SynthesizedIngredients): string[] {
+  const { actions, dataObjects, objectLabel } = ingredients;
+  return uniqueStrings([
+    `A focused ${objectLabel} entry flow.`,
+    actions.capture ? `Capture/upload/manual-entry fallback for ${objectLabel}.` : null,
+    actions.parse ? `Parsing or AI/OCR result review with manual correction before save.` : null,
+    `Data model for ${dataObjects.slice(0, 5).join(", ")}.`,
+    `List/detail surfaces for saved ${objectLabel}.`,
+    actions.search || actions.organize ? `Search, filters, categories, or tags for finding saved ${objectLabel}.` : null,
+    dataObjects.includes("CsvExport") ? `CSV export with predictable headers and selected fields.` : actions.export ? `Export/copy/download path with predictable fields and clear file format.` : null,
+    actions.localFirst ? `Local-first persistence plus backup/restore or clear-data controls.` : null,
+    `Empty, loading, error, no-result, and partial-success states for the main workflow.`
+  ].filter((item): item is string => Boolean(item))).slice(0, 8);
+}
+
+function nonGoalsFor(ingredients: SynthesizedIngredients): string[] {
+  const { actions, objectLabel } = ingredients;
+  return uniqueStrings([
+    "No broad admin, team, billing, or account system unless the user explicitly asked for it.",
+    "No unrelated starter repo features that distract from the first product workflow.",
+    actions.ai || actions.parse ? "No claims that AI/OCR/parsing is always correct; keep manual review and correction in the loop." : null,
+    actions.export ? "No hidden or lossy export behavior; exported fields should be documented and predictable." : null,
+    actions.localFirst ? "No cloud sync before the local-first storage, backup, and clear-data behavior works." : "No hosted sync or multi-device complexity before one user's saved workflow works.",
+    `No copying the starter repo's brand, sample data, screenshots, or product assumptions instead of making the ${objectLabel} product.`
+  ].filter((item): item is string => Boolean(item))).slice(0, 7);
+}
+
+function safetyFor(ingredients: SynthesizedIngredients, repo: BuildPackRepo | undefined): string[] {
+  const { actions, objectLabel } = ingredients;
+  return uniqueStrings([
+    repo?.license ? `Confirm ${repo.fullName}'s ${repo.license} license, notices, assets, and dependency terms before copying code.` : "Confirm license, notices, assets, and dependency terms before copying code.",
+    actions.localFirst ? `Document where ${objectLabel} data is stored locally and how users can export, back up, and clear it.` : `Document what ${objectLabel} data is stored and where.`,
+    actions.ai || actions.parse ? "Treat generated or parsed output as a draft until the user reviews it." : null,
+    actions.export ? "Make export behavior intentional; do not include hidden fields or secrets in downloads." : null,
+    "Keep API keys, private data, and repo inspection notes out of logs and generated sample data."
+  ].filter((item): item is string => Boolean(item))).slice(0, 6);
+}
+
+function currentAlternativesFor(ingredients: SynthesizedIngredients): string[] {
+  const { actions } = ingredients;
+  return uniqueStrings([
+    "spreadsheets",
+    "notes apps",
+    actions.capture ? "camera roll or file folders" : null,
+    actions.schedule ? "shared calendars" : null,
+    actions.export ? "manual CSV/JSON exports" : null,
+    "generic SaaS tools",
+    "the selected repo's original product"
+  ].filter((item): item is string => Boolean(item))).slice(0, 6);
+}
+
+function synthesizedWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  const repo = input.selectedRepo;
+  const ingredients = synthesizeIngredients(input);
+  const targetUser = stringPreference(input.preferences, "audience") ?? extractTargetUser(ingredients.ideaText, ingredients.objectLabel);
+  const workflow = workflowFor(ingredients);
+  const screens = screensFor(ingredients);
+  const actions = actionsFor(ingredients);
+  const requirements = requirementsFor(ingredients);
+  const nonGoals = nonGoalsFor(ingredients);
+  const safety = safetyFor(ingredients, repo);
+  const productName = name || "The app";
+  const actionSummary = humanList(actions.slice(0, 4), `manage ${ingredients.objectLabel}`);
+  const firstMilestone = stringPreference(input.preferences, "firstMilestone") ??
+    `Build the ${ingredients.productPhrase} loop: ${workflow.slice(0, 4).map((step) => step.replace(/^User\s+|^App\s+/i, "").replace(/\.$/, "")).join("; ")}.`;
+
+  return {
+    productKind: "workflow-app",
+    confidence: ingredients.objectTerms.length >= 2 ? 68 : 56,
+    productThesis: `${productName} should help ${targetUser} ${actionSummary}, using ${repo?.fullName ?? "the selected repo"} only as a foundation for reusable setup, structure, or patterns.`,
+    targetUserSegment: targetUser,
+    jobToBeDone: `When I need to work with ${ingredients.objectLabel}, I want to ${actionSummary} in one focused flow without rebuilding unrelated starter features.`,
+    currentAlternatives: currentAlternativesFor(ingredients),
+    differentiatedWedge: `Start from working code, keep the parts that support ${ingredients.objectLabel}, replace the starter's brand and assumptions, and add the missing ${ingredients.dataObjects.slice(0, 4).join(", ")} behavior that makes this the user's product.`,
+    primaryWorkflow: workflow,
+    keyScreens: screens,
+    coreDataObjects: ingredients.dataObjects.length >= 4
+      ? ingredients.dataObjects
+      : uniqueStrings([...ingredients.dataObjects, `${pascalCaseTerm(ingredients.productPhrase)}Record`, "SavedRecord", "ExportJob"]).slice(0, 7),
+    userActions: actions,
+    systemStates: {
+      empty: `No ${ingredients.objectLabel} yet; show the fastest way to add the first one plus a sample/demo path.`,
+      loading: `Processing ${ingredients.objectLabel}; keep the user's input visible and explain progress.`,
+      error: `The ${ingredients.objectLabel} workflow failed; preserve input and offer retry or manual fallback.`,
+      noResult: `No matching ${ingredients.objectLabel}; offer filter reset, broader search, or manual entry.`,
+      partialSuccess: `Some ${ingredients.objectLabel} data was saved or inferred; flag missing fields and let the user finish manually.`
+    },
+    mvpRequirements: requirements,
+    explicitNonGoals: nonGoals,
+    trustPrivacySafety: safety,
+    firstMilestone,
+    successMetrics: [
+      `A user can complete the first ${ingredients.objectLabel} workflow without setup help.`,
+      `Saved ${ingredients.objectLabel} data survives refresh or has an explicit export/backup path.`,
+      "The UI makes keep, replace, add, and remove decisions clear before a builder edits the repo.",
+      "The product feels like the user's app, not a lightly renamed starter repo."
+    ],
+    wowDemoScript: [
+      `Start from an empty ${ingredients.primaryObject} workspace.`,
+      workflow[0] ?? `Add realistic ${ingredients.objectLabel}.`,
+      workflow[2] ?? `Review and edit the ${ingredients.objectLabel} details.`,
+      workflow.find((step) => /save|track|organize|filter|search/i.test(step)) ?? `Save the ${ingredients.objectLabel} record.`,
+      workflow.find((step) => /export|share|copy|send/i.test(step)) ?? "Show the reusable output or saved state."
+    ],
+    inferredFrom: ["user idea", "general synthesis", repo ? "selected repo metadata" : "search result"]
+  };
+}
+
 function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const name = stringPreference(input.preferences, "productName");
   const repo = input.selectedRepo;
   return {
     productKind: "workflow-app",
     confidence: 45,
-    productThesis: stringPreference(input.preferences, "productGoal") ?? `${name || "The app"} should turn the user's idea into one working product loop, using ${repo?.fullName ?? "the selected repo"} only where its setup, data model, routes, or UI patterns genuinely help.`,
+    productThesis: stringPreference(input.preferences, "productGoal") ?? `${name || "The app"} should turn the user's idea into a focused workflow with useful saved or exported output, using ${repo?.fullName ?? "the selected repo"} only where its setup, data model, routes, or UI patterns genuinely help.`,
     targetUserSegment: stringPreference(input.preferences, "audience") ?? "The most specific user implied by the idea; refine this during repo inspection instead of building for everyone.",
     jobToBeDone: "Complete one painful workflow from input to useful saved output.",
     currentAlternatives: ["manual spreadsheets", "generic SaaS tools", "custom scripts", "existing apps found during repo research"],
     differentiatedWedge: "Start from working code, remove unrelated assumptions, and ship the user's narrow workflow faster than a blank scaffold.",
     primaryWorkflow: [
-      "User starts the primary task from a clear first screen.",
+      "User begins from a clear intake screen.",
       "User enters or selects the minimum information required.",
       "System produces the useful result, record, or decision.",
       "User reviews and edits the result.",
       "User saves, exports, or revisits the result."
     ],
-    keyScreens: ["Start/new item", "Result/detail", "Saved library", "Settings/data", "Export/share"],
-    coreDataObjects: ["UserInput", "Result", "SavedItem", "Settings", "Export"],
+    keyScreens: ["Intake", "Review/detail", "Saved records", "Settings/data", "Export/share"],
+    coreDataObjects: ["WorkflowRecord", "CapturedEntry", "WorkflowResult", "SavedRecord", "ExportJob"],
     userActions: ["create", "review", "edit", "save", "export", "delete"],
     systemStates: {
       empty: "No saved items; guide the user into the first task.",
@@ -623,7 +1108,7 @@ function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
       noResult: "No useful result; suggest narrower input or alternate path.",
       partialSuccess: "Some useful data exists; let the user save it and continue."
     },
-    mvpRequirements: ["One primary task", "One useful result/detail surface", "Save/revisit", "Export/backup", "Empty/loading/error/no-result states"],
+    mvpRequirements: ["Focused entry flow", "Review/detail surface", "Save/revisit", "Export/backup", "Empty/loading/error/no-result states"],
     explicitNonGoals: ["No broad admin system", "No team/billing unless the idea requires it", "No unrelated starter features", "No copied assets or license-unclear code"],
     trustPrivacySafety: ["Document what data is stored", "Check license before reuse", "Keep secrets out of client/logs", "Avoid claims that were not verified"],
     firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the smallest vertical slice: create the main item, produce the useful result, save it, and export it.",
@@ -676,5 +1161,8 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
   if (/\b(recipe|recipes|grocery list|meal plan|ingredients?|cookbook|cooking|bookmark manager)\b/i.test(signal)) {
     return recipeBookmarkBlueprint(input);
   }
-  return genericWorkflowBlueprint(input);
+  const synthesized = synthesizedWorkflowBlueprint(input);
+  return synthesized.coreDataObjects.some((objectName) => /PrimaryItem|UserInput/i.test(objectName))
+    ? genericWorkflowBlueprint(input)
+    : synthesized;
 }

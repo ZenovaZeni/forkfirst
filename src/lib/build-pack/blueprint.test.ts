@@ -302,4 +302,23 @@ describe("handoff blueprint", () => {
     expect(blueprint.primaryWorkflow.join(" ")).toMatch(/practice|game|calendar|reminder/i);
     expect(blueprint.coreDataObjects.join(" ")).toMatch(/Child|Team|Event|Reminder/i);
   });
+
+  test("synthesizes concrete handoff fields for arbitrary app ideas without a named blueprint", () => {
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want a podcast clip generator with transcript search and CSV export",
+      researchContext: null,
+      chatContext: null,
+      queries: ["podcast clip generator transcript search csv export in:name,description,readme"],
+      selectedRepo: undefined,
+      candidateRepos: [],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("workflow-app");
+    expect(blueprint.productThesis).toMatch(/podcast|clip|transcript/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/search|export|review/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/Podcast|Clip|Transcript|CsvExport/);
+    expect(blueprint.keyScreens.join(" ")).toMatch(/Podcast|Search|Export/i);
+    expect(blueprint.coreDataObjects.join(" ")).not.toMatch(/PrimaryItem|UserInput/);
+  });
 });

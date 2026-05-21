@@ -291,4 +291,14 @@ describe("search planner", () => {
       "event scheduling app in:name,description,readme"
     ]);
   });
+
+  test("plans receipt scanner expense prompts around receipts, OCR, and CSV", () => {
+    const refinement = planPromptRefinement("I want to build a local-first receipt scanner that tracks expenses and exports to CSV");
+
+    expect(refinement.bestQuery).toBe("receipt scanner expense tracker csv in:name,description,readme");
+    expect(refinement.queries.slice(0, 4).join(" ")).toMatch(/receipt/);
+    expect(refinement.queries.slice(0, 4).join(" ")).toMatch(/expense/);
+    expect(refinement.queries.slice(0, 4).join(" ")).toMatch(/scanner|ocr/);
+    expect(refinement.queries.slice(0, 4).join(" ")).toMatch(/csv|export/);
+  });
 });

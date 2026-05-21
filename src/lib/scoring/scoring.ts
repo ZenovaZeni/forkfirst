@@ -54,6 +54,11 @@ const SEARCH_SYNTAX_TERMS = new Set([
 ]);
 
 function singularize(term: string): string {
+  if (term === "expenses") return "expense";
+  if (term === "receipts") return "receipt";
+  if (term === "exports") return "export";
+  if (term === "tracks" || term === "tracking") return "track";
+  if (term === "scans" || term === "scanning") return "scan";
   return term.length > 4 && term.endsWith("s") ? term.slice(0, -1) : term;
 }
 
@@ -166,7 +171,15 @@ function scoringIntentTerms(prompt: string): string[] {
 
 function termMatchWeight(term: string, tokens: Set<string>, normalizedHaystack: string): number {
   const singular = singularize(term);
-  if (tokens.has(term) || tokens.has(singular)) return 1;
+  const variants = new Set([term, singular]);
+  if (singular === "scan" || term === "scanner") ["scan", "scanner", "scanning", "ocr", "capture", "upload"].forEach((variant) => variants.add(variant));
+  if (singular === "track") ["track", "tracker", "tracking", "history", "log"].forEach((variant) => variants.add(variant));
+  if (singular === "export") ["export", "exports", "csv", "download"].forEach((variant) => variants.add(variant));
+  if (singular === "receipt") ["receipt", "receipts", "document"].forEach((variant) => variants.add(variant));
+  if (singular === "expense") ["expense", "expenses", "budget"].forEach((variant) => variants.add(variant));
+  if (term === "local-first" || term === "local") ["local", "local-first", "offline", "self-hosted", "self"].forEach((variant) => variants.add(variant));
+  if (Array.from(variants).some((variant) => tokens.has(variant))) return 1;
+  if (Array.from(variants).some((variant) => variant.length >= 4 && normalizedHaystack.includes(variant))) return 0.8;
   if (term.includes("-") && normalizedHaystack.includes(term)) return 0.8;
   if (singular !== term && singular.length >= 5 && normalizedHaystack.includes(singular)) return 0.65;
   if (term.length >= 6 && normalizedHaystack.includes(term)) return 0.45;
@@ -187,6 +200,93 @@ function plannedIntentMatchScore(prompt: string, tokens: Set<string>, normalized
   return intentMatches / intentTerms.length;
 }
 
+function isAppFoundationRequest(prompt: string): boolean {
+  return /\b(app|application|dashboard|tracker|portal|manager|organizer|scanner|scheduler|crm|system|platform|product)\b/i.test(prompt);
+}
+
+type CoverageSignal = {
+  matchedTerms: number;
+  requestedTerms: number;
+  buckets: number;
+  missingCriticalFeature: boolean;
+  thinCoverage: boolean;
+};
+
+function hasPattern(text: string, patterns: RegExp[]): boolean {
+  return patterns.some((pattern) => pattern.test(text));
+}
+
+function requestedFeatureMissing(prompt: string, normalizedHaystack: string): boolean {
+  const checks: Array<{ requested: RegExp[]; evidence: RegExp[] }> = [
+    {
+      requested: [/\b(scan|scanner|capture|photo|image|ocr|upload)\b/i],
+      evidence: [/\b(scan|scanner|capture|photo|image|ocr|upload|camera|file)\b/i]
+    },
+    {
+      requested: [/\b(export|csv|download|pdf|json)\b/i],
+      evidence: [/\b(export|csv|download|pdf|json|spreadsheet)\b/i]
+    },
+    {
+      requested: [/\b(local[-\s]?first|offline|local storage|browser storage|on device)\b/i],
+      evidence: [/\b(local|offline|browser|device|self[-\s]?hosted|sqlite|indexeddb|storage)\b/i]
+    },
+    {
+      requested: [/\b(message|messaging|chat|notification|reminder|alert)\b/i],
+      evidence: [/\b(message|messaging|chat|notification|reminder|alert|email)\b/i]
+    },
+    {
+      requested: [/\b(calendar|schedule|booking|appointment|availability)\b/i],
+      evidence: [/\b(calendar|schedule|booking|appointment|availability|slot)\b/i]
+    }
+  ];
+  return checks.some((check) => hasPattern(prompt, check.requested) && !hasPattern(normalizedHaystack, check.evidence));
+}
+
+function coverageSignal(prompt: string, terms: string[], tokens: Set<string>, normalizedHaystack: string): CoverageSignal {
+  const requestedTerms = terms
+    .filter((term) => !GENERIC_INTENT_TERMS.has(term))
+    .filter((term) => !SEARCH_SYNTAX_TERMS.has(term));
+  const matchedTerms = requestedTerms.reduce((total, term) => total + (termMatchWeight(term, tokens, normalizedHaystack) > 0 ? 1 : 0), 0);
+  const actionBucket = hasPattern(prompt, [/\b(scan|track|save|export|organize|search|schedule|book|generate|manage|capture|upload|filter|review|edit|import)\b/i]) &&
+    hasPattern(normalizedHaystack, [/\b(scan|track|save|export|organize|search|schedule|book|generate|manage|capture|upload|filter|review|edit|import)\b/i]);
+  const featureBucket = hasPattern(prompt, [/\b(csv|ocr|dashboard|calendar|message|notification|backup|analytics|report|local[-\s]?first|offline|price|value)\b/i]) &&
+    hasPattern(normalizedHaystack, [/\b(csv|ocr|dashboard|calendar|message|notification|backup|analytics|report|local|offline|price|value|export)\b/i]);
+  const entityBucket = requestedTerms.some((term) => !ACTION_WORDS_FOR_SCORING.has(term) && termMatchWeight(term, tokens, normalizedHaystack) > 0);
+  const buckets = [actionBucket, featureBucket, entityBucket].filter(Boolean).length;
+  const missingCriticalFeature = requestedFeatureMissing(prompt, normalizedHaystack);
+  return {
+    matchedTerms,
+    requestedTerms: requestedTerms.length,
+    buckets,
+    missingCriticalFeature,
+    thinCoverage: requestedTerms.length >= 3 && (matchedTerms < 2 || buckets < 2)
+  };
+}
+
+const ACTION_WORDS_FOR_SCORING = new Set([
+  "add",
+  "book",
+  "build",
+  "capture",
+  "create",
+  "edit",
+  "export",
+  "filter",
+  "find",
+  "generate",
+  "import",
+  "manage",
+  "organize",
+  "review",
+  "save",
+  "scan",
+  "schedule",
+  "search",
+  "share",
+  "track",
+  "upload"
+]);
+
 function scoreFit(repo: NormalizedRepo, prompt: string): number {
   const terms = extractIdeaTerms(prompt);
   const intentTerms = scoringIntentTerms(prompt);
@@ -201,7 +301,23 @@ function scoreFit(repo: NormalizedRepo, prompt: string): number {
   const exactNameBoost = terms.some((term) => repo.name.toLowerCase() === term || repo.fullName.toLowerCase().includes(`/${term}`)) ? 12 : 0;
   const domainBoost = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 || intentScore >= 55 ? 10 : 0;
   const mismatchPenalty = verticalMismatchPenalty(prompt, normalizedHaystack);
-  return clamp(Math.max(rawScore, intentScore) + exactNameBoost + domainBoost + valueFeatureBoost(prompt, normalizedHaystack) + verticalCompatibilityBoost(prompt, normalizedHaystack) - mismatchPenalty);
+  const coverage = coverageSignal(prompt, terms, tokens, normalizedHaystack);
+  const coverageBoost = coverage.buckets >= 2 ? 8 : 0;
+  const featurePenalty = coverage.missingCriticalFeature ? 18 : 0;
+  const thinCoverageCap = isAppFoundationRequest(prompt) && coverage.thinCoverage ? 76 : 100;
+  return clamp(
+    Math.min(
+      thinCoverageCap,
+      Math.max(rawScore, intentScore) +
+        exactNameBoost +
+        domainBoost +
+        coverageBoost +
+        valueFeatureBoost(prompt, normalizedHaystack) +
+        verticalCompatibilityBoost(prompt, normalizedHaystack) -
+        mismatchPenalty -
+        featurePenalty
+    )
+  );
 }
 
 function isGameBuildPrompt(prompt: string): boolean {
@@ -242,6 +358,9 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   const tokens = new Set(normalizedHaystack.split(/[\s/_-]+/).filter(Boolean));
   const hasDomainMatch = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 || plannedIntentMatchScore(prompt, tokens, normalizedHaystack) >= 0.55;
   const hasValueFeatureMatch = hasValueIntent(prompt) && valueFeatureSignal(normalizedHaystack) > 0;
+  const coverage = coverageSignal(prompt, extractIdeaTerms(prompt), tokens, normalizedHaystack);
+  const isAppRequest = isAppFoundationRequest(prompt);
+  const nonAppKindPenalty = isAppRequest && (kind.kind === "directory" || kind.kind === "plugin_pack" || kind.kind === "research_resource" || kind.kind === "framework_sdk" || kind.kind === "library") ? 8 : 0;
   const archivedPenalty = repo.archived ? 45 : 0;
   const kindUtility =
     kind.kind === "game_engine"
@@ -249,21 +368,24 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
       : kind.kind === "starter_template" || kind.kind === "app"
       ? 100
       : kind.kind === "framework_sdk" || kind.kind === "library"
-        ? 82
+        ? isAppRequest ? 62 : 82
         : kind.kind === "directory" || kind.kind === "plugin_pack" || kind.kind === "research_resource"
           ? isGameBuildPrompt(prompt) ? 34 : 58
           : 68;
   const gameBoost = isGameBuildPrompt(prompt) ? Math.min(18, gameEngineSignal(repo) * 5) : 0;
-  const total = clamp(fit * 0.34 + activity * 0.22 + popularity * 0.14 + license * 0.11 + docs * 0.09 + kindUtility * 0.1 + gameBoost - archivedPenalty);
+  const total = clamp(fit * 0.34 + activity * 0.22 + popularity * 0.14 + license * 0.11 + docs * 0.09 + kindUtility * 0.1 + gameBoost - archivedPenalty - nonAppKindPenalty);
 
   const reasons = [
-    fit >= 70 ? "Strong keyword fit" : fit >= 40 ? "Partial idea fit" : "Weak idea fit",
+    fit >= 70 && !coverage.thinCoverage && !coverage.missingCriticalFeature ? "Strong workflow fit" : fit >= 40 ? "Partial idea fit" : "Weak idea fit",
     activity >= 70 ? "Recently active" : activity >= 35 ? "Some activity risk" : "Stale activity",
     license >= 80 ? "Has a license" : "License not detected",
     docs >= 70 ? "README/docs look useful" : docs >= 45 ? "Docs need inspection" : "Sparse docs"
   ];
 
   if (hasDomainMatch) reasons.push("Vertical/domain match");
+  if (coverage.thinCoverage) reasons.push("Limited workflow coverage");
+  if (coverage.missingCriticalFeature) reasons.push("Missing requested feature signal");
+  if (nonAppKindPenalty > 0) reasons.push("Reference type for app request");
   if (hasValueFeatureMatch) reasons.push("Value/pricing feature match");
   if (repo.archived) reasons.push("Repository is archived");
   if (repo.readme?.hasSetup) reasons.push("Setup path found in README");

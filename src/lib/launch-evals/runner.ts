@@ -436,6 +436,65 @@ export const LAUNCH_EVAL_CASES: LaunchEvalCase[] = [
       handoffMustNotContain: ["freeCodeCamp", "Quincy", "PrimaryItem", "UserInput"],
       qualityAuditPass: true
     }
+  },
+  {
+    id: "receipt-expense-csv",
+    category: "local productivity",
+    prompt: "I want to build a local-first receipt scanner that tracks expenses and exports to CSV",
+    repos: [
+      repo({
+        id: 14,
+        fullName: "simonwep/ocular",
+        description: "Ocular is an open-source budgeting tracking app to track your budget across the years.",
+        topics: ["budget", "expense", "finance"],
+        stars: 510,
+        forks: 40,
+        language: "Vue",
+        license: "MIT",
+        readme: {
+          excerpt: "Budget tracking, expense history, charts, import and export for personal finance.",
+          url: "https://github.com/simonwep/ocular#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: false,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 82,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      }),
+      repo({
+        id: 15,
+        fullName: "paperless-ngx/paperless-ngx",
+        description: "Self-hosted document management app with receipt scanning, OCR, tagging, expense documents, and CSV export.",
+        topics: ["receipt", "ocr", "documents", "csv", "expense", "self-hosted"],
+        stars: 520,
+        forks: 42,
+        language: "Python",
+        license: "GPL-3.0",
+        readme: {
+          excerpt: "Self-hosted local document workflow. Scan receipts, run OCR, review parsed document fields, tag expense records, search documents, and export CSV metadata.",
+          url: "https://github.com/paperless-ngx/paperless-ngx#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: true,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 88,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      })
+    ],
+    expected: {
+      bestQueryContains: "receipt scanner expense tracker csv",
+      expectedTopRepo: "paperless-ngx/paperless-ngx",
+      expectedTopCategory: ["already_exists", "forkable"],
+      minFit: 70,
+      productKind: "workflow-app",
+      handoffMustContain: ["Receipt", "ExpenseRecord", "CsvExport", "local-first"],
+      handoffMustNotContain: ["PrimaryItem", "UserInput", "one working product loop"],
+      qualityAuditPass: true
+    }
   }
 ];
 

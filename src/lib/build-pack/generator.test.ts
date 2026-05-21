@@ -632,6 +632,46 @@ describe("build pack generator", () => {
     expect(alignment).not.toMatch(/PrimaryItem|UserInput/);
   });
 
+  test("receipt scanner expense prompt produces a concrete local-first handoff", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want to build a local-first receipt scanner that tracks expenses and exports to CSV",
+        queries: ["receipt scanner expense tracker csv in:name,description,readme"],
+        repos: [
+          {
+            ...repo(),
+            fullName: "simonwep/ocular",
+            url: "https://github.com/simonwep/ocular",
+            description: "Ocular is an open-source budgeting tracking app to track your budget across the years.",
+            topics: ["budget", "expense", "csv", "self-hosted"],
+            readme: {
+              ...repo().readme!,
+              excerpt: "Self-hosted budgeting app. Import data from Google Sheets annual planner and export as json.",
+              evidence: {
+                fetchStatus: "ok",
+                fetchedAt: "2026-05-21T00:00:00Z",
+                setupSnippets: ["Deploy via Docker in seconds"],
+                commandSnippets: ["docker compose up"],
+                featureSnippets: ["budget tracking, expense history, import, export"],
+                integrationSnippets: ["Google Sheets import and JSON export"],
+                licenseSnippets: ["MIT"]
+              }
+            }
+          }
+        ]
+      }),
+      "codex"
+    );
+
+    expect(markdown).toMatch(/receipt/i);
+    expect(markdown).toMatch(/OCR|manual entry/i);
+    expect(markdown).toMatch(/ExpenseRecord|ReceiptImage|CsvExport/i);
+    expect(markdown).toMatch(/local-first|browser storage|CSV/i);
+    expect(markdown).toMatch(/Review parsed receipt|expense list|CSV export/i);
+    expect(markdown).not.toMatch(/PrimaryItem|UserInput|User starts the primary task|one working product loop/i);
+    expect(auditBuildPackQuality({ idea: "I want to build a local-first receipt scanner that tracks expenses and exports to CSV", markdown }).passed).toBe(true);
+  });
+
   test("generic trading-card prompts avoid Pokemon-specific product copy", () => {
     const markdown = buildProjectBuildPack(
       makeResult({

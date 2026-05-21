@@ -419,6 +419,137 @@ function findVerticalSearchPlan(prompt: string): (typeof VERTICAL_SEARCH_PLANS)[
   return VERTICAL_SEARCH_PLANS.find((plan) => plan.pattern.test(normalizedPrompt)) ?? null;
 }
 
+const QUERY_PRODUCT_WORDS = new Set([
+  "album",
+  "board",
+  "calendar",
+  "crm",
+  "dashboard",
+  "generator",
+  "library",
+  "manager",
+  "organizer",
+  "portal",
+  "scanner",
+  "scheduler",
+  "system",
+  "tracker",
+  "vault"
+]);
+
+const QUERY_ACTION_WORDS = new Set([
+  "add",
+  "book",
+  "capture",
+  "categorize",
+  "compare",
+  "create",
+  "export",
+  "filter",
+  "find",
+  "generate",
+  "import",
+  "log",
+  "manage",
+  "organize",
+  "parse",
+  "review",
+  "save",
+  "scan",
+  "schedule",
+  "search",
+  "share",
+  "sync",
+  "track",
+  "upload"
+]);
+
+function canonicalQueryTerm(term: string): string {
+  const normalized = term
+    .replace(/-/g, " ")
+    .replace(/\btracks?\b/g, "track")
+    .replace(/\btracking\b/g, "track")
+    .replace(/\bexports?\b/g, "export")
+    .replace(/\bscans?\b/g, "scan")
+    .replace(/\bsaves?\b/g, "save")
+    .replace(/\borganizes?\b/g, "organize")
+    .replace(/\bexpenses\b/g, "expense")
+    .replace(/\breceipts\b/g, "receipt")
+    .replace(/\s+/g, " ")
+    .trim();
+  return normalized;
+}
+
+function compactQuery(parts: Array<string | null | undefined>): string {
+  const query = Array.from(new Set(parts.flatMap((part) => canonicalQueryTerm(part ?? "").split(/\s+/)).filter(Boolean)))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return query ? `${query} in:name,description,readme` : "";
+}
+
+function queryDomainTerms(prompt: string): string[] {
+  return Array.from(
+    new Set(
+      extractIdeaTerms(prompt)
+        .map(canonicalQueryTerm)
+        .flatMap((term) => term.split(/\s+/))
+        .filter((term) => term.length >= 3)
+        .filter((term) => !QUERY_PRODUCT_WORDS.has(term))
+        .filter((term) => !QUERY_ACTION_WORDS.has(term))
+        .filter((term) => !["first", "local", "source", "starter", "template"].includes(term))
+    )
+  ).slice(0, 6);
+}
+
+function queryProductTerms(prompt: string): string[] {
+  const normalizedPrompt = normalizePromptForSearch(prompt).replace(/-/g, " ");
+  const products = Array.from(QUERY_PRODUCT_WORDS).filter((term) => new RegExp(`\\b${term}\\b`, "i").test(normalizedPrompt));
+  if (/\btrack|tracking|tracks\b/i.test(normalizedPrompt) && !products.includes("tracker")) products.push("tracker");
+  if (/\bscan|scanning|scanner\b/i.test(normalizedPrompt) && !products.includes("scanner")) products.push("scanner");
+  if (/\borganize|organizer|library|collection\b/i.test(normalizedPrompt) && !products.includes("organizer")) products.push("organizer");
+  return products.slice(0, 3);
+}
+
+function queryFeatureTerms(prompt: string): string[] {
+  const normalizedPrompt = normalizePromptForSearch(prompt).replace(/-/g, " ");
+  return [
+    /\bcsv\b|\bspreadsheet\b/i.test(normalizedPrompt) ? "csv export" : null,
+    /\bocr\b|\bscan|scanner|receipt\b/i.test(normalizedPrompt) ? "ocr" : null,
+    /\blocal first\b|\boffline\b|\blocal\b/i.test(normalizedPrompt) ? "local first" : null,
+    /\breminder|notify|notification|alert\b/i.test(normalizedPrompt) ? "reminders" : null,
+    /\btranscript|transcription\b/i.test(normalizedPrompt) ? "transcript search" : null,
+    /\bprice|pricing|value|worth\b/i.test(normalizedPrompt) ? "price tracker" : null,
+    /\bexport|download|share|copy\b/i.test(normalizedPrompt) ? "export" : null
+  ].filter((term): term is string => Boolean(term));
+}
+
+function buildGeneralSearchQueries(prompt: string): string[] {
+  const domainTerms = queryDomainTerms(prompt);
+  const productTerms = queryProductTerms(prompt);
+  const featureTerms = queryFeatureTerms(prompt);
+  if (domainTerms.length === 0) return [];
+  const primaryProduct = productTerms[0] ?? (featureTerms.some((term) => term.includes("export")) ? "tracker" : "app");
+  const secondaryProduct = productTerms.find((term) => term !== primaryProduct && term === "tracker");
+  const primary = compactQuery([domainTerms[0], primaryProduct, domainTerms[1], secondaryProduct, domainTerms[2], featureTerms.find((term) => term.includes("csv"))?.replace(" export", "")]);
+  const featureFirst = compactQuery([domainTerms[0], ...featureTerms.slice(0, 2), primaryProduct, domainTerms[1]]);
+  const productPattern = compactQuery([domainTerms[0], domainTerms[1], primaryProduct, "app"]);
+  const workflowPattern = compactQuery([domainTerms[0], domainTerms[1], productTerms.includes("tracker") ? "tracker" : featureTerms[0], featureTerms[1]]);
+  const localPattern = featureTerms.some((term) => term.includes("local")) ? compactQuery(["local first", domainTerms[1] ?? domainTerms[0], primaryProduct, featureTerms.find((term) => term.includes("csv"))]) : "";
+  const starterPattern = compactQuery([domainTerms[0], primaryProduct, "starter template"]);
+  return Array.from(new Set([primary, workflowPattern, featureFirst, localPattern, productPattern, starterPattern].filter(Boolean))).slice(0, 6);
+}
+
+function shouldPreferGeneralQueries(prompt: string, generalQuery: string | undefined, verticalQuery: string | undefined, verticalLabel: string | undefined): boolean {
+  if (!generalQuery || !verticalQuery) return Boolean(generalQuery);
+  if (verticalLabel !== "personal-finance") return false;
+  const domainTerms = queryDomainTerms(prompt);
+  if (domainTerms.length < 2) return false;
+  const generalScore = domainTerms.filter((term) => generalQuery.includes(term)).length;
+  const verticalScore = domainTerms.filter((term) => verticalQuery.includes(term)).length;
+  return generalScore >= 3 && generalScore >= verticalScore + 2;
+}
+
 export function planSearches(prompt: string): string[] {
   const terms = extractIdeaTerms(prompt);
   const quotedPrompt = prompt.trim().replace(/\s+/g, " ").slice(0, 120);
@@ -449,6 +580,24 @@ export function planSearches(prompt: string): string[] {
     (lowerPrompt.includes("repo") || lowerPrompt.includes("repository")) &&
     (lowerPrompt.includes("idea") || lowerPrompt.includes("exist") || lowerPrompt.includes("start"));
   const isVoiceAssistantDiscovery = /\b(voice|speech|audio|whisper|wisper|assistant|transcription|stt|wake word)\b/i.test(normalizedPrompt);
+  const generalQueries = buildGeneralSearchQueries(prompt);
+  const generalQueriesLead =
+    !isGameDiscovery &&
+    !isVoiceAssistantDiscovery &&
+    !isAiDiscovery &&
+    !isBusinessDiscovery &&
+    !isLeadGenDiscovery &&
+    !isRealEstateDiscovery &&
+    shouldPreferGeneralQueries(prompt, generalQueries[0], verticalPlan?.queries[0], verticalPlan?.label);
+  const generalQueriesOnly =
+    !verticalPlan &&
+    !isGameDiscovery &&
+    !isVoiceAssistantDiscovery &&
+    !isRepoDiscoveryIdea &&
+    !isAiDiscovery &&
+    !isBusinessDiscovery &&
+    !isLeadGenDiscovery &&
+    !isRealEstateDiscovery;
 
   return Array.from(
     new Set(
@@ -503,7 +652,8 @@ export function planSearches(prompt: string): string[] {
                   "real estate marketing in:name,description,readme"
                 ]
               : []),
-        ...(verticalPlan ? verticalPlan.queries : []),
+        ...(generalQueriesLead ? generalQueries : verticalPlan ? verticalPlan.queries : generalQueriesOnly ? generalQueries : []),
+        ...(generalQueriesLead && verticalPlan ? verticalPlan.queries : []),
         ...(isVoiceAssistantDiscovery
           ? [
               "open source voice assistant in:name,description,readme",

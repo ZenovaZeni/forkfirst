@@ -318,4 +318,48 @@ describe("repo scoring", () => {
     expect(first.fullName).toBe("acme/client-portal");
     expect(first.score.fit).toBeGreaterThanOrEqual(70);
   });
+
+  test("ranks workflow-complete repos above one-keyword budget overlap", () => {
+    const [first, second] = classifyRepositories(
+      [
+        repo({
+          owner: "simonwep",
+          name: "ocular",
+          fullName: "simonwep/ocular",
+          description: "Open-source budgeting app to track your budget and expenses across the years.",
+          topics: ["budget", "expense", "finance"],
+          stars: 510,
+          forks: 40,
+          language: "Vue",
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Budget tracking, expenses, charts, import and export for personal finance.",
+            qualityScore: 82
+          }
+        }),
+        repo({
+          owner: "paperless-ngx",
+          name: "paperless-ngx",
+          fullName: "paperless-ngx/paperless-ngx",
+          description: "Self-hosted document management app with receipt scanning, OCR, tagging, expense documents, and CSV export.",
+          topics: ["receipt", "ocr", "documents", "csv", "expense", "self-hosted"],
+          stars: 520,
+          forks: 42,
+          language: "Python",
+          license: "GPL-3.0",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Self-hosted local document workflow. Scan receipts, run OCR, review parsed document fields, tag expense records, search documents, and export CSV metadata.",
+            qualityScore: 88
+          }
+        })
+      ],
+      "I want to build a local-first receipt scanner that tracks expenses and exports to CSV"
+    );
+
+    expect(first.fullName).toBe("paperless-ngx/paperless-ngx");
+    expect(first.score.reasons).toContain("Strong workflow fit");
+    expect(second.score.reasons).toContain("Missing requested feature signal");
+  });
 });
