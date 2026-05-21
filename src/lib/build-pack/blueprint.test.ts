@@ -163,6 +163,82 @@ describe("handoff blueprint", () => {
     expect(blueprint.productThesis).not.toMatch(/one working product loop|selected repo/i);
   });
 
+  test("turns contractor CRM prompts into a service CRM blueprint", () => {
+    const selectedRepo = repo({
+      owner: "go2ismail",
+      name: "Free-CRM",
+      fullName: "go2ismail/Free-CRM",
+      description: "Open-source customer relationship management CRM software.",
+      topics: ["crm", "customer-management"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "Free CRM with contacts, companies, tasks, notes, sales, and customer management."
+      }
+    });
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want to build a simple CRM for a roofing company",
+      researchContext: null,
+      chatContext: null,
+      queries: ["roofing crm app in:name,description,readme"],
+      selectedRepo,
+      candidateRepos: [selectedRepo],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("service-business-crm");
+    expect(blueprint.productThesis).toMatch(/roofing|contractor|service/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/lead|estimate|job|follow/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/Customer|Lead|Job|Estimate/i);
+    expect(blueprint.coreDataObjects.join(" ")).not.toMatch(/PrimaryItem|UserInput/i);
+  });
+
+  test("turns realtor lead scraping prompts into a lead workflow, not an image workflow", () => {
+    const selectedRepo = repo({
+      owner: "omkarcloud",
+      name: "google-maps-scraper",
+      fullName: "omkarcloud/google-maps-scraper",
+      description: "Google Maps scraper and lead generation tool with business emails, phone numbers, social profiles, and API access.",
+      topics: ["scraper", "lead-generation", "real-estate"],
+      readme: {
+        ...repo().readme!,
+        excerpt: "Extract businesses, phone numbers, websites, and social profiles for lead research."
+      }
+    });
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want an app that helps realtors scrape leads and organize follow-ups",
+      researchContext: null,
+      chatContext: null,
+      queries: ["real estate lead generation in:name,description,readme"],
+      selectedRepo,
+      candidateRepos: [selectedRepo],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("real-estate-leads");
+    expect(blueprint.productThesis).toMatch(/realtor|lead|follow/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/source|qualify|follow/i);
+    expect(blueprint.explicitNonGoals.join(" ")).toMatch(/terms|consent|bulk/i);
+    expect(blueprint.productThesis).not.toMatch(/image|visual|listing photo/i);
+  });
+
+  test("turns Shopify profit prompts into an ecommerce analytics dashboard blueprint", () => {
+    const blueprint = buildHandoffBlueprint({
+      originalIdea: "I want a dashboard for tracking Shopify store profit, ad spend, and inventory",
+      researchContext: null,
+      chatContext: null,
+      queries: ["shopify analytics dashboard in:name,description,readme"],
+      selectedRepo: undefined,
+      candidateRepos: [],
+      preferences: undefined
+    });
+
+    expect(blueprint.productKind).toBe("ecommerce-dashboard");
+    expect(blueprint.productThesis).toMatch(/profit|ad spend|inventory|shopify/i);
+    expect(blueprint.primaryWorkflow.join(" ")).toMatch(/orders|ad spend|inventory|margin/i);
+    expect(blueprint.coreDataObjects.join(" ")).toMatch(/Order|AdSpend|InventoryItem|ProfitMetric/i);
+    expect(blueprint.coreDataObjects.join(" ")).not.toMatch(/PrimaryItem|UserInput/i);
+  });
+
   test("turns prompt organizer prompts into a prompt-library blueprint", () => {
     const blueprint = buildHandoffBlueprint({
       originalIdea: "I want to make an AI image prompt organizer",

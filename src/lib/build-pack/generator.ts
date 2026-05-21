@@ -1259,16 +1259,6 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ? topRepos.filter((repo) => isRelevantAlsoWorthChecking(repo, sanitizedFocusRepo, originalIdea)).slice(0, 2)
     : [];
   const chatContext = typeof wizardAnswers?.chatContext === "string" ? wizardAnswers.chatContext : null;
-  const blueprintSignal = [
-    originalIdea,
-    researchContext,
-    chatContext,
-    bestRepo?.fullName,
-    bestRepo?.description,
-    ...(bestRepo?.topics ?? []),
-    bestRepo?.readme?.excerpt,
-    ...result.queries
-  ].filter(Boolean).join(" ");
   const inferredBlueprint = buildHandoffBlueprint({
     originalIdea,
     researchContext,
@@ -1278,7 +1268,8 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     candidateRepos: topRepos,
     preferences: wizardAnswers
   });
-  const legacyProfile = profileWithPreferences(productProfileFor(blueprintSignal || originalIdea), wizardAnswers);
+  const userProfileSignal = [originalIdea, researchContext, chatContext].filter(Boolean).join(" ");
+  const legacyProfile = profileWithPreferences(productProfileFor(userProfileSignal || originalIdea), wizardAnswers);
   const blueprint = inferredBlueprint.productKind === "workflow-app" && !isGenericProductProfile(legacyProfile)
     ? blueprintFromProfile(legacyProfile, "workflow-app", ["user idea", "legacy product profile", bestRepo ? "selected repo metadata" : "search result"])
     : inferredBlueprint;

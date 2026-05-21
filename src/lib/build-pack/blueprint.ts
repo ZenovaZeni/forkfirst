@@ -17,6 +17,9 @@ export type ProductKind =
   | "prompt-library"
   | "sports-schedule"
   | "pet-identification"
+  | "service-business-crm"
+  | "real-estate-leads"
+  | "ecommerce-dashboard"
   | "workflow-app"
   | "marketplace"
   | "unknown-app";
@@ -442,6 +445,119 @@ function petIdentificationBlueprint(input: HandoffSignalInput): HandoffBlueprint
   };
 }
 
+function serviceBusinessCrmBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  const roofingFocused = /\b(roofing|roofer|roofers)\b/i.test(directTextFrom(input));
+  const trade = roofingFocused ? "roofing" : "service";
+  return {
+    productKind: "service-business-crm",
+    confidence: roofingFocused ? 78 : 72,
+    productThesis: `${name || "The app"} should help a small ${trade} business track customers, leads, estimates, jobs, notes, and follow-ups without turning into a heavy generic CRM.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? (roofingFocused ? "A small roofing company owner, office manager, or estimator who needs to keep leads, estimates, jobs, and follow-ups organized." : "A small contractor or service-business team that needs customer, job, estimate, and follow-up tracking."),
+    jobToBeDone: "When a new lead or customer calls, the business should capture the job context, create or update an estimate, track status, and know exactly who needs the next follow-up.",
+    currentAlternatives: ["spreadsheets", "paper job folders", "phone notes", "generic CRMs", "field-service platforms", "shared calendars"],
+    differentiatedWedge: "Use CRM foundations for contacts, notes, tasks, and status history, then specialize around service-business jobs, estimates, follow-ups, and owner-friendly daily views.",
+    primaryWorkflow: [
+      "Office or owner adds a lead/customer with contact details and job type.",
+      "Estimator records property/job notes, photos or attachments, and estimate status.",
+      "Team moves the opportunity through lead, estimate sent, won/lost, scheduled, in progress, and completed.",
+      "App shows follow-ups due today and stale leads that need attention.",
+      "Owner exports or reviews the pipeline by job status, estimate value, and next action."
+    ],
+    keyScreens: ["Lead capture", "Customer detail", "Estimate/job detail", "Pipeline board", "Follow-up queue", "Daily schedule", "Export/report"],
+    coreDataObjects: ["Customer", "Lead", "Property", "Estimate", "Job", "FollowUpTask", "Note", "Attachment", "PipelineStage"],
+    userActions: ["add lead", "update customer", "create estimate", "move job stage", "schedule follow-up", "record note", "export pipeline"],
+    systemStates: {
+      empty: "No customers or leads yet; guide the user to add the first lead.",
+      loading: "Loading pipeline and follow-ups; keep the current board visible.",
+      error: "Save failed; preserve lead/customer input and allow retry.",
+      noResult: "No leads match the filter; offer reset and add-lead actions.",
+      partialSuccess: "Lead saved but attachment/report/follow-up failed; mark what still needs attention."
+    },
+    mvpRequirements: ["Lead/customer capture", "Estimate and job status tracking", "Follow-up task queue", "Customer/job notes", "Simple pipeline board", "Export/report"],
+    explicitNonGoals: ["No full accounting or payroll", "No insurance-claim automation in v1", "No multi-branch enterprise CRM", "No automated SMS/email outreach before consent and provider limits are designed"],
+    trustPrivacySafety: ["Protect customer contact details", "Label exported data clearly", "Do not log private customer notes", "Document where attachments and customer data are stored"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the service CRM loop: add a lead, create an estimate/job, move it through stages, add a follow-up, and show today's follow-up queue.",
+    successMetrics: ["A user can add a lead and schedule a follow-up in under one minute.", "The pipeline shows each job's next action.", "Customer/job notes survive refresh and export cleanly."],
+    wowDemoScript: ["Add a roofing lead.", "Create an estimate/job record.", "Move it to estimate sent.", "Add a follow-up due today.", "Show the pipeline and export/report."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
+function realEstateLeadsBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  return {
+    productKind: "real-estate-leads",
+    confidence: 74,
+    productThesis: `${name || "The app"} should help realtors collect compliant lead sources, qualify prospects, organize follow-ups, and turn research into a next-action list.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? "A realtor, broker, or real-estate operator who wants practical lead research and follow-up support without a bloated CRM.",
+    jobToBeDone: "When a realtor finds a possible lead source, they need to save the source, qualify the contact or business, add context, and know the next follow-up action.",
+    currentAlternatives: ["spreadsheets", "generic CRMs", "Google Maps/manual search", "property portals", "notes apps", "marketing automation tools"],
+    differentiatedWedge: "Keep the first version focused on lead research, source notes, qualification, and follow-up organization while making compliance and data-source limits explicit.",
+    primaryWorkflow: [
+      "User defines a target niche, area, or source type.",
+      "App captures or imports lead/source details with clear source notes.",
+      "User qualifies the lead with status, value, tags, and next action.",
+      "User schedules follow-up and sees a prioritized follow-up queue.",
+      "User exports a small campaign or follow-up brief."
+    ],
+    keyScreens: ["Lead/source search", "Lead detail", "Qualification board", "Follow-up queue", "Source/compliance notes", "Export brief"],
+    coreDataObjects: ["Lead", "LeadSource", "PropertyArea", "Qualification", "FollowUpTask", "ContactMethod", "ComplianceNote", "Export"],
+    userActions: ["add lead source", "save prospect", "qualify lead", "schedule follow-up", "tag area", "export follow-up brief"],
+    systemStates: {
+      empty: "No leads or sources yet; guide the user to define a target area or import a small sample.",
+      loading: "Loading lead/source results; keep source and filter context visible.",
+      error: "Lead/source action failed; preserve input and explain retry.",
+      noResult: "No leads match; suggest a different area, niche, or manual source entry.",
+      partialSuccess: "Lead saved but follow-up/export failed; keep the saved lead and flag the missing action."
+    },
+    mvpRequirements: ["Lead/source capture", "Qualification fields", "Follow-up queue", "Saved notes/tags", "Compliance/source notes", "Export follow-up brief"],
+    explicitNonGoals: ["No bulk scraping that violates MLS, Zillow, Realtor.com, Google Maps, or other source terms", "No cold-call, SMS, or email automation without consent flows", "No full brokerage CRM in v1", "No hidden enrichment or background scraping"],
+    trustPrivacySafety: ["Show source and consent notes", "Do not imply all scraping is allowed", "Keep contact data export intentional", "Document where lead data is stored"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the realtor lead loop: add or import a lead source, qualify one lead, schedule a follow-up, and export a follow-up brief with source/compliance notes.",
+    successMetrics: ["A realtor can save and qualify a lead/source in one flow.", "Every lead has a visible next action.", "Source and compliance notes are present before export."],
+    wowDemoScript: ["Define a target area.", "Save a lead source.", "Qualify one lead.", "Schedule a follow-up.", "Export the follow-up brief."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
+function ecommerceDashboardBlueprint(input: HandoffSignalInput): HandoffBlueprint {
+  const name = stringPreference(input.preferences, "productName");
+  return {
+    productKind: "ecommerce-dashboard",
+    confidence: 76,
+    productThesis: `${name || "The app"} should help a Shopify or ecommerce operator see profit, ad spend, inventory, orders, and margin signals in one decision dashboard.`,
+    targetUserSegment: stringPreference(input.preferences, "audience") ?? "A Shopify store owner or ecommerce operator who needs practical daily visibility into profit, ads, inventory, and order health.",
+    jobToBeDone: "When I check the store, I want to see whether today's sales are profitable, which ad spend is working, what inventory needs attention, and what to do next.",
+    currentAlternatives: ["Shopify admin", "ad platform dashboards", "spreadsheets", "inventory tools", "analytics apps", "manual reports"],
+    differentiatedWedge: "Start with a clean owner dashboard that combines orders, costs, ad spend, inventory, and margin assumptions before adding deep integrations.",
+    primaryWorkflow: [
+      "User connects or imports Shopify order data, ad spend, product costs, and inventory counts.",
+      "App normalizes the data into daily revenue, cost, ad spend, inventory, and margin views.",
+      "User sees profit, ROAS/CAC-style ad signals, low-stock items, and order trends.",
+      "User filters by date range, channel, product, or campaign.",
+      "User exports a daily or weekly store-health report."
+    ],
+    keyScreens: ["Dashboard overview", "Profit and margin", "Ad spend", "Inventory health", "Orders/products", "Import/connect settings", "Export report"],
+    coreDataObjects: ["Order", "Product", "InventoryItem", "AdSpend", "CostOfGoods", "ProfitMetric", "Campaign", "StoreReport"],
+    userActions: ["import orders", "enter product cost", "import ad spend", "review inventory", "filter dashboard", "export report"],
+    systemStates: {
+      empty: "No store data yet; offer sample data and import/connect actions.",
+      loading: "Syncing or calculating metrics; show last-known dashboard state.",
+      error: "Import/sync failed; explain which source failed and preserve existing metrics.",
+      noResult: "No data for this filter; suggest a wider date range or sample data.",
+      partialSuccess: "Orders loaded but ad spend/cost/inventory is missing; label estimated metrics clearly."
+    },
+    mvpRequirements: ["Orders/import path", "Product cost input", "Ad spend input/import", "Inventory status", "Profit/margin dashboard", "Date/product filters", "Export report"],
+    explicitNonGoals: ["No full ERP or warehouse system in v1", "No automatic financial/tax claims", "No multi-store agency dashboard before one-store workflow works", "No paid ad platform automation before read-only reporting is stable"],
+    trustPrivacySafety: ["Label estimated profit clearly", "Separate missing costs from real zero costs", "Document API keys/import storage", "Do not expose store/customer data in logs"],
+    firstMilestone: stringPreference(input.preferences, "firstMilestone") ?? "Build the ecommerce dashboard loop: import/sample orders, enter costs and ad spend, show profit and inventory status, filter by date/product, and export a store-health report.",
+    successMetrics: ["Owner can see profit, ad spend, and inventory in one view.", "Missing data is clearly labeled.", "Dashboard exports a useful daily/weekly summary."],
+    wowDemoScript: ["Load sample Shopify orders.", "Add product costs and ad spend.", "Show profit and low-stock items.", "Filter by product/date.", "Export a store-health report."],
+    inferredFrom: ["user idea", input.selectedRepo ? "selected repo metadata" : "fallback blueprint"]
+  };
+}
+
 function genericWorkflowBlueprint(input: HandoffSignalInput): HandoffBlueprint {
   const name = stringPreference(input.preferences, "productName");
   const repo = input.selectedRepo;
@@ -503,6 +619,22 @@ export function buildHandoffBlueprint(input: HandoffSignalInput): HandoffBluepri
   }
   if (/\b(cat id|cat identifier|cat identification|cat breed|cat scanner|identify cat|identify cats|pet id|pet identification|pet identifier|animal identification|animal image recognition)\b/i.test(directSignal)) {
     return petIdentificationBlueprint(input);
+  }
+  if (
+    /\b(realtors?|real estate|realty|broker|mls|property|properties)\b/i.test(directSignal) &&
+    /\b(lead|leads|lead gen|prospecting|scrape|scraper|source|sources|follow[-\s]?up)\b/i.test(directSignal) &&
+    !/\b(image|images|photo|photos|visual|creative|generator|generate|listing media|social post)\b/i.test(directSignal)
+  ) {
+    return realEstateLeadsBlueprint(input);
+  }
+  if (/\b(roofing|roofer|roofers|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing))\b/i.test(directSignal) && /\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|invoice|follow[-\s]?up)\b/i.test(directSignal)) {
+    return serviceBusinessCrmBlueprint(input);
+  }
+  if (/\bcrm\b/i.test(directSignal) && !/\b(realtors?|real estate|realty|broker|mls|property|properties)\b/i.test(directSignal)) {
+    return serviceBusinessCrmBlueprint(input);
+  }
+  if (/\b(shopify|ecommerce|e-commerce|retail|store|storefront|merchant)\b/i.test(directSignal) && /\b(dashboard|analytics|profit|profits|margin|margins|ad spend|ads?|inventory|orders?|metrics?)\b/i.test(directSignal)) {
+    return ecommerceDashboardBlueprint(input);
   }
   if (/\b(recipe|recipes|grocery list|meal plan|ingredients?|cookbook|cooking|bookmark manager)\b/i.test(signal)) {
     return recipeBookmarkBlueprint(input);

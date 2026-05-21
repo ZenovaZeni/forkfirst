@@ -137,6 +137,24 @@ describe("search planner", () => {
     ]);
   });
 
+  test("plans service-business CRM prompts around contractor workflows instead of generic lead gen", () => {
+    expect(planSearches("I want to build a simple CRM for a roofing company").slice(0, 4)).toEqual([
+      "roofing crm app in:name,description,readme",
+      "contractor crm app in:name,description,readme",
+      "field service management app in:name,description,readme",
+      "home service crm in:name,description,readme"
+    ]);
+  });
+
+  test("plans Shopify analytics prompts around profit, ad spend, and inventory dashboards", () => {
+    expect(planSearches("I want a dashboard for tracking Shopify store profit, ad spend, and inventory").slice(0, 4)).toEqual([
+      "shopify analytics dashboard in:name,description,readme",
+      "ecommerce profit dashboard in:name,description,readme",
+      "shopify inventory dashboard in:name,description,readme",
+      "ad spend dashboard ecommerce in:name,description,readme"
+    ]);
+  });
+
   test("plans common utility app verticals without raw sentence search first", () => {
     expect(planSearches("I want to make a personal finance budget app").slice(0, 3)).toEqual([
       "personal finance budget app in:name,description,readme",

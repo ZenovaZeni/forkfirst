@@ -145,6 +145,32 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(roofing|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing))\b.*\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|invoice|follow[-\s]?up)\b|\b(crm|customer|customers|lead|leads|job|jobs|estimate|estimates|invoice|follow[-\s]?up)\b.*\b(roofing|contractor|contractors|field service|home service|trade|trades|plumbing|hvac|landscap(?:e|ing))\b/i,
+    label: "service-business-crm",
+    meaning: "Find open-source contractor, home-service, field-service, and small-business CRM apps with leads, customers, jobs, estimates, and follow-ups.",
+    queries: [
+      "roofing crm app in:name,description,readme",
+      "contractor crm app in:name,description,readme",
+      "field service management app in:name,description,readme",
+      "home service crm in:name,description,readme",
+      "job estimate invoice app in:name,description,readme",
+      "service business crm in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\bcrm\b/i,
+    label: "small-business-crm",
+    meaning: "Find open-source CRM apps for customers, leads, notes, tasks, pipeline, and follow-up workflows.",
+    queries: [
+      "small business crm app in:name,description,readme",
+      "open source crm app in:name,description,readme",
+      "customer relationship management app in:name,description,readme",
+      "sales crm app in:name,description,readme",
+      "simple crm app in:name,description,readme",
+      "crm dashboard app in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(salon|spa|barber|barbershop)\b.*\b(booking|appointment|appointments|scheduling|scheduler)\b|\b(booking|appointment|appointments|scheduling|scheduler)\b.*\b(salon|spa|barber|barbershop)\b/i,
     label: "salon-booking",
     meaning: "Find open-source salon, barber, spa, appointment-booking, and service scheduling apps.",
@@ -263,6 +289,19 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(shopify|ecommerce|e-commerce|retail|store|storefront|merchant)\b.*\b(dashboard|analytics|profit|profits|margin|margins|ad spend|ads?|inventory|orders?|metrics?)\b|\b(dashboard|analytics|profit|profits|margin|margins|ad spend|ads?|inventory|orders?|metrics?)\b.*\b(shopify|ecommerce|e-commerce|retail|store|storefront|merchant)\b/i,
+    label: "ecommerce-dashboard",
+    meaning: "Find open-source Shopify, ecommerce, store-profit, ad-spend, inventory, and merchant analytics dashboards.",
+    queries: [
+      "shopify analytics dashboard in:name,description,readme",
+      "ecommerce profit dashboard in:name,description,readme",
+      "shopify inventory dashboard in:name,description,readme",
+      "ad spend dashboard ecommerce in:name,description,readme",
+      "store profit analytics dashboard in:name,description,readme",
+      "merchant metrics dashboard in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(ecommerce|e-commerce|shopify|retail|storefront|inventory|merchant)\b/i,
     label: "ecommerce",
     meaning: "Find open-source ecommerce, retail, storefront, or merchant tools that match the user's specific workflow.",
@@ -318,7 +357,7 @@ function inferProbableMeaning(prompt: string, terms: string[]): string {
   if (/\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(normalizedPrompt)) {
     return "Find open-source tools that are practical for business owners, founders, or small-business workflows.";
   }
-  if (/\b(lead gen|lead generation|leads?|prospecting|realtors?|real estate|realty|broker|crm)\b/i.test(normalizedPrompt)) {
+  if (/\b(lead gen|lead generation|leads?|prospecting|realtors?|real estate|realty|broker)\b/i.test(normalizedPrompt)) {
     return "Find open-source lead-generation, prospecting, CRM, or real-estate sales tools that could help with the user's specific market.";
   }
   if (verticalPlan) return verticalPlan.meaning;
@@ -376,7 +415,7 @@ export function planSearches(prompt: string): string[] {
   const lowerPrompt = normalizedPrompt;
   const requestedName = extractRequestedName(prompt);
   const isBusinessDiscovery = /\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(normalizedPrompt);
-  const isLeadGenDiscovery = /\b(lead gen|lead generation|leads?|prospecting|sales outreach|scraper|enrichment|crm)\b/i.test(normalizedPrompt);
+  const isLeadGenDiscovery = /\b(lead gen|lead generation|leads?|prospecting|sales outreach|scraper|enrichment)\b/i.test(normalizedPrompt);
   const isRealEstateDiscovery = /\b(realtors?|real estate(?:\s+agents?)?|realty|broker|mls|property|properties)\b/i.test(normalizedPrompt);
   const isImageGenerationDiscovery =
     /\b(image|images|photo|photos|visual|creative|generator|generate|listing media|social post)\b/i.test(normalizedPrompt);

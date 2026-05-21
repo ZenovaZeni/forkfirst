@@ -14,7 +14,9 @@ describe("launch prompt benchmarks", () => {
     ["job board", "I want to make a job board app", "job board app"],
     ["cat ID app", "cat id app", "cat breed identifier app"],
     ["image prompt organizer", "I want to make an AI image prompt organizer", "ai prompt manager app"],
-    ["kids sports schedules", "I want to build a thing that helps parents organize kids sports schedules", "youth sports team schedule app"]
+    ["kids sports schedules", "I want to build a thing that helps parents organize kids sports schedules", "youth sports team schedule app"],
+    ["roofing CRM", "I want to build a simple CRM for a roofing company", "roofing crm app"],
+    ["Shopify profit dashboard", "I want a dashboard for tracking Shopify store profit, ad spend, and inventory", "shopify analytics dashboard"]
   ])("plans %s with the expected first search angle", (_name, prompt, expectedQueryStart) => {
     const refinement = planPromptRefinement(prompt);
 

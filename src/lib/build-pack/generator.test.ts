@@ -341,6 +341,91 @@ describe("build pack generator", () => {
     expect(markdown).not.toMatch(/\bnotebook app\b|\bClickUp\b|\bvoice assistant\b|\bCursor alternative\b/i);
   });
 
+  test("roofing CRM prompt produces a contractor-specific CRM Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult(
+        {
+          prompt: "Original idea: I want to build a simple CRM for a roofing company.",
+          queries: ["roofing crm app in:name,description,readme"]
+        },
+        {
+          owner: "go2ismail",
+          name: "Free-CRM",
+          fullName: "go2ismail/Free-CRM",
+          description: "Open-source customer relationship management CRM software for contacts, companies, notes, and tasks.",
+          topics: ["crm", "customer-management"],
+          readme: {
+            ...repo().readme!,
+            excerpt: "Free CRM with contacts, companies, tasks, notes, sales, and customer management."
+          }
+        }
+      ),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toMatch(/roofing|contractor|service business/i);
+    expect(markdown).toMatch(/lead|estimate|job|follow-up|customer/i);
+    expect(markdown).not.toMatch(/repo evidence|PrimaryItem|UserInput|one working product loop/i);
+  });
+
+  test("realtor scraping prompt produces lead follow-up Build Pack instead of image workflow", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult(
+        {
+          prompt: "Original idea: I want an app that helps realtors scrape leads and organize follow-ups.",
+          queries: ["real estate lead generation in:name,description,readme", "realtor crm leads in:name,description,readme"]
+        },
+        {
+          owner: "omkarcloud",
+          name: "google-maps-scraper",
+          fullName: "omkarcloud/google-maps-scraper",
+          description: "Google Maps scraper and lead generation tool with business emails, phone numbers, social profiles, and API access.",
+          topics: ["scraper", "lead-generation", "real-estate"],
+          readme: {
+            ...repo().readme!,
+            excerpt: "Extract businesses, phone numbers, websites, and social profiles for lead research."
+          },
+          category: "reference",
+          score: { ...repo().score, total: 75, fit: 43 }
+        }
+      ),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toMatch(/realtor|real estate/i);
+    expect(markdown).toMatch(/lead|source|qualify|follow-up|consent|terms/i);
+    expect(markdown).not.toMatch(/listing hero|image prompt|visual concepts|property photo/i);
+  });
+
+  test("Shopify dashboard prompt produces ecommerce analytics Build Pack", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: I want a dashboard for tracking Shopify store profit, ad spend, and inventory.",
+        queries: ["shopify analytics dashboard in:name,description,readme", "ecommerce profit dashboard in:name,description,readme"],
+        repos: [
+          {
+            ...repo(),
+            owner: "openthc",
+            name: "pos",
+            fullName: "openthc/pos",
+            description: "Software solutions for retail POS, CRM, delivery, ordering, inventory, and reporting.",
+            topics: ["retail", "pos", "inventory"],
+            category: "reference",
+            score: { ...repo().score, total: 68, fit: 25 }
+          }
+        ]
+      }),
+      "codex"
+    );
+
+    expectAllRequiredSections(markdown);
+    expect(markdown).toMatch(/Shopify|ecommerce|store/i);
+    expect(markdown).toMatch(/profit|ad spend|inventory|orders|margin/i);
+    expect(markdown).not.toMatch(/lead source|target customer|outreach|PrimaryItem|UserInput/i);
+  });
+
   test("open-source Cursor alternative prompt produces a code-editor Build Pack", () => {
     const markdown = buildProjectBuildPack(
       makeResult({

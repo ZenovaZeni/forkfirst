@@ -104,6 +104,25 @@ describe("repo kind insight", () => {
     expect(insight.notFor).toContain("product design");
   });
 
+  test("recognizes CRM product repos as apps even when they mention framework versions", () => {
+    const insight = getRepoKindInsight(
+      repo({
+        owner: "go2ismail",
+        name: "Free-CRM",
+        fullName: "go2ismail/Free-CRM",
+        description: "Free CRM open-source Customer Relationship Management software built with ASP.NET Core 9.0.",
+        topics: ["crm", "customer-management", "aspnet-core"],
+        readme: {
+          ...repo().readme!,
+          excerpt: "Free CRM includes contacts, companies, tasks, notes, and sales workflows for business users."
+        }
+      })
+    );
+
+    expect(insight.kind).toBe("app");
+    expect(insight.label).toBe("App / Product");
+  });
+
   test("recognizes MCP servers as developer plugin packs", () => {
     const insight = getRepoKindInsight(
       repo({

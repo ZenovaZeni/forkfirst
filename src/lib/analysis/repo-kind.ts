@@ -151,7 +151,7 @@ export function getRepoKindInsight(repo: NormalizedRepo): RepoKindInsight {
     };
   }
 
-  if (includesAny(text, [/\bapp\b/, /\bplatform\b/, /\bdashboard\b/, /\bservice\b/, /\bsaas\b/, /\bweb app\b/])) {
+  if (includesAny(text, [/\bcrm\b/, /\bcustomer relationship management\b/, /\bmanagement software\b/, /\bpos\b/, /\bapp\b/, /\bplatform\b/, /\bdashboard\b/, /\bservice\b/, /\bsaas\b/, /\bweb app\b/])) {
     return {
       kind: "app",
       label: "App / Product",

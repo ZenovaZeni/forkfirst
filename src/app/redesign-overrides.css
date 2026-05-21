@@ -1435,3 +1435,37 @@ body {
   background: color-mix(in srgb, var(--accent-soft) 42%, var(--paper-2));
   color: var(--accent);
 }
+
+.app-shell .loading-card .ls.done .ind::after {
+  content: " ";
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  display: block;
+  box-sizing: border-box;
+  width: 4px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  font-size: 0;
+  font-weight: 400;
+  transform: translate(-50%, -58%) rotate(45deg);
+}
+
+.app-shell .generating-card .gcs.done .gci::after {
+  content: " ";
+  left: 50%;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  display: block;
+  box-sizing: border-box;
+  width: 4px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  font-size: 0;
+  font-weight: 400;
+  transform: translate(-50%, -58%) rotate(45deg);
+}
