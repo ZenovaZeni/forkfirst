@@ -362,4 +362,46 @@ describe("repo scoring", () => {
     expect(first.score.reasons).toContain("Strong workflow fit");
     expect(second.score.reasons).toContain("Missing requested feature signal");
   });
+
+  test("demotes repos that explicitly say they are deprecated or unmaintained", () => {
+    const [first, second] = classifyRepositories(
+      [
+        repo({
+          owner: "old",
+          name: "deprecated-crm",
+          fullName: "old/deprecated-crm",
+          description: "Deprecated CRM dashboard for customer leads and follow-ups. No longer maintained.",
+          topics: ["crm", "dashboard", "deprecated"],
+          stars: 9000,
+          forks: 1200,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "DEPRECATED: this project is no longer maintained. Use the new version instead. CRM dashboard, leads, contacts, and follow-ups.",
+            qualityScore: 95
+          }
+        }),
+        repo({
+          owner: "healthy",
+          name: "small-crm",
+          fullName: "healthy/small-crm",
+          description: "Small business CRM dashboard for customer leads, contacts, and follow-ups.",
+          topics: ["crm", "dashboard", "contacts"],
+          stars: 280,
+          forks: 44,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Actively maintained CRM dashboard with leads, contacts, and follow-up tasks.",
+            qualityScore: 80
+          }
+        })
+      ],
+      "I want to build a simple CRM for a roofing company"
+    );
+
+    expect(first.fullName).toBe("healthy/small-crm");
+    expect(second.category).toBe("risk");
+    expect(second.score.reasons).toContain("Deprecated or unmaintained");
+  });
 });

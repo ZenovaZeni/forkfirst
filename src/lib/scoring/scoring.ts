@@ -331,6 +331,15 @@ function isGameBuildPrompt(prompt: string): boolean {
   return /\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|isometric|orthographic)\b/i.test(prompt);
 }
 
+function isDeprecatedOrUnmaintained(repo: NormalizedRepo): boolean {
+  const text = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.readme?.excerpt ?? ""} ${repo.readme?.reasons?.join(" ") ?? ""}`.toLowerCase();
+  if (/\b(not|isn['’]?t|no)\s+deprecated\b/i.test(text)) return false;
+  return /\b(deprecated|unmaintained|abandoned|superseded)\b/i.test(text) ||
+    /\b(no longer|not currently)\s+(maintained|supported|updated)\b/i.test(text) ||
+    /\barchived\s+(?:in favor of|because|due to)\b/i.test(text) ||
+    /\buse\s+.+\s+instead\b/i.test(text);
+}
+
 function gameEngineSignal(repo: NormalizedRepo): number {
   const text = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
   const signals = [
@@ -376,6 +385,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   const isAppRequest = isAppFoundationRequest(prompt);
   const nonAppKindPenalty = isAppRequest && (kind.kind === "directory" || kind.kind === "plugin_pack" || kind.kind === "research_resource" || kind.kind === "framework_sdk" || kind.kind === "library") ? 8 : 0;
   const archivedPenalty = repo.archived ? 45 : 0;
+  const deprecatedPenalty = isDeprecatedOrUnmaintained(repo) ? 42 : 0;
   const kindUtility =
     kind.kind === "game_engine"
       ? 112
@@ -387,7 +397,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
           ? isGameBuildPrompt(prompt) ? 34 : 58
           : 68;
   const gameBoost = isGameBuildPrompt(prompt) ? Math.min(18, gameEngineSignal(repo) * 5) : 0;
-  const total = clamp(fit * 0.34 + activity * 0.22 + popularity * 0.14 + license * 0.11 + docs * 0.09 + kindUtility * 0.1 + gameBoost - archivedPenalty - nonAppKindPenalty);
+  const total = clamp(fit * 0.34 + activity * 0.22 + popularity * 0.14 + license * 0.11 + docs * 0.09 + kindUtility * 0.1 + gameBoost - archivedPenalty - deprecatedPenalty - nonAppKindPenalty);
 
   const reasons = [
     fit >= 70 && !coverage.thinCoverage && !coverage.missingCriticalFeature ? "Strong workflow fit" : fit >= 40 ? "Partial idea fit" : "Weak idea fit",
@@ -402,6 +412,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   if (nonAppKindPenalty > 0) reasons.push("Reference type for app request");
   if (hasValueFeatureMatch) reasons.push("Value/pricing feature match");
   if (repo.archived) reasons.push("Repository is archived");
+  if (deprecatedPenalty > 0) reasons.push("Deprecated or unmaintained");
   if (repo.readme?.hasSetup) reasons.push("Setup path found in README");
   if (repo.readme?.hasExamples) reasons.push("Examples or usage found in README");
   if (kind.kind === "directory") reasons.push("Curated list, not a runnable app");
@@ -413,6 +424,7 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
 
 export function categorizeRepo(repo: NormalizedRepo, score: RepoScore): RepoCategory {
   const kind = getRepoKindInsight(repo);
+  if (isDeprecatedOrUnmaintained(repo)) return "risk";
   if (repo.archived || score.activity < 20 || score.license < 30) return "risk";
   if (kind.kind === "directory" || kind.kind === "plugin_pack" || kind.kind === "research_resource") return "reference";
   if (kind.kind === "game_engine") return "forkable";
