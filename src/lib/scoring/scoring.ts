@@ -290,7 +290,14 @@ const ACTION_WORDS_FOR_SCORING = new Set([
 function scoreFit(repo: NormalizedRepo, prompt: string): number {
   const terms = extractIdeaTerms(prompt);
   const intentTerms = scoringIntentTerms(prompt);
-  const haystack = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
+  const structureText = [
+    ...(repo.structure?.frameworks ?? []),
+    ...(repo.structure?.appDirectories ?? []),
+    ...(repo.structure?.dataLayers ?? []),
+    ...(repo.structure?.packageManagers ?? []),
+    ...(repo.structure?.reasons ?? [])
+  ].join(" ");
+  const haystack = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""} ${structureText}`.toLowerCase();
   const normalizedHaystack = haystack.replace(/[^a-z0-9+#.\s-]/g, " ");
   const tokens = new Set(normalizedHaystack.split(/[\s/_-]+/).filter(Boolean));
   if (terms.length === 0 && intentTerms.length === 0) return 30;
@@ -353,7 +360,14 @@ export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore
   const metadataDocs = (repo.description ? 28 : 0) + (repo.homepage ? 12 : 0) + (repo.topics.length > 0 ? 14 : 0);
   const docs = clamp(metadataDocs + (repo.readme?.qualityScore ? repo.readme.qualityScore * 0.55 : 0));
   const fit = scoreFit(repo, prompt);
-  const haystack = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
+  const structureText = [
+    ...(repo.structure?.frameworks ?? []),
+    ...(repo.structure?.appDirectories ?? []),
+    ...(repo.structure?.dataLayers ?? []),
+    ...(repo.structure?.packageManagers ?? []),
+    ...(repo.structure?.reasons ?? [])
+  ].join(" ");
+  const haystack = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.language ?? ""} ${repo.readme?.excerpt ?? ""} ${structureText}`.toLowerCase();
   const normalizedHaystack = haystack.replace(/[^a-z0-9+#.\s-]/g, " ");
   const tokens = new Set(normalizedHaystack.split(/[\s/_-]+/).filter(Boolean));
   const hasDomainMatch = domainMatchScore(prompt, tokens, normalizedHaystack) >= 0.5 || plannedIntentMatchScore(prompt, tokens, normalizedHaystack) >= 0.55;

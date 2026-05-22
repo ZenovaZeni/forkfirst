@@ -1087,11 +1087,12 @@ function reuseMatrixLines(repo: BuildPackRepo | undefined, blueprint: HandoffBlu
 function filesLikelyToInspect(repo: BuildPackRepo | undefined, blueprint: HandoffBlueprint): string[] {
   const text = `${repo?.readme?.excerpt ?? ""} ${repo?.description ?? ""}`.toLowerCase();
   const files = ["README.md", "LICENSE", "package files / lockfiles", "app entrypoints"];
+  if (repo?.structure?.inspectionTargets?.length) files.push(...repo.structure.inspectionTargets.slice(0, 8));
   if (/react|vite|next|frontend/.test(text)) files.push("frontend routes/components");
   if (/fastapi|express|backend|api/.test(text)) files.push("backend API routes/services");
   if (/postgres|sqlite|database|model|schema/.test(text)) files.push("database models/schemas");
   if (blueprint.productKind === "card-collector") files.push("card search, owned collection, pricing, export, and backup modules");
-  return files;
+  return Array.from(new Set(files)).slice(0, 14);
 }
 
 function architectureEvidenceLines(repo: BuildPackRepo | undefined): string[] {
@@ -1105,6 +1106,13 @@ function architectureEvidenceLines(repo: BuildPackRepo | undefined): string[] {
   for (const line of evidence?.commandSnippets ?? []) pushEvidenceLine(lines, "Command/setup note", line);
   for (const line of evidence?.featureSnippets ?? []) pushEvidenceLine(lines, "Feature", line);
   for (const line of evidence?.integrationSnippets ?? []) pushEvidenceLine(lines, "Integration", line);
+  if (repo?.structure) {
+    lines.push(`- Repo tree fetch status: ${repo.structure.fetchStatus}${repo.structure.truncated ? " (truncated)" : ""}`);
+    if (repo.structure.frameworks.length) lines.push(`- File tree frameworks: ${repo.structure.frameworks.join(", ")}`);
+    if (repo.structure.packageManagers.length) lines.push(`- Setup files: ${repo.structure.packageManagers.join(", ")}`);
+    if (repo.structure.dataLayers.length) lines.push(`- Data layer clues: ${repo.structure.dataLayers.join(", ")}`);
+    if (repo.structure.inspectionTargets.length) lines.push(`- First files to inspect: ${repo.structure.inspectionTargets.slice(0, 8).join(", ")}`);
+  }
   if (lines.length === 1 && repo?.readme?.excerpt) lines.push(`- README excerpt: ${repo.readme.excerpt.slice(0, 260)}`);
   return lines;
 }

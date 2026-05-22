@@ -1,7 +1,7 @@
 import { getRepoKindInsight, type RepoKindInsight } from "../analysis/repo-kind";
 import type { ClassifiedRepo, RepoScore } from "../analysis/types";
 import { buildHandoffBlueprint, type HandoffBlueprint } from "../build-pack/blueprint";
-import type { ReadmeEvidence, RepoCategory } from "../github/types";
+import type { ReadmeEvidence, RepoCategory, RepoStructureAnalysis } from "../github/types";
 import { normalizeLikelyReceiptScannerTypo } from "../intent/normalize";
 import { inferRepoSetupFit, type SetupFit } from "../repos/setup-fit";
 import { extractIdeaTerms, type PromptRefinement } from "../search/planner";
@@ -70,6 +70,18 @@ export type RepoInspection = {
       integrations: string[];
       license: string[];
     };
+  };
+  structure: {
+    status: RepoStructureAnalysis["fetchStatus"] | "unknown";
+    truncated: boolean;
+    fileCount: number;
+    rootFiles: string[];
+    appDirectories: string[];
+    packageManagers: string[];
+    frameworks: string[];
+    dataLayers: string[];
+    inspectionTargets: string[];
+    signals: string[];
   };
   buildPack: {
     recommendedUse: "clone_candidate" | "reference_only" | "research_only" | "avoid_until_verified";
@@ -435,6 +447,9 @@ function evidenceSummary(repo: ClassifiedRepo): string[] {
   const evidence = repo.readme?.evidence;
   return unique([
     cleanText(repo.description),
+    ...(repo.structure?.reasons ?? []),
+    ...(repo.structure?.frameworks ?? []).map((item) => `${item} file evidence found`),
+    ...(repo.structure?.dataLayers ?? []).map((item) => `${item} evidence found`),
     ...(evidence?.featureSnippets ?? []),
     ...(evidence?.integrationSnippets ?? []),
     ...(evidence?.setupSnippets ?? []),
@@ -450,7 +465,7 @@ function inspectionFiles(repo: ClassifiedRepo, setupFit: SetupFit): string[] {
   if (/api|backend|server|express|fastapi|django|flask/.test(text)) files.push("API routes and backend services");
   if (/postgres|sqlite|mysql|mongodb|prisma|drizzle|schema|model/.test(text)) files.push("database schema and migration files");
   if (setupFit.id === "docker-friendly") files.push("Dockerfile and docker-compose files");
-  return unique(files, 9);
+  return unique([...files, ...(repo.structure?.inspectionTargets ?? [])], 14);
 }
 
 export function inspectRepoForBuildPack(repo: ClassifiedRepo): RepoInspection {
@@ -466,7 +481,10 @@ export function inspectRepoForBuildPack(repo: ClassifiedRepo): RepoInspection {
     kind.kind === "directory" ? "This is a directory/list, not a runnable product foundation." : null
   ], 7);
   const unknowns = unique([
-    "Exact file paths for reusable components are not known until the repo tree is inspected.",
+    repo.structure?.fetchStatus === "ok"
+      ? null
+      : "Exact file paths for reusable components are not known until the repo tree is inspected.",
+    repo.structure?.truncated ? "GitHub returned a truncated file tree; inspect the full repository before committing." : null,
     "Install, build, and test commands must be confirmed from package files.",
     "License and attribution obligations require checking the actual repo files.",
     repo.readme?.evidence?.fetchStatus !== "ok" ? "README evidence was incomplete or unavailable." : null
@@ -513,6 +531,18 @@ export function inspectRepoForBuildPack(repo: ClassifiedRepo): RepoInspection {
         integrations: (evidence?.integrationSnippets ?? []).map(cleanText).filter(Boolean),
         license: (evidence?.licenseSnippets ?? []).map(cleanText).filter(Boolean)
       }
+    },
+    structure: {
+      status: repo.structure?.fetchStatus ?? "unknown",
+      truncated: Boolean(repo.structure?.truncated),
+      fileCount: repo.structure?.fileCount ?? 0,
+      rootFiles: (repo.structure?.rootFiles ?? []).map(cleanText).filter(Boolean),
+      appDirectories: (repo.structure?.appDirectories ?? []).map(cleanText).filter(Boolean),
+      packageManagers: (repo.structure?.packageManagers ?? []).map(cleanText).filter(Boolean),
+      frameworks: (repo.structure?.frameworks ?? []).map(cleanText).filter(Boolean),
+      dataLayers: (repo.structure?.dataLayers ?? []).map(cleanText).filter(Boolean),
+      inspectionTargets: (repo.structure?.inspectionTargets ?? []).map(cleanText).filter(Boolean),
+      signals: (repo.structure?.reasons ?? []).map(cleanText).filter(Boolean)
     },
     buildPack: {
       recommendedUse: recommendedUse(repo, mode),

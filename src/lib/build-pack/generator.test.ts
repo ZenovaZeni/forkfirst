@@ -709,6 +709,19 @@ describe("build pack generator", () => {
       url: "https://github.com/simonwep/ocular",
       description: "Open-source budgeting app with expense tracking, CSV export, and Docker setup.",
       topics: ["budget", "expense", "csv", "self-hosted"],
+      structure: {
+        fetchStatus: "ok" as const,
+        fetchedAt: "2026-05-21T00:00:00Z",
+        truncated: false,
+        fileCount: 8,
+        rootFiles: ["package.json", "docker-compose.yml"],
+        appDirectories: ["src/app", "src/components", "src/app/api"],
+        packageManagers: ["pnpm", "Docker"],
+        frameworks: ["Next.js / React", "Prisma"],
+        dataLayers: ["Prisma schema", "environment config"],
+        inspectionTargets: ["package.json", "src/app/api/receipts/route.ts", "prisma/schema.prisma"],
+        reasons: ["Next.js / React files found", "Prisma schema found"]
+      },
       readme: {
         ...repo().readme!,
         excerpt: "Track budgets and expenses, import data, export CSV, and self-host with Docker.",
@@ -742,6 +755,7 @@ describe("build pack generator", () => {
     expect(markdown).toMatch(/Receipt capture|Expense review|CSV export/);
     expect(markdown).toMatch(/Receipt|ExpenseRecord|CsvExport/);
     expect(markdown).toMatch(/ReceiptImage data model|save\/export path/);
+    expect(markdown).toMatch(/Repo tree fetch status: ok|src\/app\/api\/receipts\/route\.ts|prisma\/schema\.prisma/);
     expect(markdown).not.toMatch(/PrimaryItem|UserInput|one working product loop|main thing/i);
     expect(auditBuildPackQuality({ idea: prompt, markdown }).passed).toBe(true);
   });

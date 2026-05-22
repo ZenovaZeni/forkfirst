@@ -20,8 +20,10 @@ export type NormalizedRepo = {
   updatedAt: string | null;
   archived: boolean;
   homepage: string | null;
+  defaultBranch?: string | null;
   githubScore?: number;
   readme?: ReadmeAnalysis;
+  structure?: RepoStructureAnalysis;
 };
 
 export type ReadmeAnalysis = {
@@ -45,6 +47,20 @@ export type ReadmeEvidence = {
   featureSnippets: string[];
   integrationSnippets: string[];
   licenseSnippets: string[];
+};
+
+export type RepoStructureAnalysis = {
+  fetchStatus: "ok" | "missing" | "rate_limited" | "error";
+  fetchedAt: string | null;
+  truncated: boolean;
+  fileCount: number;
+  rootFiles: string[];
+  appDirectories: string[];
+  packageManagers: string[];
+  frameworks: string[];
+  dataLayers: string[];
+  inspectionTargets: string[];
+  reasons: string[];
 };
 
 export type GitHubSearchWarning = {

@@ -1,6 +1,8 @@
 import { analyzeIdea } from "@/lib/analysis/analyst";
+import { rerankWithUserAi } from "../analysis/rerank";
 import { buildSearchRecovery } from "@/lib/analysis/search-recovery";
 import { searchGithubRepositories } from "@/lib/github/provider";
+import { enrichRepositoriesWithStructure } from "../github/structure";
 import { classifyRepositories } from "@/lib/scoring/scoring";
 import { saveIdeaCheck } from "@/lib/db/research-cases";
 import type { IdeaCheckResult } from "@/types/idea-check";
@@ -22,7 +24,16 @@ export type RunIdeaCheckInput = {
 export async function runIdeaCheck(input: RunIdeaCheckInput): Promise<IdeaCheckResult> {
   const search = await searchGithubRepositories(input.prompt, input.githubToken);
   const enrichedRepos = await enrichTopCandidateReadmes(search.repos, input.prompt, input.githubToken);
-  const classified = classifyRepositories(enrichedRepos, input.prompt);
+  const initiallyClassified = classifyRepositories(enrichedRepos, input.prompt);
+  const structuredRepos = await enrichRepositoriesWithStructure(initiallyClassified, input.githubToken);
+  const classified = await rerankWithUserAi({
+    prompt: input.prompt,
+    repos: classifyRepositories(structuredRepos, input.prompt),
+    provider: input.aiProvider,
+    apiKey: input.aiApiKey,
+    model: input.aiModel,
+    baseUrl: input.aiBaseUrl
+  });
   const productIntent = deriveProductIntent({
     prompt: input.prompt,
     refinement: search.refinement,

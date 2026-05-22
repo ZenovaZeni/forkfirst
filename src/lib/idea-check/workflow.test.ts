@@ -21,9 +21,23 @@ function repo(overrides: Partial<ClassifiedRepo> = {}): ClassifiedRepo {
     updatedAt: "2026-05-01T00:00:00Z",
     archived: false,
     homepage: null,
+    defaultBranch: "main",
     category: "forkable",
     score: { total: 86, fit: 82, activity: 80, popularity: 55, license: 100, docs: 92, reasons: ["Strong keyword fit", "README/docs look useful"] },
     summary: "Useful budgeting starter",
+    structure: {
+      fetchStatus: "ok",
+      fetchedAt: "2026-05-21T00:00:00Z",
+      truncated: false,
+      fileCount: 9,
+      rootFiles: ["package.json", "docker-compose.yml", "README.md", "LICENSE"],
+      appDirectories: ["src/app", "src/components", "src/app/api"],
+      packageManagers: ["pnpm", "Docker"],
+      frameworks: ["Next.js / React", "Prisma"],
+      dataLayers: ["Prisma schema", "environment config"],
+      inspectionTargets: ["package.json", "src/app/api/expenses/route.ts", "prisma/schema.prisma", "docker-compose.yml"],
+      reasons: ["Next.js routes found", "API route files found", "Prisma schema found"]
+    },
     readme: {
       excerpt: "Track budgets and expenses, import data from sheets, export JSON or CSV, and self-host with Docker.",
       url: "https://github.com/simonwep/ocular#readme",
@@ -132,7 +146,8 @@ describe("idea-check workflow artifacts", () => {
     expect(inspection.classification.foundationMode).toBe("clone");
     expect(inspection.classification.setupFit.label).toMatch(/Docker/i);
     expect(inspection.readme.evidence.features.join(" ")).toMatch(/expense history|CSV export/i);
-    expect(inspection.buildPack.firstInspectionFiles).toEqual(expect.arrayContaining(["README.md", "LICENSE"]));
+    expect(inspection.buildPack.firstInspectionFiles).toEqual(expect.arrayContaining(["README.md", "LICENSE", "src/app/api/expenses/route.ts", "prisma/schema.prisma"]));
+    expect(inspection.buildPack.evidenceSummary.join(" ")).toMatch(/Next\.js routes found|Prisma schema found/i);
   });
 
   test("builds a merge plan that separates keep, replace, add, remove, and inspect work", () => {

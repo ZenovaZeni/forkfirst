@@ -20,6 +20,7 @@ type GitHubRepoItem = {
   updated_at: string | null;
   archived: boolean;
   homepage: string | null;
+  default_branch?: string | null;
   score?: number;
   owner: { login: string };
 };
@@ -56,6 +57,7 @@ function normalizeRepo(item: GitHubRepoItem): NormalizedRepo {
     updatedAt: item.updated_at,
     archived: item.archived,
     homepage: item.homepage,
+    defaultBranch: item.default_branch ?? null,
     githubScore: item.score
   };
 }
