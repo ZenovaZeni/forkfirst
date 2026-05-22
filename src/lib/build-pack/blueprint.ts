@@ -792,6 +792,10 @@ const FEATURE_OBJECT_MAP: Array<[RegExp, string]> = [
   [/\breminders?\b|\bnotifications?\b/, "Reminder"],
   [/\bappointments?\b|\bbookings?\b/, "Appointment"],
   [/\bcustomers?\b|\bclients?\b/, "Customer"],
+  [/\bwork[-\s]?orders?\b|\brepair requests?\b|\bmaintenance requests?\b/, "WorkOrder"],
+  [/\btenants?\b/, "Tenant"],
+  [/\blandlords?\b/, "Landlord"],
+  [/\bvendors?\b/, "Vendor"],
   [/\binventory\b|\bstock\b/, "InventoryItem"],
   [/\breports?\b|\banalytics?\b|\bdashboard\b/, "Report"]
 ];
@@ -995,7 +999,7 @@ function synthesizeIngredients(input: HandoffSignalInput): SynthesizedIngredient
   const objectLabel = /\breceipts?\b/i.test(ideaSignalText) && /\bexpenses?\b/i.test(ideaSignalText)
     ? "receipts and expenses"
     : humanList(objectTerms.slice(0, 3), productPhrase || "the core records");
-  const dataObjects = deriveDataObjects(ideaSignalText, objectTerms, actions);
+  const dataObjects = deriveDataObjects(signalText, objectTerms, actions);
   return { ideaText, signalText, terms, objectTerms, productPhrase, objectLabel, primaryObject, dataObjects, actions };
 }
 

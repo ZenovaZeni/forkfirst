@@ -495,6 +495,219 @@ export const LAUNCH_EVAL_CASES: LaunchEvalCase[] = [
       handoffMustNotContain: ["PrimaryItem", "UserInput", "one working product loop", "receipt, expense, and parsed", "taxes who"],
       qualityAuditPass: true
     }
+  },
+  {
+    id: "saas-billing-portal",
+    category: "saas",
+    prompt: "I want a simple SaaS billing portal with Stripe subscriptions and an admin dashboard",
+    repos: [
+      repo({
+        id: 16,
+        fullName: "boxyhq/saas-starter-kit",
+        description: "SaaS starter kit with Stripe subscriptions, tenant admin dashboard, users, teams, roles, billing portal, and auth.",
+        topics: ["saas", "stripe", "subscriptions", "admin", "billing", "starter"],
+        stars: 6400,
+        forks: 710,
+        readme: {
+          excerpt: "Next.js SaaS starter with authentication, organizations, Stripe subscription billing, customer portal, admin dashboard, and role-based access control.",
+          url: "https://github.com/boxyhq/saas-starter-kit#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: true,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 92,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      }),
+      repo({
+        id: 17,
+        fullName: "invoiceplane/invoiceplane",
+        description: "Open-source invoicing app for quotes, invoices, clients, and payments.",
+        topics: ["invoice", "billing", "payments"],
+        stars: 2900,
+        forks: 900
+      })
+    ],
+    expected: {
+      bestQueryContains: "saas starter stripe subscriptions",
+      expectedTopRepo: "boxyhq/saas-starter-kit",
+      expectedTopCategory: ["already_exists", "forkable"],
+      minFit: 70,
+      productKind: "workflow-app",
+      handoffMustContain: ["Subscription", "Admin", "Billing", "Stripe"],
+      handoffMustNotContain: ["client portal invoice messaging", "PrimaryItem", "UserInput"],
+      qualityAuditPass: true
+    }
+  },
+  {
+    id: "property-maintenance-portal",
+    category: "real estate",
+    prompt: "I want a property maintenance portal for landlords and tenants",
+    repos: [
+      repo({
+        id: 18,
+        fullName: "landlord-app/property-maintenance-portal",
+        description: "Property maintenance portal for landlords, tenants, work orders, vendors, photos, statuses, and repair messages.",
+        topics: ["property", "maintenance", "landlord", "tenant", "work-orders"],
+        stars: 820,
+        forks: 95,
+        readme: {
+          excerpt: "Tenants submit maintenance requests with photos. Landlords triage work orders, assign vendors, message tenants, track repair statuses, and export reports.",
+          url: "https://github.com/landlord-app/property-maintenance-portal#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: true,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 90,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      }),
+      repo({
+        id: 19,
+        fullName: "real-estate/lead-scraper",
+        description: "Real estate lead scraper and prospecting list builder.",
+        topics: ["real-estate", "leads", "scraper"],
+        stars: 1800,
+        forks: 200
+      })
+    ],
+    expected: {
+      bestQueryContains: "property maintenance portal",
+      expectedTopRepo: "landlord-app/property-maintenance-portal",
+      expectedTopCategory: ["already_exists", "forkable"],
+      minFit: 70,
+      productKind: "workflow-app",
+      handoffMustContain: ["Maintenance", "Tenant", "WorkOrder", "Landlord"],
+      handoffMustNotContain: ["lead scraper", "LeadSource", "PrimaryItem"],
+      qualityAuditPass: true
+    }
+  },
+  {
+    id: "event-ticketing",
+    category: "events",
+    prompt: "I need an event ticketing app with RSVPs, QR check-in, and attendee emails",
+    repos: [
+      repo({
+        id: 20,
+        fullName: "eventkit/open-event",
+        description: "Event ticketing and RSVP app with attendees, QR code check-in, email reminders, sessions, and organizer dashboard.",
+        topics: ["event", "ticketing", "rsvp", "qr-code", "attendees"],
+        stars: 1200,
+        forks: 140,
+        readme: {
+          excerpt: "Create events, sell or reserve tickets, collect RSVPs, email attendees, generate QR codes, and check guests in at the door.",
+          url: "https://github.com/eventkit/open-event#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: true,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 88,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      }),
+      genericAiRepo
+    ],
+    expected: {
+      bestQueryContains: "event ticketing rsvp",
+      expectedTopRepo: "eventkit/open-event",
+      expectedTopCategory: ["already_exists", "forkable"],
+      minFit: 70,
+      productKind: "workflow-app",
+      handoffMustContain: ["Event", "Ticket", "Attendee", "Qr"],
+      handoffMustNotContain: ["browser-use", "PrimaryItem", "UserInput"],
+      qualityAuditPass: true
+    }
+  },
+  {
+    id: "bug-tracker",
+    category: "developer tools",
+    prompt: "I need a bug tracker for small software teams with issues, comments, and releases",
+    repos: [
+      repo({
+        id: 21,
+        fullName: "plane-so/plane",
+        description: "Open-source project management and issue tracking tool for software teams with issues, comments, cycles, releases, and roadmaps.",
+        topics: ["bug-tracker", "issue-tracker", "project-management", "releases"],
+        stars: 41000,
+        forks: 2200,
+        readme: {
+          excerpt: "Track issues, comments, cycles, projects, releases, roadmaps, team workflows, and software planning in one open-source app.",
+          url: "https://github.com/plane-so/plane#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: true,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 96,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      }),
+      repo({
+        id: 22,
+        fullName: "awesome/awesome-issue-trackers",
+        description: "Curated list of issue trackers and project management tools.",
+        topics: ["awesome-list", "issue-tracker"],
+        stars: 5000,
+        forks: 500
+      })
+    ],
+    expected: {
+      bestQueryContains: "bug tracker app",
+      expectedTopRepo: "plane-so/plane",
+      expectedTopCategory: ["already_exists", "forkable"],
+      minFit: 70,
+      productKind: "workflow-app",
+      handoffMustContain: ["Issue", "Comment", "Release"],
+      handoffMustNotContain: ["awesome list", "PrimaryItem", "UserInput"],
+      qualityAuditPass: true
+    }
+  },
+  {
+    id: "kids-learning-app",
+    category: "education",
+    prompt: "I want a learning app for kids with lessons, quizzes, progress, and parent reports",
+    repos: [
+      repo({
+        id: 23,
+        fullName: "learnhouse/learnhouse",
+        description: "Learning platform with courses, lessons, quizzes, student progress, reports, and parent or teacher dashboards.",
+        topics: ["learning", "education", "lessons", "quizzes", "progress"],
+        stars: 3200,
+        forks: 360,
+        readme: {
+          excerpt: "Create courses and lessons, add quizzes, track learner progress, show reports, and manage education dashboards.",
+          url: "https://github.com/learnhouse/learnhouse#readme",
+          hasSetup: true,
+          hasExamples: true,
+          hasApiDetails: true,
+          hasLocalDevelopment: true,
+          hasLicenseText: true,
+          qualityScore: 90,
+          reasons: ["Setup path found", "Examples found"]
+        }
+      }),
+      repo({
+        id: 24,
+        fullName: "kids-games/puzzle-game",
+        description: "Simple puzzle game for kids.",
+        topics: ["kids", "game"],
+        stars: 900,
+        forks: 100
+      })
+    ],
+    expected: {
+      bestQueryContains: "kids learning app",
+      expectedTopRepo: "learnhouse/learnhouse",
+      expectedTopCategory: ["already_exists", "forkable"],
+      minFit: 70,
+      productKind: "workflow-app",
+      handoffMustContain: ["Lesson", "Quiz", "Progress", "Report"],
+      handoffMustNotContain: ["puzzle game", "PrimaryItem", "UserInput"],
+      qualityAuditPass: true
+    }
   }
 ];
 

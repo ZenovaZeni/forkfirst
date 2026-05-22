@@ -17,7 +17,12 @@ describe("launch prompt benchmarks", () => {
     ["kids sports schedules", "I want to build a thing that helps parents organize kids sports schedules", "youth sports team schedule app"],
     ["roofing CRM", "I want to build a simple CRM for a roofing company", "roofing crm app"],
     ["cleaning company ops", "I want an app for a cleaning company to manage quotes, jobs, crews, and follow-ups", "cleaning business management app"],
-    ["Shopify profit dashboard", "I want a dashboard for tracking Shopify store profit, ad spend, and inventory", "shopify analytics dashboard"]
+    ["Shopify profit dashboard", "I want a dashboard for tracking Shopify store profit, ad spend, and inventory", "shopify analytics dashboard"],
+    ["SaaS billing portal", "I want a simple SaaS billing portal with Stripe subscriptions and an admin dashboard", "saas starter stripe subscriptions"],
+    ["property maintenance portal", "I want a property maintenance portal for landlords and tenants", "property maintenance portal"],
+    ["event ticketing", "I need an event ticketing app with RSVPs, QR check-in, and attendee emails", "event ticketing rsvp app"],
+    ["bug tracker", "I need a bug tracker for small software teams with issues, comments, and releases", "bug tracker app"],
+    ["kids learning app", "I want a learning app for kids with lessons, quizzes, progress, and parent reports", "kids learning app lessons quizzes"]
   ])("plans %s with the expected first search angle", (_name, prompt, expectedQueryStart) => {
     const refinement = planPromptRefinement(prompt);
 

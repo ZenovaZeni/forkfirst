@@ -112,6 +112,19 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(saas|subscription|subscriptions|stripe|billing portal|admin dashboard|multi[-\s]?tenant)\b/i,
+    label: "saas-billing",
+    meaning: "Find open-source SaaS starter kits, subscription billing portals, tenant dashboards, and admin foundations.",
+    queries: [
+      "saas starter stripe subscriptions in:name,description,readme",
+      "saas billing portal in:name,description,readme",
+      "stripe subscription starter in:name,description,readme",
+      "multi tenant admin dashboard in:name,description,readme",
+      "saas boilerplate billing auth in:name,description,readme",
+      "subscription management dashboard in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(healthcare|health care|medical|clinic|clinics|patient|patients|hipaa)\b/i,
     label: "healthcare",
     meaning: "Find open-source healthcare, clinic, compliance, or medical-practice tools that match the user's specific workflow.",
@@ -131,6 +144,19 @@ const VERTICAL_SEARCH_PLANS = [
       "law firm automation in:name,description,readme",
       "legal compliance workflow in:name,description,readme",
       "attorney crm open source in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(property|properties|landlord|landlords|tenant|tenants|rental|rentals)\b.*\b(maintenance|repair|repairs|work order|work orders|portal|request|requests|vendor|vendors)\b|\b(maintenance|repair|repairs|work order|work orders|portal|request|requests|vendor|vendors)\b.*\b(property|properties|landlord|landlords|tenant|tenants|rental|rentals)\b/i,
+    label: "property-maintenance",
+    meaning: "Find open-source property maintenance, landlord-tenant portal, repair request, and work-order apps.",
+    queries: [
+      "property maintenance portal in:name,description,readme",
+      "landlord tenant maintenance app in:name,description,readme",
+      "rental work order app in:name,description,readme",
+      "tenant repair request portal in:name,description,readme",
+      "property management maintenance in:name,description,readme",
+      "maintenance request app in:name,description,readme"
     ]
   },
   {
@@ -223,6 +249,45 @@ const VERTICAL_SEARCH_PLANS = [
       "sports team management app in:name,description,readme",
       "family sports calendar app in:name,description,readme",
       "coach team schedule app in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(event|events|ticket|tickets|ticketing|rsvp|rsvps|attendee|attendees|qr|check[-\s]?in|venue)\b/i,
+    label: "event-ticketing",
+    meaning: "Find open-source event ticketing, RSVP, attendee email, QR check-in, and organizer dashboard apps.",
+    queries: [
+      "event ticketing rsvp app in:name,description,readme",
+      "event ticketing qr checkin in:name,description,readme",
+      "rsvp attendee email app in:name,description,readme",
+      "open source event management app in:name,description,readme",
+      "event organizer dashboard in:name,description,readme",
+      "ticketing check in app in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(bug tracker|bug tracking|issue tracker|issues|comments|releases|roadmap|software teams?)\b/i,
+    label: "bug-tracker",
+    meaning: "Find open-source bug trackers, issue trackers, release planning, and software-team workflow apps.",
+    queries: [
+      "bug tracker app in:name,description,readme",
+      "issue tracker software teams in:name,description,readme",
+      "open source issue tracking app in:name,description,readme",
+      "bug tracking releases comments in:name,description,readme",
+      "project management issue tracker in:name,description,readme",
+      "software team roadmap releases in:name,description,readme"
+    ]
+  },
+  {
+    pattern: /\b(kids?|children|students?|learning|lessons?|quizzes?|courses?|education|progress|parent reports?|teacher dashboard)\b/i,
+    label: "learning-app",
+    meaning: "Find open-source learning apps with lessons, quizzes, learner progress, reports, and parent or teacher dashboards.",
+    queries: [
+      "kids learning app lessons quizzes in:name,description,readme",
+      "learning platform quizzes progress in:name,description,readme",
+      "education app lessons reports in:name,description,readme",
+      "student progress dashboard app in:name,description,readme",
+      "course lesson quiz app in:name,description,readme",
+      "parent report learning app in:name,description,readme"
     ]
   },
   {
@@ -566,6 +631,7 @@ export function planSearches(prompt: string): string[] {
   const isImageGenerationDiscovery =
     /\b(image|images|photo|photos|visual|creative|generator|generate|listing media|social post)\b/i.test(normalizedPrompt);
   const verticalPlan = findVerticalSearchPlan(prompt);
+  const isPropertyMaintenance = verticalPlan?.label === "property-maintenance";
   const isAiDiscovery =
     !isLeadGenDiscovery &&
     !isRealEstateDiscovery &&
@@ -623,7 +689,9 @@ export function planSearches(prompt: string): string[] {
               "business intelligence dashboard in:name,description,readme"
             ]
           : []),
-        ...(isRealEstateDiscovery && isImageGenerationDiscovery
+        ...(isPropertyMaintenance
+          ? []
+          : isRealEstateDiscovery && isImageGenerationDiscovery
           ? [
               "real estate image generator in:name,description,readme",
               "realtor marketing image generator in:name,description,readme",
