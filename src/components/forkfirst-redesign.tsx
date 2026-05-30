@@ -524,7 +524,7 @@ function qualityItems({
 }) {
   return [
     { label: "Starter repo selected", done: !!starterRepo || !!result?.repos[0] },
-    { label: "Product direction captured", done: !!brand?.name && !!brand?.audience },
+    { label: "Product direction captured", done: !!brand?.name && (!!brand?.productGoal || !!brand?.firstMilestone) },
     { label: "Brand and UX notes included", done: !!brand?.vibe || !!brand?.color },
     { label: "Follow-up context captured", done: followUps.length > 0 },
     { label: "Prompt packs selected", done: promptPackState.enabledIds.length > 0 },
@@ -3834,7 +3834,7 @@ function BrandingInterview({
           <time>- now</time>
         </div>
         <p className="say">
-          Good. I&apos;ll turn this repo into a builder brief, not just a clone. These five quick answers tell your AI what product you actually want, what to keep from the foundation, and what to build first.
+          Good. I&apos;ll turn this repo into a builder brief, not just a clone. Three quick questions tell your AI what product you actually want, what to build first, and how it should feel.
         </p>
         <div className="brand-question">
           <div className="bq-dev-header">
