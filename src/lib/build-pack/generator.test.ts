@@ -1071,6 +1071,15 @@ describe("build pack generator", () => {
     expect(operatingIdx).toBeGreaterThan(onboardingIdx);
   });
 
+  test("Onboarding Protocol and START_HERE use the same folder slug (lowercased)", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "claude-code", undefined, { productName: "TrackPath" });
+    expect(markdown).toContain("mkdir trackpath && cd trackpath");
+    expect(markdown).toContain("New-Item -ItemType Directory trackpath; Set-Location trackpath");
+    // The raw product name shouldn't appear as a folder-mkdir target — that would be the casing bug
+    expect(markdown).not.toContain("mkdir TrackPath");
+    expect(markdown).not.toContain("New-Item -ItemType Directory TrackPath");
+  });
+
   test("TOC lists 00-START-HERE first", () => {
     const markdown = buildProjectBuildPack(makeResult({}), "claude-code");
     expect(markdown).toMatch(/## Contents\n0\. \[00-START-HERE\]/);

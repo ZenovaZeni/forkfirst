@@ -1,11 +1,11 @@
 <!--
-ILLUSTRATIVE SAMPLE — regenerated 2026-05-29 from synthetic input modeled on the
+ILLUSTRATIVE SAMPLE — regenerated 2026-05-30 from synthetic input modeled on the
 public berkinduz/job-apply-tracker repo. Demonstrates the 00-START-HERE non-developer
-onboarder, the Onboarding Protocol that asks the user 3 setup questions, the visual TOC,
-the consolidated Foundation Decisions section, per-file purpose lines, inline Foundation
-At A Glance, Attribution To Paste block, License & Reuse literacy, and "How To Use This
-Foundation Respectfully" checklist that ship in every Builder Handoff. Re-run ForkFirst
-on the live repo before treating any specific claim here as current.
+onboarder, the Onboarding Protocol with consistent lowercase folder slug, the visual
+TOC, the consolidated Foundation Decisions section, per-file purpose lines, inline
+Foundation At A Glance, Attribution To Paste block, License & Reuse literacy, and "How
+To Use This Foundation Respectfully" checklist that ship in every Builder Handoff.
+Re-run ForkFirst on the live repo before treating any specific claim here as current.
 -->
 
 # ForkFirst Builder Handoff
@@ -385,7 +385,7 @@ berkinduz/job-apply-tracker is a fork candidate. berkinduz/job-apply-tracker is 
 - [ ] If the repo is not a fit, inspect the next ranked repo instead of forcing it.
 
 ## Architecture Evidence
-- README fetch status: ok at 2026-05-29T00:00:00Z
+- README fetch status: ok at 2026-05-30T00:00:00Z
 - Setup: pnpm install && pnpm dev
 - Command/setup note: pnpm test
 - Feature: Kanban board with drag-and-drop card movement.
@@ -507,7 +507,7 @@ Treat this handoff as the source of truth. If the user already has STARTER_REPO.
 ## Onboarding Protocol (do this FIRST, before any other action)
 Before running any shell command, editing any file, cloning anything, or starting Phase 0, ask the user these three setup questions and wait for their answers:
 
-1. **Are you already inside a project folder, or should I create a new one** (e.g. `mkdir TrackPath && cd TrackPath` on bash, or `New-Item -ItemType Directory TrackPath; Set-Location TrackPath` on PowerShell)?
+1. **Are you already inside a project folder, or should I create a new one** (e.g. `mkdir trackpath && cd trackpath` on bash, or `New-Item -ItemType Directory trackpath; Set-Location trackpath` on PowerShell)?
 2. **Has the starter repo been cloned yet?** If not, the clone target is `https://github.com/berkinduz/job-apply-tracker`.
 3. **Where are the handoff Markdown files** (this packet) — already at your repo root, in a separate folder you can name, or attached to this chat?
 

@@ -1111,13 +1111,13 @@ function mergePlanSectionLines(plan: MergePlan | undefined): string[] {
 function buildStartHereSection(
   repo: BuildPackRepo | undefined,
   target: BuildTarget,
-  projectName: string
+  projectName: string,
+  folder: string
 ): string[] {
   const agentFile = target === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
   const builderLabel = buildTargetLabels[target];
   const repoUrl = repo?.url ?? "<no foundation selected — choose one before building>";
   const repoFullName = repo?.fullName ?? "<repo>";
-  const folder = projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-product";
 
   const pastePrompt = [
     `I downloaded a ForkFirst Builder Handoff for ${projectName}.`,
@@ -1775,6 +1775,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
   const blueprint = ir.blueprint;
   const profile = profileFromBlueprint(blueprint);
   const projectName = preferredProjectName(originalIdea, wizardAnswers);
+  const projectFolderSlug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-product";
   const preferenceBullets = preferenceLines(wizardAnswers);
   const skipPreferences = preferenceSkipList(wizardAnswers);
   const relevantQueries = filterRelevantQueries(result.queries, originalIdea, researchContext);
@@ -1875,7 +1876,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `4. [REPO_STARTER_NOTES](#repo_starter_notes) — architecture, license literacy, attribution, respect checklist.`,
     `5. [${agentFile.replace(/\.md$/i, "").toUpperCase()}](#${agentFile.replace(/\.md$/i, "").toLowerCase()}) — entrypoint instructions for the AI builder.`,
     ``,
-    ...buildStartHereSection(bestRepo, target, projectName),
+    ...buildStartHereSection(bestRepo, target, projectName, projectFolderSlug),
     `# STARTER_REPO`,
     `_What this file is for: the selected foundation, the clone commands, and the consolidated keep/replace/add/remove/inspect decisions for adapting it into your product._`,
     ``,
@@ -2070,7 +2071,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `## Onboarding Protocol (do this FIRST, before any other action)`,
     `Before running any shell command, editing any file, cloning anything, or starting Phase 0, ask the user these three setup questions and wait for their answers:`,
     ``,
-    `1. **Are you already inside a project folder, or should I create a new one** (e.g. \`mkdir ${projectName} && cd ${projectName}\` on bash, or \`New-Item -ItemType Directory ${projectName}; Set-Location ${projectName}\` on PowerShell)?`,
+    `1. **Are you already inside a project folder, or should I create a new one** (e.g. \`mkdir ${projectFolderSlug} && cd ${projectFolderSlug}\` on bash, or \`New-Item -ItemType Directory ${projectFolderSlug}; Set-Location ${projectFolderSlug}\` on PowerShell)?`,
     `2. **Has the starter repo been cloned yet?** If not, the clone target is \`${bestRepo?.url ?? "<no foundation selected>"}\`.`,
     `3. **Where are the handoff Markdown files** (this packet) — already at your repo root, in a separate folder you can name, or attached to this chat?`,
     ``,
