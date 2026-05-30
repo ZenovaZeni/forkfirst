@@ -163,10 +163,11 @@ function addDecision(repo: ClassifiedRepo | undefined, blueprint: HandoffBluepri
 }
 
 function removeDecision(repo: ClassifiedRepo | undefined, blueprint: HandoffBlueprint): AlignmentDecision {
+  const milestoneNoTrailingPunct = blueprint.firstMilestone.replace(/[.;,\s]+$/u, "");
   return {
     decision: "remove",
     productNeed: "A focused first milestone without unrelated starter features.",
-    repoCapability: repo ? `Unrelated demo routes, broad admin areas, sample workflows, paid/team surfaces, or features outside ${blueprint.firstMilestone}.` : "No starter features selected.",
+    repoCapability: repo ? `Unrelated demo routes, broad admin areas, sample workflows, paid/team surfaces, or features outside ${milestoneNoTrailingPunct}.` : "No starter features selected.",
     evidenceRefs: blueprint.explicitNonGoals.slice(0, 3),
     rationale: "Remove or defer anything that makes the AI builder chase the starter repo's product instead of the user's product.",
     confidence: 74,
@@ -207,12 +208,16 @@ function verificationLines(repo: ClassifiedRepo | undefined, blueprint: HandoffB
   ];
 }
 
+function joinSnippets(items: string[], separator = "; "): string {
+  return items.map((item) => item.replace(/[.;,\s]+$/u, "").trim()).filter((item) => item.length > 0).join(separator);
+}
+
 export function buildAlignmentDecisionTable(decisions: AlignmentDecision[]): string[] {
   return [
     "| Decision | Product Need | Repo Capability | Evidence | Builder Instruction |",
     "|---|---|---|---|---|",
     ...decisions.map((decision) => {
-      const evidence = decision.evidenceRefs.length > 0 ? decision.evidenceRefs.join("; ") : "Needs repo inspection.";
+      const evidence = decision.evidenceRefs.length > 0 ? joinSnippets(decision.evidenceRefs) : "Needs repo inspection.";
       const instruction = `${decision.rationale} Confidence: ${decision.confidence}%.`;
       return `| ${decision.decision[0].toUpperCase()}${decision.decision.slice(1)} | ${decision.productNeed} | ${decision.repoCapability} | ${evidence} | ${instruction} |`;
     })

@@ -27,10 +27,10 @@ export const buildTargetLabels: Record<BuildTarget, string> = {
 
 function targetInstructions(target: BuildTarget): string {
   if (target === "codex") {
-    return "Treat this handoff as the source of truth. If the user pasted one combined Markdown file, split it into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and AGENTS.md inside the chosen repo. Clone/open the selected starter repo first, inspect it before editing, keep changes scoped to the current phase, preserve unrelated work, and run the verification checklist before expanding scope.";
+    return "Treat this handoff as the source of truth. If the user already has STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and AGENTS.md at the repo root (zip extract), use them as-is — do not regenerate or duplicate them. If they pasted one combined Markdown file, split it into those same files inside the chosen repo. Clone/open the selected starter repo first, inspect it before editing, keep changes scoped to the current phase, preserve unrelated work, and run the verification checklist before expanding scope.";
   }
   if (target === "claude-code") {
-    return "Treat this handoff as the source of truth. If the user pasted one combined Markdown file, split it into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, AGENTS.md, and CLAUDE.md inside the chosen repo. Clone/open the selected starter repo first, summarize the architecture before edits, implement one phase at a time, and maintain a running checklist of files changed, tests run, and open questions.";
+    return "Treat this handoff as the source of truth. If the user already has STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, AGENTS.md, and CLAUDE.md at the repo root (zip extract), use them as-is — do not regenerate or duplicate them. If they pasted one combined Markdown file, split it into those same files inside the chosen repo. Clone/open the selected starter repo first, summarize the architecture before edits, implement one phase at a time, and maintain a running checklist of files changed, tests run, and open questions.";
   }
   if (target === "cursor") {
     return "Treat this handoff as the source of truth. If the user pasted one combined Markdown file, split it into project notes/rules and the main Markdown files as needed. Clone/open the selected starter repo first, explain which existing components or patterns you will reuse before generating code, then implement the first milestone only.";
@@ -101,6 +101,8 @@ type ProductProfile = {
   notInFirstVersion: string[];
   firstMilestone: string;
   successMetrics: string[];
+  keyScreens?: string[];
+  coreDataObjects?: string[];
 };
 
 function profileFromBlueprint(blueprint: HandoffBlueprint): ProductProfile {
@@ -123,7 +125,7 @@ function isGenericProductProfile(profile: ProductProfile): boolean {
 }
 
 const PROFILE_OBJECT_MAP: Array<[RegExp, string]> = [
-  [/\brepos?\b|\brepositor(?:y|ies)\b/, "RepoLead"],
+  [/\bgithub\s+(repos?|repositor(?:y|ies)|projects?)\b|\bopen[-\s]?source\s+(repos?|projects?)\b/, "RepoLead"],
   [/\bgithub\b|\bsearch quer(?:y|ies)\b/, "SearchQuery"],
   [/\bverdict\b|\bdecision\b/, "ReuseDecision"],
   [/\bhandoff\b|\bmarkdown\b/, "BuilderHandoff"],
@@ -197,6 +199,9 @@ function profilePascalCase(value: string): string {
 }
 
 function profileDataObjects(profile: ProductProfile): string[] {
+  if (profile.coreDataObjects?.length) {
+    return profile.coreDataObjects.slice(0, 9);
+  }
   const text = [
     profile.goal,
     profile.problem,
@@ -206,6 +211,9 @@ function profileDataObjects(profile: ProductProfile): string[] {
     ...profile.mustHave
   ].join(" ");
   const mapped = PROFILE_OBJECT_MAP.flatMap(([pattern, objectName]) => pattern.test(text) ? [objectName] : []);
+  if (mapped.length >= 2) {
+    return Array.from(new Set([...mapped, "SavedRecord", "ExportJob"])).slice(0, 9);
+  }
   const terms = Array.from(new Set(
     text
       .toLowerCase()
@@ -219,6 +227,9 @@ function profileDataObjects(profile: ProductProfile): string[] {
 }
 
 function profileScreens(profile: ProductProfile): string[] {
+  if (profile.keyScreens?.length) {
+    return profile.keyScreens.slice(0, 7);
+  }
   const objects = profileDataObjects(profile);
   const primary = objects[0]?.replace(/([a-z])([A-Z])/g, "$1 $2") ?? "Workflow";
   return Array.from(new Set([
@@ -273,7 +284,8 @@ function productProfileFor(idea: string): ProductProfile {
   const isLeadTool = /\b(lead|leads|prospecting|outreach|crm|sales)\b/i.test(idea);
   const isVoiceTool = /\b(voice|whisper|whisperflow|speech|dictation|transcription|audio|stt)\b/i.test(idea);
   const isRepoTool = lower.includes("github") && (lower.includes("repo") || lower.includes("repository"));
-  const isProjectTool = /\b(clickup|asana|trello|notion|monday|linear|jira|kanban|project management|task management|team collaboration|productivity suite|workspace tool|todo app)\b/i.test(idea);
+  const isJobTracker = /\b(job\s+(application|apply|search)|job tracker|application tracker|applications? tracker|track(ing)?\s+(my|job|jobs|applications)|job board personal|interview tracker)\b/i.test(idea);
+  const isProjectTool = !isJobTracker && /\b(clickup|asana|trello|notion|monday\.com|linear|jira|project management|task management|team collaboration|productivity suite|workspace tool|todo app|kanban board for (teams?|projects?))\b/i.test(idea);
   const isNotebookTool = /\b(obsidian|roam|logseq|notion notes|second brain|note[-\s]?taking|notebook app|markdown editor|wiki app|knowledge base|knowledge graph|personal knowledge|pkm|zettelkasten)\b/i.test(idea);
   const isCodeEditor = /\b(cursor|vs ?code|vscode|copilot|code editor|ide alternative|ai coding|coding assistant|developer ide|programming editor|ai pair programmer)\b/i.test(idea);
   const isPokemonCardCollector = /\b(pokemon|pokémon|tcgdex)\b/i.test(idea);
@@ -652,6 +664,67 @@ function productProfileFor(idea: string): ProductProfile {
       ]
     };
   }
+  if (isJobTracker) {
+    return {
+      goal: "Help a solo job seeker track every application from saved through offer or rejection in one place they own.",
+      primaryUser: "A solo job seeker who is tired of spreadsheets and does not want to create an account just to track their own job hunt.",
+      problem: "Tracking applications across LinkedIn, email, recruiters, and spreadsheets means follow-ups get lost, interview prep is rushed, and the job seeker cannot see the funnel. The first version needs one local board for personal use, no signup.",
+      promise: "Give the user a fast local-first job tracker: add applications, move them across stages, track follow-up dates, take notes, and export the data without ever creating an account.",
+      coreWorkflow: [
+        "User opens the app and immediately starts adding job applications (company, role, link, location, salary, source, notes).",
+        "User moves each application across stages such as Saved, Applied, Screening, Interview, Offer, Rejected, Archived.",
+        "User sets follow-up dates that show up as visible upcoming reminders (not background notifications).",
+        "User searches, filters, and tags applications by company, role, stage, or date.",
+        "User exports the entire board to CSV or JSON for backup or migration."
+      ],
+      stories: [
+        "As a job seeker, I can add a new application with company, role, link, and notes in under 20 seconds.",
+        "As a job seeker, I can drag or click an application from Saved to Applied to Interview without page reloads.",
+        "As a job seeker, I can see which applications need follow-up today.",
+        "As a job seeker, I can export my entire job board to CSV when I want to back it up.",
+        "As a builder, I can study Kanban-style trackers for board UX patterns without copying their branding."
+      ],
+      mustHave: [
+        "Application data model with company, role, link, location, salary, contact, source, stage, notes, and follow-up date.",
+        "Stage workflow: Saved, Applied, Screening, Interview, Offer, Rejected, Archived (or close equivalents).",
+        "Board or list view that supports moving applications across stages.",
+        "Follow-up dates surfaced as a visible list, not just stored in a field.",
+        "Search and filter by company, role, stage, and date.",
+        "CSV (and ideally JSON) import/export for backup.",
+        "Local persistence by default; no required signup."
+      ],
+      notInFirstVersion: [
+        "Multi-user accounts, team sharing, or recruiter access.",
+        "Automated resume parsing, AI cover letters, or job-board scraping.",
+        "Push notifications, email reminders, or background sync.",
+        "Paid integrations with LinkedIn, Greenhouse, Lever, or other ATS APIs.",
+        "Mobile native apps before the local web loop is solid."
+      ],
+      firstMilestone: "User adds three job applications, moves one from Applied to Interview, sets a follow-up date that appears as a visible reminder, and exports the board to CSV.",
+      successMetrics: [
+        "A new user adds their first application within 30 seconds of opening the app.",
+        "Applications persist locally and survive a browser refresh without a signup.",
+        "Exported CSV opens cleanly in Excel/Sheets without manual cleanup."
+      ],
+      keyScreens: [
+        "Add application form",
+        "Application detail view",
+        "Board (stage columns)",
+        "List view with search and filters",
+        "Follow-ups due today",
+        "Import / export settings"
+      ],
+      coreDataObjects: [
+        "Application",
+        "Stage",
+        "FollowUp",
+        "Contact",
+        "Note",
+        "ExportJob",
+        "SavedRecord"
+      ]
+    };
+  }
   if (isProjectTool) {
     return {
       goal: "Help a small team plan, track, and finish work in one place — an open-source alternative to ClickUp, Asana, or Notion-style task tools.",
@@ -968,8 +1041,12 @@ function blueprintWithIntentPreferences(blueprint: HandoffBlueprint, preferences
   };
 }
 
+function joinCleanSnippets(items: string[]): string {
+  return items.map((item) => item.replace(/[.;,\s]+$/u, "").trim()).filter((item) => item.length > 0).join("; ");
+}
+
 function mergePlanItemText(item: { item: string; evidence: string[] }): string {
-  const evidence = item.evidence.length ? ` Evidence: ${item.evidence.slice(0, 2).join("; ")}` : "";
+  const evidence = item.evidence.length ? ` Evidence: ${joinCleanSnippets(item.evidence.slice(0, 2))}` : "";
   return `${item.item}${evidence}`;
 }
 
@@ -1029,10 +1106,11 @@ function adaptationMap(repo: BuildPackRepo | undefined, profile: ProductProfile,
   const keep = stringPreference(preferences, "keepFromRepo");
   const replace = stringPreference(preferences, "replaceFromRepo");
   const add = stringPreference(preferences, "addToRepo");
+  const stripTrailing = (raw: string): string => raw.replace(/[.;,\s]+$/u, "").trim();
   const designLine = [
-    preferences?.vibe ? `brand vibe: ${preferences.vibe}` : null,
-    preferences?.accentColor ? `accent: ${preferences.accentColor}` : null,
-    preferences?.audience ? `audience: ${preferences.audience}` : null
+    preferences?.vibe ? `brand vibe: ${stripTrailing(String(preferences.vibe))}` : null,
+    preferences?.accentColor ? `accent: ${stripTrailing(String(preferences.accentColor))}` : null,
+    preferences?.audience ? `audience: ${stripTrailing(String(preferences.audience))}` : null
   ].filter(Boolean).join("; ");
   return [
     `- Keep: ${keep || `working setup, app shell, routing, persistence/data patterns, tests, and components that directly support: ${profile.coreWorkflow[0]}`}`,
@@ -1232,15 +1310,21 @@ function pushEvidenceLine(lines: string[], label: string, raw: string): void {
 }
 
 function wowDemoScript(blueprint: HandoffBlueprint, repo: BuildPackRepo | undefined): string[] {
-  const scripted = blueprint.wowDemoScript.map((step) => `- ${step}`);
-  return [
+  const prelude = [
     "- Start from a blank or realistic sample state, not a mocked marketing page.",
-    `- Complete this milestone on screen: ${blueprint.firstMilestone}`,
-    ...scripted,
+    `- Complete this milestone on screen: ${blueprint.firstMilestone}`
+  ];
+  const tail = [
     repo ? `- Show where ${repo.fullName} helped: reused setup, component pattern, data model, workflow, or implementation idea.` : "- Show the repo decision or explain why no foundation was selected.",
     "- End with a saved, copied, exported, or revisitable output that proves the product did useful work.",
     "- Call out any honest limitation, missing key, mocked data, or license question before the user asks."
   ];
+  const seen = new Set([...prelude, ...tail].map((line) => line.replace(/^- /, "").trim().toLowerCase()));
+  const scripted = blueprint.wowDemoScript
+    .map((step) => step.trim())
+    .filter((step) => step.length > 0 && !seen.has(step.toLowerCase()) && step.toLowerCase() !== blueprint.firstMilestone.toLowerCase())
+    .map((step) => `- ${step}`);
+  return [...prelude, ...scripted, ...tail];
 }
 
 function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRepo | undefined, projectName: string, blueprint?: HandoffBlueprint): Array<{ title: string; tasks: string[]; acceptance: string[] }> {
@@ -1264,13 +1348,13 @@ function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRep
       tasks: [
         repo ? `Clone or fork the selected starter repo: ${repo.fullName}.` : "Choose a starter repo before implementation.",
         ...commands.map((command) => `Run or adapt: ${command}`),
-        `Create STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile} in the cloned repo root from this combined handoff packet.`,
-        "Copy/split the relevant sections yourself without asking the user to manually arrange the Markdown.",
+        `If STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile} are already at the repo root (zip extract), use them as-is — do not regenerate or duplicate.`,
+        `Only if those files are missing: create them in the cloned repo root from this combined handoff packet, splitting by the # H1 headers.`,
         "Mark unknowns as open questions instead of filling them with assumptions."
       ],
       acceptance: [
         "The cloned repo opens locally or the setup blocker is documented.",
-        "The repo has the handoff files at the root.",
+        "The repo has the handoff files at the root (either pre-existing from the zip or freshly split from the combined packet).",
         "Each file contains editable checklists and a clear next action.",
         "Open questions are explicitly listed."
       ]
@@ -1619,8 +1703,8 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `Generated by ForkFirst.`,
     ...(focusRepo ? [`Focused on: ${focusRepo.fullName}`] : []),
     ``,
-    `How to use this: the user may paste this whole file, upload it, or provide it as a download. The AI builder should handle cloning/opening the selected repo, splitting this packet into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile}, then building from those instructions.`,
-    `Do not make the user manually sort the Markdown files. Treat this combined packet as the source of truth, create the files you need, keep the checkboxes, delete sections that stop being true, and replace unknowns with evidence as you inspect the repo.`,
+    `How to use this: ForkFirst hands you both a combined Markdown file AND a zip with the same content already split into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile}. If you got the zip — extract it into the cloned starter repo and use the files as-is. If you only have this combined file — split it at the # H1 headers into those same filenames. Either way, do not duplicate or regenerate files that already exist.`,
+    `Treat this packet as the source of truth. Keep the checkboxes, delete sections that stop being true, replace unknowns with evidence as you inspect the repo, and never strip the upstream LICENSE without explicit reason.`,
     ``,
     `# STARTER_REPO`,
     ``,
@@ -1811,7 +1895,9 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...checkItems([
       "Start inside the cloned starter repo unless STARTER_REPO.md says no foundation was selected.",
       "Inspect the current repo before editing and summarize what already exists.",
-      "Do not copy third-party code until license and attribution are documented.",
+      "Read REPO_STARTER_NOTES.md \"License And Reuse\" and \"How To Use This Foundation Respectfully\" sections BEFORE copying any upstream code. If the license is copyleft, missing, or NOASSERTION, follow the stop-rules in that section.",
+      "Read REPO_STARTER_NOTES.md \"Foundation Spec (Patterns Detected)\" to learn the upstream stack, persistence, auth, API, and state choices before designing replacements.",
+      "Paste the attribution snippet from REPO_STARTER_NOTES.md into the new repo's README before the first public commit.",
       "Implement one phase at a time and update checkboxes as evidence changes.",
       "Keep unrelated files and user edits intact.",
       "Stop and record blockers when verification fails instead of hiding them."

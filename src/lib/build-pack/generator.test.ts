@@ -155,8 +155,8 @@ describe("build pack generator", () => {
     const markdown = buildProjectBuildPack(result(), "claude-code");
 
     expect(markdown).toContain("### Phase 0 - Clone Foundation And Add Handoff Files");
-    expect(markdown).toContain("- [ ] Create STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and CLAUDE.md in the cloned repo root from this combined handoff packet.");
-    expect(markdown).toContain("- [ ] Copy/split the relevant sections yourself without asking the user to manually arrange the Markdown.");
+    expect(markdown).toMatch(/STARTER_REPO\.md, PRD\.md, BUILD_PLAN\.md, REPO_STARTER_NOTES\.md, and CLAUDE\.md (are already at the repo root|in the cloned repo root)/);
+    expect(markdown).toContain("Only if those files are missing");
     expect(markdown).toContain("### Phase 2 - Smallest Product Loop");
     expect(markdown).toContain("## Verification Checklist");
     expect(markdown).toContain("- [ ] Run the starter repo's documented install, build, dev, and test commands");
@@ -517,8 +517,8 @@ describe("build pack generator", () => {
       "codex"
     );
 
-    expect(markdown).toMatch(/No license was detected/i);
-    expect(markdown).toContain("Do not copy third-party code until license and attribution are documented.");
+    expect(markdown).toMatch(/no license detected|GitHub did not report a license|No license was detected/i);
+    expect(markdown).toMatch(/Do not copy code from an unlicensed public repo|Do not copy code without written permission/i);
   });
 
   test("notToBuildInV1 does not emit a fallback bullet for unclassified gaps", () => {
@@ -955,5 +955,86 @@ describe("build pack generator", () => {
 
     expect(markdown).toContain("AGPL-3.0");
     expect(markdown).toMatch(/network use|source-sharing|source sharing/i);
+  });
+
+  test("job application tracker idea routes to the job-tracker profile, not project-management", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: Build a local-first job application tracker for solo job seekers with Kanban, follow-up dates, CSV export, and no account required."
+      }),
+      "codex"
+    );
+    expect(markdown).toMatch(/job\s+seeker|job application|Saved.*Applied/i);
+    expect(markdown).not.toMatch(/ClickUp[-\s]?alternative|project workspace|small team/);
+  });
+
+  test("kanban alone does not trigger the project-management profile", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: a simple kanban board for tracking my personal job hunt"
+      }),
+      "codex"
+    );
+    expect(markdown).not.toMatch(/ClickUp[-\s]?alternative/);
+  });
+
+  test("project management idea still routes to the project profile", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({
+        prompt: "Original idea: open-source ClickUp alternative for small teams with project management features"
+      }),
+      "codex"
+    );
+    expect(markdown).toMatch(/project workspace|task board|ClickUp/);
+  });
+
+  test("design direction line does not produce period-then-semicolon punctuation", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({ prompt: "Original idea: build a kanban job tracker" }),
+      "codex",
+      undefined,
+      {
+        vibe: "Quiet confidence — clean type, minimal chrome.",
+        accentColor: "Deep blue.",
+        audience: "Solo job seekers"
+      }
+    );
+    expect(markdown).not.toMatch(/\.[;,]\s/);
+    expect(markdown).toMatch(/brand vibe: Quiet confidence — clean type, minimal chrome; accent: Deep blue; audience: Solo job seekers/);
+  });
+
+  test("Operating Rules in CLAUDE.md tell the builder to read License And Reuse + Foundation Spec", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "claude-code");
+    expect(markdown).toMatch(/Read REPO_STARTER_NOTES\.md "License And Reuse"/);
+    expect(markdown).toMatch(/Foundation Spec/);
+    expect(markdown).toMatch(/Paste the attribution snippet/);
+  });
+
+  test("job tracker profile produces real job-tracker key screens, not data-object names", () => {
+    const markdown = buildProjectBuildPack(
+      makeResult({ prompt: "Original idea: build a personal job application tracker with kanban and follow-up dates" }),
+      "codex"
+    );
+    expect(markdown).toMatch(/## Key Screens \/ Surfaces[\s\S]*Add application form/);
+    expect(markdown).toMatch(/Application detail view/);
+    expect(markdown).not.toMatch(/Follow Up Task intake|Follow Up Task detail/);
+  });
+
+  test("alignment remove row does not produce double period when milestone ends in period", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "codex");
+    expect(markdown).not.toMatch(/[A-Za-z]\.\.\s/);
+  });
+
+  test("wow demo script does not repeat the first milestone verbatim", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "codex");
+    const wow = markdown.match(/## Wow Demo Script\n([\s\S]*?)\n\n## /);
+    expect(wow).toBeTruthy();
+    const block = wow![1];
+    const milestoneRegex = /Complete this milestone on screen: ([^\n]+)/;
+    const milestone = block.match(milestoneRegex)?.[1] ?? "";
+    expect(milestone.length).toBeGreaterThan(10);
+    // Milestone text must not appear a second time as its own bullet
+    const occurrences = (block.match(new RegExp(`^- ${milestone.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "gm")) ?? []).length;
+    expect(occurrences).toBe(0);
   });
 });
