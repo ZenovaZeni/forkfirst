@@ -2,7 +2,7 @@ import { buildRepoNarrative } from "../analysis/human-answer";
 import type { IdeaCheckResult } from "../../types/idea-check";
 import { buildHandoffBlueprint, isGenericBuildPackPreference, type HandoffBlueprint, type ProductKind } from "./blueprint";
 import { buildAlignmentDecisionTable, buildBuildPackIR } from "./ir";
-import { profileForLicense, renderLicenseAndAttributionBlock, renderRespectfulUseChecklist } from "./license";
+import { buildAttributionSnippet, profileForLicense, renderLicenseAndAttributionBlock, renderRespectfulUseChecklist } from "./license";
 import { buildMergePlan, inspectRepoForBuildPack, productIntentToBlueprint, type MergePlan, type RepoInspection } from "../idea-check/workflow";
 
 type BuildPackRepo = IdeaCheckResult["repos"][number];
@@ -910,23 +910,66 @@ const cardSpecificFoundationLabels = new Set([
   "scanner/image-assisted entry"
 ]);
 
-function foundationCoverageMap(repo: BuildPackRepo | undefined, profile: ProductProfile, originalIdea: string): string[] {
-  if (!repo) return ["- Already detected: no starter repo selected yet."];
+function inlineFoundationAtAGlance(repo: BuildPackRepo | undefined): string[] {
+  if (!repo) {
+    return [
+      `## Foundation At A Glance`,
+      `No starter repo selected. The Operating Rules above still apply — when one is chosen, re-read this section.`,
+      ``
+    ];
+  }
+  const profile = profileForLicense(repo.license);
+  const stack = Array.from(new Set([
+    ...(repo.structure?.frameworks ?? []),
+    repo.language ?? ""
+  ].filter(Boolean)));
+  const lines: string[] = [
+    `## Foundation At A Glance`,
+    `_Quick reference so you don't have to context-switch. Full breakdown lives in REPO_STARTER_NOTES.md._`,
+    ``,
+    `- **Foundation:** \`${repo.fullName}\` — ${repo.url}`,
+    `- **License:** ${profile.displayName} (${profile.family}). ${profile.oneLineSummary}`
+  ];
+  if (stack.length) lines.push(`- **Stack:** ${stack.join(", ")}`);
+  if (repo.structure?.packageManagers?.length) lines.push(`- **Setup files:** ${repo.structure.packageManagers.join(", ")}`);
+  if (profile.attributionRequired) {
+    lines.push(`- **Attribution required:** yes — paste the snippet below into the new repo's README before the first public commit.`);
+  } else {
+    lines.push(`- **Attribution required:** legally optional, but credit \`${repo.owner || repo.fullName}\` anyway. It's free reputational insurance.`);
+  }
+  if (profile.shareAlikeRequired) {
+    lines.push(`- **Share-alike obligation:** YES — confirm your downstream license is compatible before copying code.`);
+  }
+  lines.push(``);
+  return lines;
+}
+
+function inlineAttributionToPaste(repo: BuildPackRepo | undefined): string[] {
+  if (!repo) return [];
+  const profile = profileForLicense(repo.license);
+  const snippet = buildAttributionSnippet(repo, profile);
+  return [
+    `## Attribution To Paste`,
+    `_Drop this block into the new repo's README before the first public commit. Replaces the need to open REPO_STARTER_NOTES.md._`,
+    ``,
+    "```markdown",
+    snippet.markdownReadme,
+    "```",
+    ``
+  ];
+}
+
+function foundationCoverageSignalLine(repo: BuildPackRepo | undefined, originalIdea: string): string {
+  if (!repo) return "no starter repo selected yet";
   const haystack = repoHaystack(repo);
   const isCardProduct =
     /\b(pokemon|pokémon|tcgdex|tcg|trading[-\s]?card|collectibles?|card collection|card collector|collector album|card binder|card value|tcgplayer|cardmarket|sports[-\s]?cards?|magic the gathering|mtg|yu-gi-oh|yugioh)\b/i.test(originalIdea);
   const features = isCardProduct ? foundationFeatures : foundationFeatures.filter((feature) => !cardSpecificFoundationLabels.has(feature.label));
   const detected = features.filter((feature) => feature.pattern.test(haystack)).map((feature) => feature.label);
   const missing = features.filter((feature) => !detected.includes(feature.label)).map((feature) => feature.label);
-
-  return [
-    `- Already detected: ${detected.length ? detected.join(", ") : "no strong feature coverage from description, topics, or README excerpt."}`,
-    `- Keep first: ${detected.length ? detected.slice(0, 5).join(", ") : "working setup and any generic app shell that runs locally."}`,
-    `- Replace/rebrand: product name, navigation, sample data, screenshots, demo copy, and any branding that belongs to ${repo.fullName}.`,
-    `- Add/customize: ${missing.length ? missing.slice(0, 5).join(", ") : `the product-specific workflow from the PRD: ${profile.firstMilestone}`}.`,
-    "- Remove/defer: unrelated demo pages, marketplace/social/admin features, and anything listed in Skip In v1.",
-    `- Risk checks: verify license, attribution, data/image terms, and setup health before copying code${isCardProduct ? "; use original branding, avoid official logos or copied product UI, confirm card-image/pricing API terms, and label card values as estimates." : "."}`
-  ];
+  const detectedPart = detected.length ? `Already detected — ${detected.join(", ")}` : "no strong feature coverage from description, topics, or README excerpt";
+  const missingPart = missing.length ? `. Likely to add — ${missing.slice(0, 5).join(", ")}` : "";
+  return `${detectedPart}${missingPart}`;
 }
 
 function verdictDirection(result: IdeaCheckResult): string {
@@ -1706,7 +1749,15 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `How to use this: ForkFirst hands you both a combined Markdown file AND a zip with the same content already split into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile}. If you got the zip — extract it into the cloned starter repo and use the files as-is. If you only have this combined file — split it at the # H1 headers into those same filenames. Either way, do not duplicate or regenerate files that already exist.`,
     `Treat this packet as the source of truth. Keep the checkboxes, delete sections that stop being true, replace unknowns with evidence as you inspect the repo, and never strip the upstream LICENSE without explicit reason.`,
     ``,
+    `## Contents`,
+    `1. [STARTER_REPO](#starter_repo) — which repo to clone and how to adapt it.`,
+    `2. [PRD](#prd) — what to build, for whom, and what's out of scope.`,
+    `3. [BUILD_PLAN](#build_plan) — phases, milestone, demo, verification.`,
+    `4. [REPO_STARTER_NOTES](#repo_starter_notes) — architecture, license literacy, attribution, respect checklist.`,
+    `5. [${agentFile.replace(/\.md$/i, "").toUpperCase()}](#${agentFile.replace(/\.md$/i, "").toLowerCase()}) — entrypoint instructions for the AI builder.`,
+    ``,
     `# STARTER_REPO`,
+    `_What this file is for: the selected foundation, the clone commands, and the consolidated keep/replace/add/remove/inspect decisions for adapting it into your product._`,
     ``,
     `## Selected Foundation`,
     bestRepo ? `- Repo: ${bestRepo.fullName}` : "- Repo: none selected",
@@ -1719,9 +1770,6 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...cloneCommands,
     "```",
     ``,
-    `## Repo-To-Product Adaptation Map`,
-    ...adaptationMap(bestRepo, profile, wizardAnswers),
-    ``,
     ...(mergePlanLines.length
       ? [
           `## Product/Repo Merge Plan`,
@@ -1729,15 +1777,19 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
           ``
         ]
       : []),
-    `## Alignment Decisions`,
-    ir.alignment.summary,
+    `## Foundation Decisions`,
+    `_Coverage, adaptation, evidence-anchored moves, and per-area focus in one place. Verify each row in the repo before editing._`,
     ``,
+    ir.alignment.summary,
+    `Coverage signal: ${foundationCoverageSignalLine(bestRepo, originalIdea)}. See \`REPO_STARTER_NOTES.md\` → Foundation Spec for the pattern-level breakdown.`,
+    ``,
+    `### Wizard targets`,
+    ...adaptationMap(bestRepo, profile, wizardAnswers),
+    ``,
+    `### Decision evidence table`,
     ...buildAlignmentDecisionTable(ir.alignment.decisions),
     ``,
-    `## Foundation Coverage Map`,
-    ...foundationCoverageMap(bestRepo, profile, originalIdea),
-    ``,
-    `## Reuse Matrix`,
+    `### Per-area focus`,
     ...reuseMatrixLines(bestRepo, blueprint),
     ``,
     `## Foundation Guardrails`,
@@ -1752,6 +1804,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...checkItems(fileInspectionChecklist(bestRepo)),
     ``,
     `# PRD`,
+    `_What this file is for: the product spec — thesis, target user, job to be done, primary workflow, MVP requirements, what's explicitly out of scope, success metrics._`,
     ``,
     `## Snapshot`,
     `- Verdict: ${visibleVerdict.label} (${visibleVerdict.confidence}% confidence)`,
@@ -1831,6 +1884,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ]),
     ``,
     `# BUILD_PLAN`,
+    `_What this file is for: the staged plan — pre-build decisions, first milestone, wow demo, the four implementation phases, and how to verify it works._`,
     ``,
     `## Pre-Build Decision Checklist`,
     ...checkItems(decisionChecklist(result)),
@@ -1847,6 +1901,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...checkItems(verificationChecklist(bestRepo)),
     ``,
     `# REPO_STARTER_NOTES`,
+    `_What this file is for: the deep read on the foundation — architecture evidence, the Foundation Spec (stack / persistence / auth / API / state patterns), the License & Reuse literacy block, pre-filled attribution snippets, and the "How To Use This Foundation Respectfully" checklist. Read this before copying any upstream code._`,
     ``,
     `## Recommended Starting Point`,
     bestRepo && bestNarrative
@@ -1887,6 +1942,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ]),
     ``,
     `# ${agentHeading}`,
+    `_What this file is for: the entrypoint for the AI builder reading this packet. Builder instructions + operating rules (including license + attribution gates) + the starter prompt._`,
     ``,
     `## Builder Instructions`,
     targetInstructions(target),
@@ -1903,6 +1959,8 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
       "Stop and record blockers when verification fails instead of hiding them."
     ]),
     ``,
+    ...inlineFoundationAtAGlance(bestRepo),
+    ...inlineAttributionToPaste(bestRepo),
     ...(builderRulePackLines.length
       ? [
           `## Builder Rule Packs`,

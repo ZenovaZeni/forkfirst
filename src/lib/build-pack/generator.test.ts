@@ -623,7 +623,7 @@ describe("build pack generator", () => {
       "codex"
     );
 
-    const alignment = markdown.split("## Alignment Decisions")[1]?.split("## Foundation Coverage Map")[0] ?? "";
+    const alignment = markdown.split("### Decision evidence table")[1]?.split("### Per-area focus")[0] ?? "";
     expect(alignment).toContain("| Decision | Product Need | Repo Capability | Evidence | Builder Instruction |");
     expect(alignment).toMatch(/\|\s*Keep\s*\|/i);
     expect(alignment).toMatch(/\|\s*Replace\s*\|/i);
@@ -692,7 +692,7 @@ describe("build pack generator", () => {
 
     expect(markdown).toMatch(/trading-card|sports-card|collectibles collector/i);
     expect(markdown).toMatch(/collection vault|album|binder/i);
-    expect(markdown).toContain("## Foundation Coverage Map");
+    expect(markdown).toContain("## Foundation Decisions");
     expect(markdown).toContain("card search/catalog");
     expect(markdown).toContain("collection/vault");
     expect(markdown).toContain("pricing/value estimates");
@@ -805,7 +805,7 @@ describe("build pack generator", () => {
       "codex",
       focusedRepo
     );
-    const mergePlanSection = markdown.split("## Product/Repo Merge Plan")[1]?.split("## Alignment Decisions")[0] ?? "";
+    const mergePlanSection = markdown.split("## Product/Repo Merge Plan")[1]?.split("## Foundation Decisions")[0] ?? "";
 
     expect(markdown).toContain("- Repo: focus/receipt-foundation");
     expect(mergePlanSection).toContain("focus/receipt-foundation");
@@ -830,8 +830,8 @@ describe("build pack generator", () => {
 
     expect(markdown).not.toContain("<UNTRUSTED_REPO_CONTENT>");
     expect(markdown).not.toContain("</UNTRUSTED_REPO_CONTENT>");
-    expect(markdown).toContain("## Foundation Coverage Map");
-    expect(markdown).toContain("Already detected:");
+    expect(markdown).toContain("## Foundation Decisions");
+    expect(markdown).toMatch(/Already detected|Coverage signal/);
     expect(markdown).toContain("card search/catalog");
     expect(markdown).toContain("collection/vault");
     expect(markdown).toContain("binder/wishlist/grouping");
@@ -842,12 +842,14 @@ describe("build pack generator", () => {
     expect(markdown).toContain("frontend shell");
     expect(markdown).toContain("backend/API");
     expect(markdown).toContain("database/persistence");
-    expect(markdown).toContain("Docker/local setup");
-    expect(markdown).toContain("Keep first:");
-    expect(markdown).toContain("Replace/rebrand:");
-    expect(markdown).toContain("Add/customize:");
-    expect(markdown).toContain("Remove/defer:");
-    expect(markdown).toContain("Risk checks:");
+    // After the table collapse, the Wizard targets / Decision evidence table replace the old Keep first / Replace/rebrand bullets.
+    expect(markdown).toContain("### Wizard targets");
+    expect(markdown).toContain("### Decision evidence table");
+    expect(markdown).toContain("### Per-area focus");
+    expect(markdown).toMatch(/- Keep:/);
+    expect(markdown).toMatch(/- Replace:/);
+    expect(markdown).toMatch(/- Add:/);
+    expect(markdown).toMatch(/- Remove or defer:/);
   });
 
   test("cleans untrusted markers from differentiation gaps", () => {
