@@ -42,6 +42,7 @@ These are example output packets checked against live GitHub Search API results 
 - [Job application tracker](./public/sample-handoffs/job-application-tracker.md)
 - [Local-first journal](./public/sample-handoffs/local-first-journal.md)
 - [AI agent dashboard](./public/sample-handoffs/ai-agent-dashboard.md)
+- [Full handoff with license + attribution sections (illustrative)](./public/sample-handoffs/full-handoff-with-license-attribution.md) — shows the per-license literacy block, Foundation Spec, and "How To Use This Foundation Respectfully" checklist that ship in every handoff.
 
 ## Use cases
 
@@ -67,11 +68,12 @@ These are example output packets checked against live GitHub Search API results 
 
 - Not a license scanner or legal advisor.
 - Not a code-copying tool.
+- Not a launderer. ForkFirst is for building ON a foundation with credit, not erasing the source.
 - Not a hosted SaaS with accounts, billing, or team workspaces.
 - Not tied to a single AI provider.
 - Not a promise that any surfaced repo is safe to reuse.
 
-Always inspect setup, license, docs, recent activity, and architecture before building from a repo.
+Every Builder Handoff now includes a plain-English license summary, a copy-paste attribution snippet, and a "How To Use This Foundation Respectfully" checklist for the selected repo. Always inspect setup, license, docs, recent activity, and architecture before building from a repo.
 
 ## Support
 

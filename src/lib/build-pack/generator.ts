@@ -2,6 +2,7 @@ import { buildRepoNarrative } from "../analysis/human-answer";
 import type { IdeaCheckResult } from "../../types/idea-check";
 import { buildHandoffBlueprint, isGenericBuildPackPreference, type HandoffBlueprint, type ProductKind } from "./blueprint";
 import { buildAlignmentDecisionTable, buildBuildPackIR } from "./ir";
+import { profileForLicense, renderLicenseAndAttributionBlock, renderRespectfulUseChecklist } from "./license";
 import { buildMergePlan, inspectRepoForBuildPack, productIntentToBlueprint, type MergePlan, type RepoInspection } from "../idea-check/workflow";
 
 type BuildPackRepo = IdeaCheckResult["repos"][number];
@@ -1117,6 +1118,98 @@ function architectureEvidenceLines(repo: BuildPackRepo | undefined): string[] {
   return lines;
 }
 
+type FoundationPatternMatch = { pattern: RegExp; label: string };
+
+const PERSISTENCE_PATTERNS: FoundationPatternMatch[] = [
+  { pattern: /\b(sqlite|better-sqlite3|libsql|turso)\b/i, label: "SQLite / libsql (local-first friendly)" },
+  { pattern: /\b(postgres|prisma|drizzle|kysely|supabase)\b/i, label: "Postgres / ORM layer" },
+  { pattern: /\b(mongodb|mongoose)\b/i, label: "MongoDB" },
+  { pattern: /\b(localstorage|indexeddb|dexie)\b/i, label: "Browser local storage (no backend)" },
+  { pattern: /\b(redis|upstash)\b/i, label: "Redis / KV store" }
+];
+
+const AUTH_PATTERNS: FoundationPatternMatch[] = [
+  { pattern: /\b(next-auth|authjs|auth\.js)\b/i, label: "NextAuth / Auth.js" },
+  { pattern: /\bclerk\b/i, label: "Clerk" },
+  { pattern: /\bsupabase auth\b/i, label: "Supabase Auth" },
+  { pattern: /\blucia\b/i, label: "Lucia (session-based)" },
+  { pattern: /\b(oauth|sso|saml)\b/i, label: "OAuth / SSO" },
+  { pattern: /\b(jwt|jsonwebtoken)\b/i, label: "JWT-based session" }
+];
+
+const API_PATTERNS: FoundationPatternMatch[] = [
+  { pattern: /\btrpc\b/i, label: "tRPC" },
+  { pattern: /\b(graphql|apollo)\b/i, label: "GraphQL" },
+  { pattern: /\b(fastapi|express|hono|nestjs|nest\.js|koa)\b/i, label: "REST (Node / Python backend)" },
+  { pattern: /\bserver actions?\b/i, label: "Server Actions" },
+  { pattern: /\b(route handlers?|api routes?)\b/i, label: "Next.js Route Handlers" }
+];
+
+const STATE_PATTERNS: FoundationPatternMatch[] = [
+  { pattern: /\bzustand\b/i, label: "Zustand" },
+  { pattern: /\b(redux|@reduxjs\/toolkit)\b/i, label: "Redux" },
+  { pattern: /\bjotai\b/i, label: "Jotai" },
+  { pattern: /\b(react query|tanstack query|swr)\b/i, label: "Server-state cache (TanStack Query / SWR)" }
+];
+
+function matchedLabels(haystack: string, patterns: FoundationPatternMatch[]): string[] {
+  const hits: string[] = [];
+  for (const entry of patterns) {
+    if (entry.pattern.test(haystack)) hits.push(entry.label);
+  }
+  return Array.from(new Set(hits));
+}
+
+function foundationSpecLines(repo: BuildPackRepo | undefined): string[] {
+  if (!repo) {
+    return ["- No starter repo selected, so the foundation spec cannot be derived yet."];
+  }
+  const haystack = [
+    repo.description ?? "",
+    repo.readme?.excerpt ?? "",
+    repo.topics.join(" "),
+    (repo.structure?.frameworks ?? []).join(" "),
+    (repo.structure?.dataLayers ?? []).join(" "),
+    (repo.readme?.evidence?.integrationSnippets ?? []).join(" "),
+    (repo.readme?.evidence?.featureSnippets ?? []).join(" ")
+  ].join(" ").toLowerCase();
+  const lines: string[] = [];
+
+  const stack = Array.from(new Set([
+    ...(repo.structure?.frameworks ?? []),
+    repo.language ?? ""
+  ].filter(Boolean)));
+  if (stack.length) lines.push(`- **Stack:** ${stack.join(", ")}`);
+
+  if (repo.structure?.packageManagers?.length) {
+    lines.push(`- **Setup files:** ${repo.structure.packageManagers.join(", ")}`);
+  }
+
+  const persistence = matchedLabels(haystack, PERSISTENCE_PATTERNS);
+  if (persistence.length) lines.push(`- **Persistence pattern:** ${persistence.join("; ")}`);
+
+  const auth = matchedLabels(haystack, AUTH_PATTERNS);
+  if (auth.length) {
+    lines.push(`- **Auth pattern:** ${auth.join("; ")}`);
+  } else if (/\b(no auth|no signup|local-first)\b/i.test(haystack)) {
+    lines.push("- **Auth pattern:** explicitly no-auth / local-first");
+  }
+
+  const api = matchedLabels(haystack, API_PATTERNS);
+  if (api.length) lines.push(`- **API style:** ${api.join("; ")}`);
+
+  const state = matchedLabels(haystack, STATE_PATTERNS);
+  if (state.length) lines.push(`- **State management:** ${state.join("; ")}`);
+
+  if (lines.length === 0) {
+    lines.push("- No strong patterns detected from README, topics, or file tree. Open the repo and read the source before assuming architecture.");
+  }
+
+  lines.push("");
+  lines.push("**Builder takeaway:** each detected pattern is evidence, not a requirement. Keep what matches your product promise; replace what does not.");
+  return lines;
+}
+
 function cleanEvidenceSnippet(line: string | null | undefined): string | null {
   if (!line) return null;
   const cleaned = cleanRepoContent(line)
@@ -1220,18 +1313,6 @@ function phasePlan(firstMilestone: string, agentFile: string, repo: BuildPackRep
       ]
     }
   ];
-}
-
-function licenseReuseNote(repo: BuildPackRepo): string {
-  if (!repo.license) return "No license was detected. Treat this as research only until a human confirms reuse rights.";
-  const license = repo.license.toUpperCase();
-  if (license.includes("AGPL")) {
-    return `${repo.license} may add reciprocal obligations, including network use and source-sharing requirements for users who interact with a modified hosted version. Confirm compatibility, notice, source-offer, and deployment obligations before copying code into a closed or differently licensed project.`;
-  }
-  if (license.includes("GPL") || license.includes("AGPL") || license.includes("LGPL")) {
-    return `${repo.license} may add reciprocal obligations. Confirm compatibility before copying code into a closed or differently licensed project.`;
-  }
-  return `${repo.license} was detected. Still confirm the LICENSE file, notices, assets, dependencies, and README reuse guidance before copying code.`;
 }
 
 function inspectionSteps(repo: BuildPackRepo): string[] {
@@ -1483,7 +1564,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
       `- Not good for: ${narrative.notFor}`,
       `- Reuse caution: ${narrative.caution}`,
       `- Next step: ${narrative.next}`,
-      `- License/reuse: ${licenseReuseNote(bestRepo)}`,
+      `- License/reuse: ${profileForLicense(bestRepo.license).oneLineSummary}`,
       ``
     ];
   })() : [];
@@ -1496,7 +1577,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
       `- Score: ${formatScoreBreakdown(repo)}`,
       `- What it does: ${narrative.overview}`,
       `- Good for: ${narrative.goodFor}`,
-      `- License/reuse: ${licenseReuseNote(repo)}`,
+      `- License/reuse: ${profileForLicense(repo.license).oneLineSummary}`,
       ``
     ];
   });
@@ -1517,7 +1598,7 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
       `- Not good for: ${narrative.notFor}`,
       `- Reuse caution: ${narrative.caution}`,
       `- Next step: ${narrative.next}`,
-      `- License/reuse: ${licenseReuseNote(repo)}`,
+      `- License/reuse: ${profileForLicense(repo.license).oneLineSummary}`,
       ``
     ];
   });
@@ -1692,6 +1773,9 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `## Architecture Evidence`,
     ...architectureEvidenceLines(bestRepo),
     ``,
+    `## Foundation Spec (Patterns Detected)`,
+    ...foundationSpecLines(bestRepo),
+    ``,
     `## Files Likely To Inspect First`,
     ...bulletItems(filesLikelyToInspect(bestRepo, blueprint)),
     ``,
@@ -1701,7 +1785,14 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ...(bestRepo ? checkItems(inspectionSteps(bestRepo)) : ["- [ ] Run a narrower repo search and inspect README, activity, docs, and license before choosing a base."]),
     ``,
     `## License And Reuse`,
-    bestRepo ? licenseReuseNote(bestRepo) : "No starter repo was selected, so no reuse rights have been confirmed.",
+    ...(bestRepo
+      ? renderLicenseAndAttributionBlock(bestRepo)
+      : ["No starter repo was selected, so no reuse rights have been confirmed."]),
+    ``,
+    `## How To Use This Foundation Respectfully`,
+    `Build ON the foundation, do not strip it. ForkFirst surfaces foundations so you can ship faster; it is not a tool for laundering open-source work into a closed competitor. The checklist below is the difference between a respected fork and a takedown notice.`,
+    ``,
+    ...renderRespectfulUseChecklist(bestRepo),
     ``,
     `## Open Questions For The Builder`,
     ...checkItems([
