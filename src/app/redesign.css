@@ -4850,6 +4850,95 @@ input, textarea, select { font: inherit; color: inherit; }
   color: var(--accent);
 }
 
+/* ── Wizard v2 additions ─────────────────────────────────────────────── */
+.bq-dev-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.bq-mode-toggle {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+.bq-mode-toggle:hover { color: var(--ink); }
+
+.bq-warn {
+  font-size: 13px;
+  color: #c97b1f;
+  background: rgba(201, 123, 31, 0.10);
+  border: 1px solid rgba(201, 123, 31, 0.24);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.bq-advanced-toggle {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bq-advanced-toggle:hover { color: var(--ink); }
+.bq-optional {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--paper-3);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.bq-advanced {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.bq-license-gate {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid;
+}
+.bq-license-gate.warn {
+  background: rgba(201, 123, 31, 0.08);
+  border-color: rgba(201, 123, 31, 0.28);
+}
+.bq-license-gate.stop {
+  background: rgba(201, 50, 50, 0.08);
+  border-color: rgba(201, 50, 50, 0.28);
+}
+.bq-license-gate strong { display: block; font-size: 15px; margin-bottom: 6px; }
+.bq-license-gate p { font-size: 13.5px; color: var(--muted); margin: 0 0 8px; line-height: 1.5; }
+.bq-license-gate p:last-child { margin-bottom: 0; }
+.bq-license-gate code { font-family: var(--font-mono); font-size: 12.5px; background: var(--paper-3); padding: 2px 5px; border-radius: 5px; }
+.bq-license-extra { font-size: 12.5px !important; }
+.bq-license-links { margin-top: 8px; }
+.bq-license-links a { font-size: 13px; color: var(--accent); text-decoration: none; }
+.bq-license-links a:hover { text-decoration: underline; }
+.bq-license-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+
+.bq-dev-mode { max-width: 720px; }
+
 /* Brand answer summary card (after they answer) */
 .brand-summary {
   background: var(--paper-2);

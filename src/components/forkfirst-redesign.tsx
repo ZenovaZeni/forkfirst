@@ -3534,7 +3534,7 @@ function ChatResults({
           </>
         ) : null}
       </div>
-      {phase === "branding" ? <BrandingInterview onComplete={onGenerate} onCancel={() => go("results", { scroll: "preserve" })} /> : null}
+      {phase === "branding" ? <BrandingInterview onComplete={onGenerate} onCancel={() => go("results", { scroll: "preserve" })} repo={selectedStarterRepo} originalIdea={result.prompt} /> : null}
       {phase === "generating" ? <Generating brand={brand} result={result} selectedStarterRepo={selectedStarterRepo} onReady={onReady} /> : null}
       {phase === "ready" ? (
         <ReadyCard
@@ -3600,20 +3600,231 @@ function ChatResults({
   );
 }
 
+// ── Wizard helpers ────────────────────────────────────────────────────────────
+
+const TOO_BROAD_WORDS = ["everything", "all of it", "all features", "mobile too", "mobile friendly", "the whole thing", "idk", "not sure", "anything", "the works"];
+function isTooBroad(text: string): boolean {
+  const lower = text.toLowerCase().trim();
+  if (!lower) return false;
+  if (TOO_BROAD_WORDS.some((w) => lower.includes(w))) return true;
+  if (lower.split(/\s+/).length < 6) return true;
+  return false;
+}
+
+function domainPlaceholder(idea: string): { name: string; description: string; milestone: string } {
+  const lower = idea.toLowerCase();
+  if (/realtor|real estate|agent|listing|property|mls/i.test(lower)) return {
+    name: "e.g. My Realtor CRM",
+    description: "e.g. A personal CRM for a realtor to track clients, follow-ups, and deals.",
+    milestone: "e.g. I add a new client, write a note from our call, and set a reminder to follow up next Thursday."
+  };
+  if (/job|application|tracker|career|resume|interview/i.test(lower)) return {
+    name: "e.g. TrackPath",
+    description: "e.g. A local-first job tracker with Kanban stages, follow-up reminders, and CSV export.",
+    milestone: "e.g. I add three applications, move one to the Interview stage, and set a follow-up date."
+  };
+  if (/crm|customer|contact|lead|client/i.test(lower)) return {
+    name: "e.g. ClientNest",
+    description: "e.g. A simple CRM for tracking clients, notes, and follow-ups without monthly fees.",
+    milestone: "e.g. I add a contact, write a note, and see everyone I need to follow up with today."
+  };
+  if (/invoice|billing|payment|estimate|quote/i.test(lower)) return {
+    name: "e.g. QuoteKit",
+    description: "e.g. A simple estimate and invoice tool for freelancers that exports to PDF.",
+    milestone: "e.g. I create an estimate, add line items, and download it as a PDF to send to a client."
+  };
+  if (/inventory|stock|product|catalog/i.test(lower)) return {
+    name: "e.g. StockTrack",
+    description: "e.g. A simple inventory tracker with low-stock alerts and CSV export.",
+    milestone: "e.g. I add a product, set a stock level, and see which items are below the threshold."
+  };
+  return {
+    name: "e.g. MyApp",
+    description: "e.g. A personal tool that helps me track [what] without needing an account.",
+    milestone: "e.g. I [do the main thing], save it, and come back later to see it's still there."
+  };
+}
+
+function licenseRisk(license: string | null | undefined): "none" | "warn" | "stop" {
+  if (!license) return "warn";
+  const l = license.toUpperCase();
+  if (l.includes("NOASSERTION") || l.includes("NO LICENSE") || l.includes("NONE")) return "stop";
+  if (l.includes("AGPL")) return "warn";
+  if (l.includes("GPL") && !l.includes("LGPL")) return "warn";
+  return "none";
+}
+
+function complexSetup(repo: ClassifiedRepo | null | undefined): boolean {
+  if (!repo) return false;
+  const haystack = [
+    repo.description ?? "",
+    (repo.structure?.packageManagers ?? []).join(" "),
+    (repo.readme?.excerpt ?? "")
+  ].join(" ").toLowerCase();
+  return /\bdocker\b|\bdocker-compose\b|\bkubernetes\b|\bk8s\b/.test(haystack);
+}
+
+// ── Wizard ────────────────────────────────────────────────────────────────────
+
 function BrandingInterview({
   onComplete,
-  onCancel
+  onCancel,
+  repo,
+  originalIdea = ""
 }: {
   onComplete: (brand: BrandAnswers) => void;
   onCancel: () => void;
+  repo?: ClassifiedRepo | null;
+  originalIdea?: string;
 }) {
   const [step, setStep] = useState(1);
   const [brand, setBrand] = useState<BrandAnswers>({ ...DEFAULT_BRAND_ANSWERS, notList: [] });
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [devMode, setDevMode] = useState(false);
+  const [milestoneWarn, setMilestoneWarn] = useState(false);
+  const [licenseAcknowledged, setLicenseAcknowledged] = useState(false);
+
+  const ph = domainPlaceholder(originalIdea);
+  const risk = licenseRisk(repo?.license);
+  const needsDocker = complexSetup(repo);
+  const showLicenseGate = (risk === "stop" || risk === "warn") && !licenseAcknowledged;
+
+  // Auto-expand advanced if signals suggest a developer
+  const ideaHasTechTerms = /\bauth\b|\bapi\b|\bdatabase\b|\bstack\b|\borm\b|\bframework\b|\bbackend\b|\bfrontend\b|\bschema\b/i.test(originalIdea);
+  const [advancedAutoExpanded] = useState(ideaHasTechTerms);
 
   function done() {
+    if (isTooBroad(brand.firstMilestone)) {
+      setMilestoneWarn(true);
+      return;
+    }
     onComplete({ ...brand, name: brand.name.trim() || "Untitled app" });
   }
 
+  function next() {
+    if (step === 2 && isTooBroad(brand.firstMilestone)) {
+      setMilestoneWarn(true);
+      return;
+    }
+    setMilestoneWarn(false);
+    if (step < 3) setStep(step + 1);
+    else done();
+  }
+
+  // License gate — shown before wizard starts
+  if (showLicenseGate && repo) {
+    return (
+      <>
+        <div className="t t-assist">
+          <div className="brand-question">
+            <div className={`bq-license-gate ${risk === "stop" ? "stop" : "warn"}`}>
+              <span className="bq-license-icon">{risk === "stop" ? "⚠️" : "ℹ️"}</span>
+              <div>
+                <strong>{risk === "stop" ? "License needs checking before you build" : "License note"}</strong>
+                <p>
+                  {risk === "stop"
+                    ? <>GitHub couldn&apos;t detect a clear license for <code>{repo.fullName}</code>. That defaults to &ldquo;all rights reserved&rdquo; — meaning there&apos;s no automatic right to copy or modify the code. Check the LICENSE file before shipping anything from it.</>
+                    : <>{repo.license} licenses have share-alike rules. If you host this app for others (even for free), you may need to publish your source code. Worth understanding before you build.</>}
+                </p>
+                {needsDocker && risk === "stop" && (
+                  <p className="bq-license-extra">This repo also requires Docker to run locally — ask your AI builder to handle the setup steps.</p>
+                )}
+                <div className="bq-license-links">
+                  <a href={`${repo.url}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer">Check the LICENSE file →</a>
+                </div>
+              </div>
+            </div>
+            <div className="bq-foot">
+              <button className="btn ghost compact" type="button" onClick={onCancel}>← Pick a different repo</button>
+              <button className="btn accent" type="button" onClick={() => setLicenseAcknowledged(true)}>
+                Understood, continue anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Docker-only warning (no license issue)
+  if (needsDocker && !licenseAcknowledged && risk === "none") {
+    return (
+      <>
+        <div className="t t-assist">
+          <div className="brand-question">
+            <div className="bq-license-gate warn">
+              <span className="bq-license-icon">ℹ️</span>
+              <div>
+                <strong>Heads up — this repo needs Docker</strong>
+                <p>
+                  <code>{repo?.fullName}</code> uses Docker to run locally. That&apos;s fine — just tell your AI builder &ldquo;handle the setup for me&rdquo; and it will walk you through it.
+                </p>
+              </div>
+            </div>
+            <div className="bq-foot">
+              <button className="btn ghost compact" type="button" onClick={onCancel}>← Pick a different repo</button>
+              <button className="btn accent" type="button" onClick={() => setLicenseAcknowledged(true)}>
+                Got it, let&apos;s continue
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (devMode) {
+    // ── Developer mode — single scroll form ──────────────────────────────────
+    return (
+      <>
+        <div className="t t-assist">
+          <div className="brand-question bq-dev-mode">
+            <div className="bq-dev-header">
+              <span className="bq-step">All options</span>
+              <button className="bq-mode-toggle" type="button" onClick={() => setDevMode(false)}>← Guided mode</button>
+            </div>
+            <input className="bq-input" autoFocus value={brand.name} onChange={(e) => setBrand({ ...brand, name: e.target.value })} placeholder={ph.name} />
+            <textarea className="bq-input bq-textarea" value={brand.productGoal} onChange={(e) => setBrand({ ...brand, productGoal: e.target.value })} placeholder={ph.description} />
+            <textarea className="bq-input bq-textarea" value={brand.audience} onChange={(e) => setBrand({ ...brand, audience: e.target.value })} placeholder="Who is it for? e.g. Just me — a freelancer who needs to track invoices without a subscription." />
+            <textarea className="bq-input bq-textarea" value={brand.firstMilestone} onChange={(e) => { setBrand({ ...brand, firstMilestone: e.target.value }); setMilestoneWarn(false); }} placeholder={ph.milestone} />
+            {milestoneWarn && <p className="bq-warn">Too broad — what&apos;s the single most important moment? You can build the rest after.</p>}
+            <textarea className="bq-input bq-textarea compact" value={brand.keepFromRepo} onChange={(e) => setBrand({ ...brand, keepFromRepo: e.target.value })} placeholder="Keep from the repo: auth, dashboard layout, data model... (leave blank — we'll figure it out)" />
+            <textarea className="bq-input bq-textarea compact" value={brand.replaceFromRepo} onChange={(e) => setBrand({ ...brand, replaceFromRepo: e.target.value })} placeholder="Replace: sample data, colors, navigation, domain assumptions..." />
+            <textarea className="bq-input bq-textarea compact" value={brand.addToRepo} onChange={(e) => setBrand({ ...brand, addToRepo: e.target.value })} placeholder="Add: the one thing the repo doesn't do that your product needs..." />
+            <div className="vibe-row">
+              {[
+                { id: "calm and trustworthy", name: "Calm + trustworthy", sub: "Clear, focused, low-noise" },
+                { id: "bold and modern", name: "Bold + modern", sub: "Confident, crisp, high contrast" },
+                { id: "friendly and simple", name: "Friendly + simple", sub: "Warm, approachable, non-techy" }
+              ].map((v) => (
+                <button key={v.id} className={`vibe-card ${brand.vibe === v.id ? "selected" : ""}`} type="button" onClick={() => setBrand({ ...brand, vibe: v.id })}>
+                  <strong>{v.name}</strong><span>{v.sub}</span>
+                </button>
+              ))}
+            </div>
+            <div className="not-grid">
+              {["Billing", "Team accounts", "Admin dashboard", "Native app", "Browser extension", "Complex automations", "Public marketplace", "Analytics", "Email/SMS", "AI agents"].map((item) => {
+                const sel = brand.notList.includes(item);
+                return (
+                  <button key={item} type="button" className={sel ? "selected" : ""} onClick={() => setBrand({ ...brand, notList: sel ? brand.notList.filter((v) => v !== item) : [...brand.notList, item] })}>
+                    {sel ? <Check size={13} /> : null}{item}
+                  </button>
+                );
+              })}
+            </div>
+            <textarea className="bq-input bq-textarea compact" value={brand.designNotes} onChange={(e) => setBrand({ ...brand, designNotes: e.target.value })} placeholder="Design notes: colors, tone, anything the builder should know..." />
+            <div className="bq-foot">
+              <button className="btn ghost compact" type="button" onClick={onCancel}>Back</button>
+              <button className="bq-link" type="button" onClick={() => onComplete({ ...brand, name: brand.name.trim() || "Untitled app" })}>Skip and create simple handoff</button>
+              <button className="btn accent" type="button" onClick={done}>Create handoff <ArrowRight size={14} /></button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── Guided mode — 3 steps ─────────────────────────────────────────────────
   return (
     <>
       <div className="t t-assist">
@@ -3626,84 +3837,86 @@ function BrandingInterview({
           Good. I&apos;ll turn this repo into a builder brief, not just a clone. These five quick answers tell your AI what product you actually want, what to keep from the foundation, and what to build first.
         </p>
         <div className="brand-question">
-          <span className="bq-step">Step {step} of 5</span>
+          <div className="bq-dev-header">
+            <span className="bq-step">Step {step} of 3</span>
+            <button className="bq-mode-toggle" type="button" onClick={() => setDevMode(true)}>Developer? See all options →</button>
+          </div>
+
+          {/* Step 1 — What are we building? */}
           {step === 1 ? (
             <>
-              <h4>What are we turning this into?</h4>
-              <p className="help">Give the builder the product name and the plain-English outcome, so it does not just re-skin the repo.</p>
-              <input className="bq-input" autoFocus value={brand.name} onChange={(event) => setBrand({ ...brand, name: event.target.value })} placeholder="Product name, e.g. ClientNest" />
-              <textarea className="bq-input bq-textarea" value={brand.productGoal} onChange={(event) => setBrand({ ...brand, productGoal: event.target.value })} placeholder="What should this become? e.g. A simple client portal where small agencies can share files, messages, approvals, and project updates." />
+              <h4>What are we building?</h4>
+              <input className="bq-input" autoFocus value={brand.name} onChange={(e) => setBrand({ ...brand, name: e.target.value })} placeholder={ph.name} />
+              <textarea className="bq-input bq-textarea" value={brand.productGoal} onChange={(e) => setBrand({ ...brand, productGoal: e.target.value })} placeholder={ph.description} />
             </>
           ) : null}
+
+          {/* Step 2 — The first moment */}
           {step === 2 ? (
             <>
-              <h4>Who is it for, and what pain should it solve?</h4>
-              <p className="help">This makes the handoff speak to the user, not just the tech stack.</p>
-              <textarea className="bq-input bq-textarea" autoFocus value={brand.audience} onChange={(event) => setBrand({ ...brand, audience: event.target.value })} placeholder="e.g. Solo consultants who need one place for clients to see deliverables, upload assets, and approve work without hunting through email." />
+              <h4>When it&apos;s done, what should you be able to do?</h4>
+              <p className="help">One action. Keep it small — you can always build more.</p>
+              <textarea className="bq-input bq-textarea" autoFocus value={brand.firstMilestone} onChange={(e) => { setBrand({ ...brand, firstMilestone: e.target.value }); setMilestoneWarn(false); }} placeholder={ph.milestone} />
+              {milestoneWarn ? (
+                <p className="bq-warn">That&apos;s a big one. What&apos;s the single most important moment? Try: &ldquo;{ph.milestone.replace("e.g. ", "")}&rdquo;</p>
+              ) : null}
             </>
           ) : null}
+
+          {/* Step 3 — Feel + skip */}
           {step === 3 ? (
             <>
-              <h4>What should work when you come back?</h4>
-              <p className="help">Describe the first useful prototype moment. This becomes the first milestone your AI builder works toward.</p>
-              <textarea className="bq-input bq-textarea" autoFocus value={brand.firstMilestone} onChange={(event) => setBrand({ ...brand, firstMilestone: event.target.value })} placeholder="e.g. A client can log in, open a project, view three shared files, leave a comment, and mark one item approved." />
-            </>
-          ) : null}
-          {step === 4 ? (
-            <>
-              <h4>What should the builder keep, change, and add?</h4>
-              <p className="help">This is the repo-to-your-product map. Short phrases are fine.</p>
-              <textarea className="bq-input bq-textarea compact" autoFocus value={brand.keepFromRepo} onChange={(event) => setBrand({ ...brand, keepFromRepo: event.target.value })} placeholder="Keep from the repo: auth, dashboard layout, file upload flow, data model..." />
-              <textarea className="bq-input bq-textarea compact" value={brand.replaceFromRepo} onChange={(event) => setBrand({ ...brand, replaceFromRepo: event.target.value })} placeholder="Replace: sample data, wording, colors, navigation, domain-specific assumptions..." />
-              <textarea className="bq-input bq-textarea compact" value={brand.addToRepo} onChange={(event) => setBrand({ ...brand, addToRepo: event.target.value })} placeholder="Add: the one thing your idea needs that the repo does not already do..." />
-            </>
-          ) : null}
-          {step === 5 ? (
-            <>
-              <h4>How should it feel, and what should it avoid?</h4>
-              <p className="help">This gives the builder a design direction and guardrails so it does not overbuild.</p>
+              <h4>How should it feel?</h4>
               <div className="vibe-row">
                 {[
                   { id: "calm and trustworthy", name: "Calm + trustworthy", sub: "Clear, focused, low-noise" },
                   { id: "bold and modern", name: "Bold + modern", sub: "Confident, crisp, high contrast" },
                   { id: "friendly and simple", name: "Friendly + simple", sub: "Warm, approachable, non-techy" }
-                ].map((vibe) => (
-                  <button key={vibe.id} className={`vibe-card ${brand.vibe === vibe.id ? "selected" : ""}`} type="button" onClick={() => setBrand({ ...brand, vibe: vibe.id })}>
-                    <strong>{vibe.name}</strong>
-                    <span>{vibe.sub}</span>
+                ].map((v) => (
+                  <button key={v.id} className={`vibe-card ${brand.vibe === v.id ? "selected" : ""}`} type="button" onClick={() => setBrand({ ...brand, vibe: v.id })}>
+                    <strong>{v.name}</strong><span>{v.sub}</span>
                   </button>
                 ))}
               </div>
-              <textarea className="bq-input bq-textarea compact" value={brand.designNotes} onChange={(event) => setBrand({ ...brand, designNotes: event.target.value })} placeholder="Optional design notes: colors, tone, examples, or anything that should feel different from the starter repo." />
-              <p className="help">Optional: tap only the things your first version should avoid.</p>
+              <p className="help" style={{ marginTop: "16px" }}>Leave these out of v1:</p>
               <div className="not-grid">
                 {["Billing", "Team accounts", "Admin dashboard", "Native app", "Browser extension", "Complex automations", "Public marketplace", "Analytics", "Email/SMS", "AI agents"].map((item) => {
-                  const selected = brand.notList.includes(item);
+                  const sel = brand.notList.includes(item);
                   return (
-                    <button
-                      key={item}
-                      type="button"
-                      className={selected ? "selected" : ""}
-                      onClick={() =>
-                        setBrand({
-                          ...brand,
-                          notList: selected ? brand.notList.filter((value) => value !== item) : [...brand.notList, item]
-                        })
-                      }
-                    >
-                      {selected ? <Check size={13} /> : null}
-                      {item}
+                    <button key={item} type="button" className={sel ? "selected" : ""} onClick={() => setBrand({ ...brand, notList: sel ? brand.notList.filter((v) => v !== item) : [...brand.notList, item] })}>
+                      {sel ? <Check size={13} /> : null}{item}
                     </button>
                   );
                 })}
               </div>
+              <textarea className="bq-input bq-textarea compact" value={brand.designNotes} onChange={(e) => setBrand({ ...brand, designNotes: e.target.value })} placeholder="Anything else? e.g. Deep blue accent, needs to work on mobile, very minimal." style={{ marginTop: "12px" }} />
+
+              {/* Optional advanced section */}
+              <button
+                className="bq-advanced-toggle"
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                {showAdvanced ? "▾" : "▸"} Give the builder more direction <span className="bq-optional">optional</span>
+              </button>
+              {(showAdvanced || advancedAutoExpanded) ? (
+                <div className="bq-advanced">
+                  <textarea className="bq-input bq-textarea compact" value={brand.audience} onChange={(e) => setBrand({ ...brand, audience: e.target.value })} placeholder="Who specifically is it for? e.g. Just me — a realtor tracking 30–40 active clients." />
+                  <textarea className="bq-input bq-textarea compact" value={brand.keepFromRepo} onChange={(e) => setBrand({ ...brand, keepFromRepo: e.target.value })} placeholder="Keep from the repo: auth, dashboard layout, data model... (leave blank — we'll figure it out)" />
+                  <textarea className="bq-input bq-textarea compact" value={brand.replaceFromRepo} onChange={(e) => setBrand({ ...brand, replaceFromRepo: e.target.value })} placeholder="Replace: sample data, colors, navigation, domain assumptions..." />
+                  <textarea className="bq-input bq-textarea compact" value={brand.addToRepo} onChange={(e) => setBrand({ ...brand, addToRepo: e.target.value })} placeholder="Add: the one thing the repo doesn't do that your product needs..." />
+                </div>
+              ) : null}
             </>
           ) : null}
+
           <div className="bq-foot">
-            <button className="btn ghost compact" type="button" onClick={onCancel}>Back</button>
-            <button className="bq-link" type="button" onClick={done}>Skip and create simple handoff</button>
-            <button className="btn accent" type="button" onClick={() => (step < 5 ? setStep(step + 1) : done())}>
-              {step < 5 ? "Next" : "Create handoff"} <ArrowRight size={14} />
+            <button className="btn ghost compact" type="button" onClick={step > 1 ? () => { setStep(step - 1); setMilestoneWarn(false); } : onCancel}>
+              {step > 1 ? "Back" : "← Repos"}
+            </button>
+            <button className="bq-link" type="button" onClick={() => onComplete({ ...brand, name: brand.name.trim() || "Untitled app" })}>Skip</button>
+            <button className="btn accent" type="button" onClick={next}>
+              {step < 3 ? "Next" : "Create handoff"} <ArrowRight size={14} />
             </button>
           </div>
         </div>
