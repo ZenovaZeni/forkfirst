@@ -1108,6 +1108,122 @@ function mergePlanSectionLines(plan: MergePlan | undefined): string[] {
   ];
 }
 
+function buildStartHereSection(
+  repo: BuildPackRepo | undefined,
+  target: BuildTarget,
+  projectName: string
+): string[] {
+  const agentFile = target === "claude-code" ? "CLAUDE.md" : "AGENTS.md";
+  const builderLabel = buildTargetLabels[target];
+  const repoUrl = repo?.url ?? "<no foundation selected — choose one before building>";
+  const repoFullName = repo?.fullName ?? "<repo>";
+  const folder = projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-product";
+
+  const pastePrompt = [
+    `I downloaded a ForkFirst Builder Handoff for ${projectName}.`,
+    `The handoff Markdown files (00-START-HERE.md, STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, ${agentFile}) are in this folder or attached to this chat.`,
+    `Please read 00-START-HERE.md and ${agentFile} first, then run the Onboarding Protocol — ask me the three setup questions BEFORE running any commands.`,
+    `Once we're aligned, build Phase 0 from BUILD_PLAN.md.`
+  ].join(" ");
+
+  const builderBlocks: Record<string, string[]> = {
+    "claude-code": [
+      `### Claude Code${target === "claude-code" ? " (recommended — this packet was generated for Claude Code)" : ""}`,
+      `1. Install Claude Code: https://claude.com/code`,
+      `2. Open a terminal in the folder where you keep projects (e.g. \`~/Projects\`).`,
+      `3. Run \`claude\` (or open the desktop app).`,
+      `4. Paste the prompt above into the chat. Claude will ask you the three setup questions before doing anything.`
+    ],
+    cursor: [
+      `### Cursor${target === "cursor" ? " (recommended — this packet was generated for Cursor)" : ""}`,
+      `1. Install Cursor: https://cursor.com`,
+      `2. Open Cursor → File → Open Folder → pick this unzipped folder.`,
+      `3. Open the chat with Ctrl/Cmd+L.`,
+      `4. Paste the prompt above. Cursor's agent will ask the three setup questions before running anything.`
+    ],
+    codex: [
+      `### Codex / ChatGPT${target === "codex" ? " (recommended — this packet was generated for Codex)" : ""}`,
+      `1. Open https://chatgpt.com or your Codex client.`,
+      `2. Drag every \`.md\` file from this folder into the chat.`,
+      `3. Paste the prompt above. The model will ask the three setup questions and propose terminal commands you run yourself.`
+    ],
+    replit: [
+      `### Replit${target === "replit" ? " (recommended — this packet was generated for Replit)" : ""}`,
+      `1. Create a new Repl (any template).`,
+      `2. Upload all \`.md\` files from this folder.`,
+      `3. Open Replit AI chat. Paste the prompt above. Replit handles the clone inside the Repl.`
+    ],
+    other: [
+      `### Lovable / v0`,
+      `Best for UI-first iteration. Drag the files in, paste the prompt, but expect to do backend work in a separate builder.`
+    ]
+  };
+
+  const orderedBuilders = target === "claude-code"
+    ? ["claude-code", "cursor", "codex", "replit", "other"]
+    : target === "cursor"
+      ? ["cursor", "claude-code", "codex", "replit", "other"]
+      : target === "codex"
+        ? ["codex", "claude-code", "cursor", "replit", "other"]
+        : target === "replit"
+          ? ["replit", "claude-code", "cursor", "codex", "other"]
+          : ["claude-code", "cursor", "codex", "replit", "other"];
+
+  return [
+    `# 00-START-HERE`,
+    `_What this file is for: the first thing you should open. Tells a non-developer exactly what to do next._`,
+    ``,
+    `## Welcome`,
+    `This packet is your **ForkFirst Builder Handoff** for **${projectName}**.`,
+    `Target AI builder selected: **${builderLabel}**.`,
+    ``,
+    `You do not need to be a developer to use this. Read this one file and follow it.`,
+    ``,
+    `## The 30-second version`,
+    `1. Pick your AI builder below (we recommend ${builderLabel} since this packet was generated for it).`,
+    `2. Copy the **Paste Prompt** below.`,
+    `3. Paste it into your AI builder's chat.`,
+    `4. Answer the **three setup questions** the builder asks you.`,
+    `5. Watch it build.`,
+    ``,
+    `## Paste Prompt (works in any AI builder)`,
+    ``,
+    "```",
+    pastePrompt,
+    "```",
+    ``,
+    `## Builder-specific setup`,
+    ``,
+    ...orderedBuilders.flatMap((key) => [...builderBlocks[key], ``]),
+    `## What the AI builder will ask you (three setup questions)`,
+    ``,
+    `1. **"Are you already in a project folder, or should I create a new one?"** — If unsure, say "create a new one". The AI will propose \`mkdir ${folder} && cd ${folder}\` (or PowerShell equivalent on Windows).`,
+    `2. **"Has the starter repo been cloned yet?"** — Almost always "no". The AI will propose \`git clone ${repoUrl} .\` (clone into the current folder).`,
+    `3. **"Where are the handoff Markdown files?"** — Tell it the path to your unzipped folder, OR say "I dragged them into this chat".`,
+    ``,
+    `After those answers, the AI follows the Onboarding Protocol from ${agentFile} and starts Phase 0 from BUILD_PLAN.md.`,
+    ``,
+    `## If something goes wrong`,
+    ``,
+    `- **"I don't see the files."** → Confirm the absolute path to your unzipped folder, or drag the \`.md\` files into the chat.`,
+    `- **"It started building the wrong product."** → Say: *"Stop. Read PRD.md again and rebuild from scratch."*`,
+    `- **"It stripped the LICENSE file."** → Say: *"Stop. Restore the upstream LICENSE from ${repoFullName} and paste the attribution snippet from REPO_STARTER_NOTES.md into the README."*`,
+    `- **"It's using the wrong shell."** → Tell it: *"I'm on Windows, use PowerShell"* or *"I'm on Mac/Linux, use bash"*.`,
+    `- **"It's asking for paid keys but I just want to try it."** → Say: *"Use demo mode / sample data — don't add paid integrations in v1."*`,
+    ``,
+    `## What's in the rest of this packet`,
+    ``,
+    `- \`STARTER_REPO.md\` — which open-source repo to use as foundation and how to adapt it.`,
+    `- \`PRD.md\` — the product spec (what you're building, for whom, what's out of scope).`,
+    `- \`BUILD_PLAN.md\` — staged phases the AI will execute.`,
+    `- \`REPO_STARTER_NOTES.md\` — architecture, license literacy, attribution snippets, respect checklist.`,
+    `- \`${agentFile}\` — the entrypoint your AI builder reads first.`,
+    ``,
+    `You do not need to open these. The AI builder reads them for you.`,
+    ``
+  ];
+}
+
 function mergePlanForActiveRepo(result: IdeaCheckResult, repo: BuildPackRepo | undefined): MergePlan | undefined {
   if (!result.productIntent) return result.mergePlan;
   const matchingInspection = repo
@@ -1746,16 +1862,20 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     `Generated by ForkFirst.`,
     ...(focusRepo ? [`Focused on: ${focusRepo.fullName}`] : []),
     ``,
-    `How to use this: ForkFirst hands you both a combined Markdown file AND a zip with the same content already split into STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile}. If you got the zip — extract it into the cloned starter repo and use the files as-is. If you only have this combined file — split it at the # H1 headers into those same filenames. Either way, do not duplicate or regenerate files that already exist.`,
+    `**New here? Open \`00-START-HERE.md\` first.** It's the only file you need to read yourself — everything else is for your AI builder.`,
+    ``,
+    `How to use this: ForkFirst hands you both a combined Markdown file AND a zip with the same content already split into 00-START-HERE.md, STARTER_REPO.md, PRD.md, BUILD_PLAN.md, REPO_STARTER_NOTES.md, and ${agentFile}. If you got the zip — extract it into a new folder and follow \`00-START-HERE.md\`. If you only have this combined file — split it at the # H1 headers into those same filenames. Either way, do not duplicate or regenerate files that already exist.`,
     `Treat this packet as the source of truth. Keep the checkboxes, delete sections that stop being true, replace unknowns with evidence as you inspect the repo, and never strip the upstream LICENSE without explicit reason.`,
     ``,
     `## Contents`,
+    `0. [00-START-HERE](#00-start-here) — read this first if you're not a developer. Tells you exactly what to do next.`,
     `1. [STARTER_REPO](#starter_repo) — which repo to clone and how to adapt it.`,
     `2. [PRD](#prd) — what to build, for whom, and what's out of scope.`,
     `3. [BUILD_PLAN](#build_plan) — phases, milestone, demo, verification.`,
     `4. [REPO_STARTER_NOTES](#repo_starter_notes) — architecture, license literacy, attribution, respect checklist.`,
     `5. [${agentFile.replace(/\.md$/i, "").toUpperCase()}](#${agentFile.replace(/\.md$/i, "").toLowerCase()}) — entrypoint instructions for the AI builder.`,
     ``,
+    ...buildStartHereSection(bestRepo, target, projectName),
     `# STARTER_REPO`,
     `_What this file is for: the selected foundation, the clone commands, and the consolidated keep/replace/add/remove/inspect decisions for adapting it into your product._`,
     ``,
@@ -1946,6 +2066,17 @@ export function buildProjectBuildPack(result: IdeaCheckResult, target: BuildTarg
     ``,
     `## Builder Instructions`,
     targetInstructions(target),
+    ``,
+    `## Onboarding Protocol (do this FIRST, before any other action)`,
+    `Before running any shell command, editing any file, cloning anything, or starting Phase 0, ask the user these three setup questions and wait for their answers:`,
+    ``,
+    `1. **Are you already inside a project folder, or should I create a new one** (e.g. \`mkdir ${projectName} && cd ${projectName}\` on bash, or \`New-Item -ItemType Directory ${projectName}; Set-Location ${projectName}\` on PowerShell)?`,
+    `2. **Has the starter repo been cloned yet?** If not, the clone target is \`${bestRepo?.url ?? "<no foundation selected>"}\`.`,
+    `3. **Where are the handoff Markdown files** (this packet) — already at your repo root, in a separate folder you can name, or attached to this chat?`,
+    ``,
+    `Then, based on their answers, propose the EXACT shell commands to run, using THEIR shell (bash on macOS/Linux, PowerShell on Windows). Wait for explicit confirmation before executing destructive or stateful commands (\`git clone\`, \`mkdir\`, \`rm\`, \`cd\` into an unfamiliar path).`,
+    ``,
+    `This protocol exists because three failure modes destroy first-time non-developer users: (a) cloning into the wrong directory, (b) polluting an existing project with the starter repo, and (c) running shell commands in the wrong shell. Honor it.`,
     ``,
     `## Operating Rules`,
     ...checkItems([

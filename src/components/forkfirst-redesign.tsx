@@ -328,11 +328,12 @@ function isLegacyExamplePrompt(value: string) {
   return LEGACY_EXAMPLE_PROMPTS.has(value.trim());
 }
 
-const HANDOFF_DOC_TABS = ["STARTER_REPO.md", "PRD.md", "BUILD_PLAN.md", "REPO_STARTER_NOTES.md", "AGENTS.md", "CLAUDE.md"] as const;
+const HANDOFF_DOC_TABS = ["00-START-HERE.md", "STARTER_REPO.md", "PRD.md", "BUILD_PLAN.md", "REPO_STARTER_NOTES.md", "AGENTS.md", "CLAUDE.md"] as const;
 type HandoffDocTab = (typeof HANDOFF_DOC_TABS)[number];
 type HandoffDocuments = Record<HandoffDocTab, string>;
 
 const HANDOFF_DOC_TAB_LABELS: Record<HandoffDocTab, string> = {
+  "00-START-HERE.md": "START.md",
   "STARTER_REPO.md": "STARTER.md",
   "PRD.md": "PRD.md",
   "BUILD_PLAN.md": "PLAN.md",
@@ -356,6 +357,7 @@ const BUILD_TARGETS: Array<{ id: BuildTarget; label: string; sub: string; logo?:
 const BUILD_PACK_SCHEMA_VERSION = 2;
 
 const READY_FILE_DEFS: Array<{ kind: string; file: HandoffDocTab }> = [
+  { kind: "START", file: "00-START-HERE.md" },
   { kind: "STR", file: "STARTER_REPO.md" },
   { kind: "PRD", file: "PRD.md" },
   { kind: "AGT", file: "AGENTS.md" },
@@ -376,7 +378,7 @@ function BuilderLogo({ target, className = "" }: { target: (typeof BUILD_TARGETS
 }
 
 function markdownSection(markdown: string, heading: string) {
-  const headings = Array.from(markdown.matchAll(/^# (STARTER_REPO|PRD|BUILD_PLAN|REPO_STARTER_NOTES|AGENTS|CLAUDE|AI_BUILDER_NOTES)\s*$/gm));
+  const headings = Array.from(markdown.matchAll(/^# (00-START-HERE|STARTER_REPO|PRD|BUILD_PLAN|REPO_STARTER_NOTES|AGENTS|CLAUDE|AI_BUILDER_NOTES)\s*$/gm));
   const start = headings.find((match) => match[0].trim() === `# ${heading}`);
   if (!start || start.index === undefined) return "";
   const next = headings.find((match) => (match.index ?? 0) > start.index);
@@ -384,7 +386,7 @@ function markdownSection(markdown: string, heading: string) {
 }
 
 function handoffIntro(markdown: string) {
-  const firstSection = markdown.search(/^# STARTER_REPO\s*$/m);
+  const firstSection = markdown.search(/^# (00-START-HERE|STARTER_REPO)\s*$/m);
   return firstSection >= 0 ? markdown.slice(0, firstSection).trim() : "# ForkFirst Builder Handoff";
 }
 
@@ -409,6 +411,7 @@ function createFallbackAgentDoc(markdown: string, file: "AGENTS.md" | "CLAUDE.md
 
 function createHandoffDocuments(markdown: string): HandoffDocuments {
   return {
+    "00-START-HERE.md": markdownSection(markdown, "00-START-HERE") || "# 00-START-HERE\n\nRun an idea check first.",
     "STARTER_REPO.md": markdownSection(markdown, "STARTER_REPO") || "# STARTER_REPO\n\nRun an idea check first.",
     "PRD.md": markdownSection(markdown, "PRD") || "# PRD\n\nRun an idea check first.",
     "BUILD_PLAN.md": markdownSection(markdown, "BUILD_PLAN") || "# BUILD_PLAN\n\nRun an idea check first.",
@@ -1497,6 +1500,7 @@ function TopNav({
       </button>
       <nav className="nav-links">
           <a href="#how">How it works</a>
+          <a href="#after-download">After download</a>
           <a href="#why">Why use it</a>
           <a href="#builders">Builders</a>
           <a href="#trust">Your keys, your data</a>
@@ -1773,6 +1777,108 @@ function Landing({
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="section" id="after-download">
+        <div className="section-head">
+          <span className="eyebrow">After you download</span>
+          <h2>From zip to <span className="accent-word">first line of code</span> in five minutes.</h2>
+          <p>
+            You do not need to be a developer. Open one file, paste one prompt, answer three questions.
+            Your AI builder handles the rest — the clone, the brand swap, the first phase.
+          </p>
+        </div>
+        <ol className="zip-storyboard" aria-label="After-download flow">
+          <li className="zip-frame">
+            <div className="zip-frame-art" aria-hidden="true">
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="20" y="12" width="56" height="60" rx="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                <path d="M76 12 L76 28 L92 28" fill="none" stroke="currentColor" strokeWidth="2" />
+                <path d="M76 12 L92 28" fill="none" stroke="currentColor" strokeWidth="2" />
+                <text x="32" y="50" fontFamily="ui-monospace, monospace" fontSize="10" fill="currentColor">.zip</text>
+                <path d="M48 62 L60 70 L72 62" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="60" y1="56" x2="60" y2="70" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="zip-frame-step">Step 1</div>
+            <strong>Download the zip</strong>
+            <p>One file. Six Markdown documents inside, plus a combined version. No installers.</p>
+          </li>
+          <li className="zip-frame">
+            <div className="zip-frame-art" aria-hidden="true">
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 24 L14 64 Q14 68 18 68 L98 68 Q102 68 102 64 L102 28 Q102 24 98 24 L52 24 L46 18 L18 18 Q14 18 14 22 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                <rect x="26" y="32" width="64" height="28" rx="2" fill="var(--accent-soft, #e7ecff)" stroke="currentColor" strokeWidth="1.5" />
+                <text x="32" y="50" fontFamily="ui-monospace, monospace" fontSize="9" fontWeight="700" fill="currentColor">00-START-HERE.md</text>
+              </svg>
+            </div>
+            <div className="zip-frame-step">Step 2</div>
+            <strong>Open 00-START-HERE</strong>
+            <p>The only file you read yourself. Tells you the next exact move for your AI builder of choice.</p>
+          </li>
+          <li className="zip-frame">
+            <div className="zip-frame-art" aria-hidden="true">
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="14" y="22" width="28" height="36" rx="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                <rect x="46" y="22" width="28" height="36" rx="6" fill="var(--accent-soft, #e7ecff)" stroke="currentColor" strokeWidth="2" />
+                <rect x="78" y="22" width="28" height="36" rx="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                <text x="22" y="44" fontFamily="ui-monospace, monospace" fontSize="9" fill="currentColor">CC</text>
+                <text x="54" y="44" fontFamily="ui-monospace, monospace" fontSize="9" fontWeight="700" fill="currentColor">CL</text>
+                <text x="86" y="44" fontFamily="ui-monospace, monospace" fontSize="9" fill="currentColor">CX</text>
+              </svg>
+            </div>
+            <div className="zip-frame-step">Step 3</div>
+            <strong>Pick your AI builder</strong>
+            <p>Claude Code, Cursor, Codex, Replit — each has its own copy-paste setup block.</p>
+          </li>
+          <li className="zip-frame">
+            <div className="zip-frame-art" aria-hidden="true">
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 14 L106 14 Q110 14 110 18 L110 52 Q110 56 106 56 L46 56 L34 66 L34 56 L18 56 Q14 56 14 52 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                <line x1="24" y1="26" x2="98" y2="26" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="24" y1="34" x2="86" y2="34" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="24" y1="42" x2="74" y2="42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="zip-frame-step">Step 4</div>
+            <strong>Paste one prompt</strong>
+            <p>&ldquo;Read 00-START-HERE.md and walk me through what to do next.&rdquo; That&rsquo;s the whole prompt.</p>
+          </li>
+          <li className="zip-frame">
+            <div className="zip-frame-art" aria-hidden="true">
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="14" y="14" width="92" height="14" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
+                <rect x="14" y="33" width="92" height="14" rx="4" fill="var(--accent-soft, #e7ecff)" stroke="currentColor" strokeWidth="2" />
+                <rect x="14" y="52" width="92" height="14" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
+                <text x="22" y="24" fontFamily="ui-monospace, monospace" fontSize="9" fill="currentColor">? new folder or existing</text>
+                <text x="22" y="43" fontFamily="ui-monospace, monospace" fontSize="9" fontWeight="700" fill="currentColor">? cloned yet</text>
+                <text x="22" y="62" fontFamily="ui-monospace, monospace" fontSize="9" fill="currentColor">? where are the files</text>
+              </svg>
+            </div>
+            <div className="zip-frame-step">Step 5</div>
+            <strong>Answer 3 questions</strong>
+            <p>Your AI asks three setup questions before touching anything. No surprise commands, no wrong folder.</p>
+          </li>
+          <li className="zip-frame">
+            <div className="zip-frame-art" aria-hidden="true">
+              <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="14" y="14" width="92" height="56" rx="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                <line x1="14" y1="26" x2="106" y2="26" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="22" cy="20" r="2" fill="currentColor" />
+                <circle cx="30" cy="20" r="2" fill="currentColor" />
+                <circle cx="38" cy="20" r="2" fill="currentColor" />
+                <line x1="22" y1="36" x2="50" y2="36" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="56" y1="36" x2="86" y2="36" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="28" y1="44" x2="74" y2="44" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="22" y1="52" x2="62" y2="52" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <line x1="28" y1="60" x2="90" y2="60" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="zip-frame-step">Step 6</div>
+            <strong>It builds</strong>
+            <p>Clone, brand swap, first phase. License credited. You watch the diff in real time.</p>
+          </li>
+        </ol>
       </section>
 
       <section className="section foundation-types-section" id="foundation-types">

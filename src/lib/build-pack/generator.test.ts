@@ -1039,4 +1039,40 @@ describe("build pack generator", () => {
     const occurrences = (block.match(new RegExp(`^- ${milestone.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "gm")) ?? []).length;
     expect(occurrences).toBe(0);
   });
+
+  test("emits a 00-START-HERE section with the paste prompt and per-builder setup", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "claude-code", undefined, { productName: "TrackPath" });
+    expect(markdown).toContain("# 00-START-HERE");
+    expect(markdown).toMatch(/## Paste Prompt/);
+    expect(markdown).toMatch(/I downloaded a ForkFirst Builder Handoff for TrackPath\./);
+    expect(markdown).toMatch(/### Claude Code \(recommended/);
+    expect(markdown).toMatch(/### Cursor/);
+    expect(markdown).toMatch(/### Codex \/ ChatGPT/);
+    expect(markdown).toMatch(/### Replit/);
+    expect(markdown).toMatch(/three setup questions/i);
+  });
+
+  test("Codex target swaps recommended builder + agent file in START_HERE", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "codex", undefined, { productName: "TrackPath" });
+    expect(markdown).toMatch(/### Codex \/ ChatGPT \(recommended/);
+    expect(markdown).toMatch(/Please read 00-START-HERE\.md and AGENTS\.md/);
+  });
+
+  test("Operating Rules include the three-question Onboarding Protocol BEFORE the rules list", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "claude-code", undefined, { productName: "TrackPath" });
+    expect(markdown).toMatch(/## Onboarding Protocol \(do this FIRST/);
+    expect(markdown).toMatch(/Are you already inside a project folder/);
+    expect(markdown).toMatch(/Has the starter repo been cloned/);
+    expect(markdown).toMatch(/Where are the handoff Markdown files/);
+    // Onboarding must appear before Operating Rules
+    const onboardingIdx = markdown.indexOf("## Onboarding Protocol");
+    const operatingIdx = markdown.indexOf("## Operating Rules");
+    expect(onboardingIdx).toBeGreaterThan(0);
+    expect(operatingIdx).toBeGreaterThan(onboardingIdx);
+  });
+
+  test("TOC lists 00-START-HERE first", () => {
+    const markdown = buildProjectBuildPack(makeResult({}), "claude-code");
+    expect(markdown).toMatch(/## Contents\n0\. \[00-START-HERE\]/);
+  });
 });
