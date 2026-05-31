@@ -181,7 +181,7 @@ export function buildAnswerSections(prompt: string, repos: ClassifiedRepo[]): An
   const top = repos.slice(0, 3);
   if (top.length === 0) {
     return {
-      intro: `I could not find a strong GitHub match for "${prompt}". Try making the idea more specific or add a GitHub token for better search coverage.`,
+      intro: `No close match for "${prompt}" — try rephrasing, or add a GitHub token to search all of GitHub for your exact idea.`,
       picks: []
     };
   }

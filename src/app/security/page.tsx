@@ -95,7 +95,7 @@ export default function SecurityPage() {
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Demo mode and optional keys</h2>
         <ul>
           <li><Highlight>Demo mode works without keys</Highlight>, so users can try ForkFirst before pasting secrets.</li>
-          <li>A <Highlight>GitHub token is optional</Highlight> and improves repo search limits and metadata.</li>
+          <li>A <Highlight>GitHub token is optional</Highlight>. Without one, ForkFirst shows curated starter repos. With one, it searches all of GitHub live for your exact idea.</li>
           <li>An <Highlight>AI provider key is optional</Highlight> and improves summaries, verdicts, follow-up chat, and handoffs.</li>
           <li>Keys are <Highlight>session-only by default</Highlight>; persistent local storage is opt-in.</li>
           <li>Use <Highlight>dedicated, revocable keys with usage limits</Highlight>.</li>

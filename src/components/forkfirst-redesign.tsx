@@ -6147,7 +6147,7 @@ export function ForkFirstRedesignApp() {
       });
       recordUsage(createUsageEntry({
         provider: "custom",
-        model: keys.githubToken ? "GitHub Search API with token" : "GitHub Search API unauthenticated",
+        model: keys.githubToken ? "GitHub Search API with token" : "Curated starter repo set (demo mode)",
         action: "idea-check",
         inputText: submittedPrompt,
         outputText: JSON.stringify({ queries: data.queries, repos: data.repos.map((repo) => repo.fullName), warnings: data.warnings })

@@ -10,10 +10,12 @@ import { classifyRepositories } from "@/lib/scoring/scoring";
 vi.mock("@/lib/analysis/analyst", () => ({ analyzeIdea: vi.fn() }));
 vi.mock("@/lib/analysis/search-recovery", () => ({ buildSearchRecovery: vi.fn(() => undefined) }));
 vi.mock("@/lib/github/provider", () => ({ searchGithubRepositories: vi.fn() }));
+vi.mock("@/lib/github/demo-search", () => ({ searchCuratedRepos: vi.fn(() => ({ repos: [], matched: false })) }));
 vi.mock("./enrich-candidates", () => ({ enrichTopCandidateReadmes: vi.fn() }));
 vi.mock("../github/structure", () => ({ enrichRepositoriesWithStructure: vi.fn(async (repos) => repos) }));
 vi.mock("@/lib/scoring/scoring", () => ({ classifyRepositories: vi.fn() }));
 vi.mock("@/lib/db/research-cases", () => ({ saveIdeaCheck: vi.fn() }));
+vi.mock("@/lib/security/server-keys", () => ({ optionalServerKey: vi.fn(() => null) }));
 
 function repo(): ClassifiedRepo {
   return {

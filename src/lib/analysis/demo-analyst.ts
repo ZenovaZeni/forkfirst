@@ -26,7 +26,7 @@ export function analyzeWithDemo(prompt: string, repos: ClassifiedRepo[]): Analys
 
   const summary =
     repos.length === 0
-      ? "GitHub did not return strong candidates. Try a broader description or add a GitHub token for more reliable search."
+      ? "No close match in the curated starter set. Add a GitHub token to search all of GitHub for your specific idea."
       : `${labelFor(verdict)}: ${top.fullName} is the strongest signal so far. The result is based on public GitHub metadata and deterministic demo analysis for "${prompt.slice(0, 90)}".`;
 
   return {
