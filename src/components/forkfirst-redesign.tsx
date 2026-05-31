@@ -1679,9 +1679,9 @@ function Landing({
           <span className="muted-word">start from zero.</span>
         </h1>
         <p className="hero-sub">
-          Talk through your app idea like you would with ChatGPT. ForkFirst finds real GitHub projects that can become
-          your foundation, then creates the repo, prompt, and handoff files your AI builder needs to clone, customize,
-          and build your version faster.
+          Talk through your app idea like you would with ChatGPT. ForkFirst finds a working open-source foundation that
+          matches what you want to build, then creates the repo, prompt, and handoff files your AI builder needs to
+          clone, customize, and build your version faster.
         </p>
         <div className="hero-cta-row">
           <button className="btn accent xl" type="button" onClick={() => startApp("hero")}>
@@ -1766,7 +1766,7 @@ function Landing({
         <div className="flow-lineup" aria-label="ForkFirst flow">
           {[
             ["01", "Chat through the idea", "Talk to ForkFirst like ChatGPT so it understands what you want to build."],
-            ["02", "Find what already exists", "ForkFirst searches GitHub for real projects most people would never know to search for."],
+            ["02", "Find what already exists", "ForkFirst finds real open-source projects most people would never know to look for."],
             ["03", "Pick a working foundation", "See what can become your starting point, what is only a reference, and what to avoid."],
             ["04", "Give your AI direction", "Get the repo, prompt, and files your builder needs to clone, customize, and build your version."]
           ].map(([step, title, body]) => (
@@ -2983,7 +2983,7 @@ function LoadingView({ prompt }: { prompt: string }) {
         <div className="v-eyebrow">Checking your idea</div>
         <h3>Looking at what&apos;s already out there...</h3>
         <div className="steps-loading">
-          {["Reading your idea", "Searching public GitHub", "Comparing repo signals", "Preparing your recommendation"].map((step, index) => (
+          {["Reading your idea", "Finding the right foundations", "Comparing repo signals", "Preparing your recommendation"].map((step, index) => (
             <div key={step} className={`ls ${index < 2 ? "done" : ""}`}>
               <span className="ind" />
               <span>{step}</span>

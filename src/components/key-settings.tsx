@@ -119,7 +119,7 @@ export function KeySettings({
         <section className="key-panel">
           <div className="key-panel-heading">
             <strong>GitHub access</strong>
-            <span>Optional. Improves GitHub search limits and repo metadata. Use a dedicated token with the lowest permissions possible. Public read-only access is enough. Do not use private repo, write, admin, or organization permissions unless you understand the risk.</span>
+            <span>Optional. Without one, ForkFirst shows curated starter repos matched to your idea. With one, it searches all of GitHub live. Use a dedicated token with the lowest permissions possible — public read-only access is enough. Do not use private repo, write, admin, or organization permissions unless you understand the risk.</span>
           </div>
           <div className="key-grid single">
             <label>
