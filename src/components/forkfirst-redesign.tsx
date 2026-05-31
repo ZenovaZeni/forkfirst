@@ -4182,7 +4182,21 @@ function RepoDrawer({
   return (
     <>
       <div className="overlay" onClick={onClose} />
-      <aside className="drawer" {...slideDismiss}>
+      <aside
+        ref={(el) => {
+          if (!el) return;
+          // CSS animations and transitions freeze in background/non-focused tabs
+          // (Chromium: animation currentTime stays 0; transition similarly throttled).
+          // Skip the entry animation by disabling transitions, snapping to the open
+          // position, then re-enabling transitions so the swipe-dismiss gesture works.
+          el.classList.add("is-open");
+          el.style.transition = "none";
+          void el.offsetHeight; // flush
+          el.style.transition = "";
+        }}
+        className="drawer"
+        {...slideDismiss}
+      >
         <div className="mobile-swipe-handle" aria-hidden="true" />
         <div className="drawer-head" {...swipeDown}>
           <button className="close" type="button" onClick={onClose} aria-label="Close">
@@ -5273,12 +5287,16 @@ function TrendingRepoDrawer({
   const swipeDown = useSwipeDownDismiss(onClose);
   const slideDismiss = useSlideDismiss(onClose);
   if (!repo) return null;
-  const alsoInLabels = (repo.matchedCategoryLabels ?? []).filter((label) => label !== repo.sourceCategoryLabel);
+  const alsoInLabels = (repo.matchedCategoryLabels ?? []).filter(label => label !== repo.sourceCategoryLabel);
   const setupFit = inferRepoSetupFit(repo);
   return (
     <>
       <div className="overlay" onClick={onClose} />
-      <aside className="drawer trending-drawer" {...slideDismiss}>
+      <aside
+        ref={(el) => { if (el) { void el.offsetHeight; el.classList.add("is-open"); } }}
+        className="drawer trending-drawer"
+        {...slideDismiss}
+      >
         <div className="mobile-swipe-handle" aria-hidden="true" />
         <div className="drawer-head" {...swipeDown}>
           <button className="close" type="button" onClick={onClose} aria-label="Close trending repo details">
@@ -6329,7 +6347,7 @@ export function ForkFirstRedesignApp() {
       : screen === "settings" ? "Settings"
       : screen === "trending" ? "Trending"
       : screen === "packs" ? "Prompt Packs"
-      : "GitHub idea validator";
+      : buildPackTitle(result, brand, activeBuildPack);
 
   if (screen === "landing") {
     return (
