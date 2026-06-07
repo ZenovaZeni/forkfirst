@@ -33,6 +33,9 @@ The root `public/manifest.json` points at the icons in `brand/favicon/`:
 - `icon-192.png`
 - `icon-512.png`
 - `icon-maskable-512.png`
+- `icon-192-android-v3.png`
+- `icon-512-android-v3.png`
+- `icon-maskable-512-android-v3.png`
 
 The PWA background and theme color are set to the app paper surface so install and splash surfaces match the default landing screen.
 

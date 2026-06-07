@@ -1,6 +1,7 @@
 {
   "name": "ForkFirst",
   "short_name": "ForkFirst",
+  "id": "/",
   "description": "Chat through your app idea, find a working GitHub foundation, and give your AI builder the repo, prompt, and files it needs.",
   "start_url": "/",
   "scope": "/",
@@ -8,8 +9,8 @@
   "background_color": "#F4F0E6",
   "theme_color": "#F4F0E6",
   "icons": [
-    { "src": "/brand/favicon/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/brand/favicon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/brand/favicon/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/brand/favicon/icon-192-android-v3.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/favicon/icon-512-android-v3.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/favicon/icon-maskable-512-android-v3.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
