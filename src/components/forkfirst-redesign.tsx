@@ -13,6 +13,7 @@ import {
   Download,
   ExternalLink,
   GitFork,
+  MessageSquare,
   Mic,
   Moon,
   MoreHorizontal,
@@ -90,7 +91,7 @@ type Screen = "landing" | "app" | "loading" | "results" | "more" | "branding" | 
 type GoOptions = { scroll?: "top" | "preserve" };
 type Theme = "light" | "dark";
 type ChatTurn = { role: "user" | "assistant"; content: string; ui?: ChatUiAction[]; result?: IdeaCheckResult; intent?: ChatIntent };
-type SettingsTab = "appearance" | "keys" | "usage" | "backup" | "install";
+type SettingsTab = "appearance" | "keys" | "usage" | "backup" | "install" | "feedback";
 const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
@@ -100,6 +101,7 @@ const REPOSITORY_URL = process.env.NEXT_PUBLIC_REPOSITORY_URL ?? "";
 const SECURITY_ADVISORY_URL = process.env.NEXT_PUBLIC_SECURITY_ADVISORY_URL ?? "";
 const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "";
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
+const FEEDBACK_EMAIL = process.env.NEXT_PUBLIC_FEEDBACK_EMAIL || SUPPORT_EMAIL || "feedback@forkfirst.dev";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
 
@@ -216,6 +218,53 @@ function themeFromStorage(value: string | null): Theme {
 
 function themeToStorage(value: Theme) {
   return value === "dark" ? "ink" : "paper";
+}
+
+type FeedbackKind = "general" | "bug" | "bad-match";
+
+function currentFeedbackPage() {
+  if (typeof window === "undefined") return "https://forkfirst.dev";
+  return window.location.href.replace("forkfirst.vercel.app", "forkfirst.dev");
+}
+
+function buildFeedbackMailto({
+  kind,
+  prompt,
+  repo,
+  result
+}: {
+  kind: FeedbackKind;
+  prompt?: string;
+  repo?: ClassifiedRepo | null;
+  result?: IdeaCheckResult | null;
+}) {
+  const subject =
+    kind === "bad-match"
+      ? "ForkFirst feedback: bad repo match"
+      : kind === "bug"
+        ? "ForkFirst bug report"
+        : "ForkFirst feedback";
+  const lines = [
+    "Please describe what happened:",
+    "",
+    "What did you expect instead?",
+    "",
+    "Device/browser:",
+    "",
+    "Page:",
+    currentFeedbackPage(),
+    "",
+    "Prompt or search idea:",
+    prompt || "(paste only if you are comfortable sharing it)",
+    "",
+    repo ? `Repo/result: ${repo.fullName} (${repo.url})` : "Repo/result: (if this is about a specific repo, paste it here)",
+    repo ? `Fit score shown: ${repo.score.total}%` : "",
+    result ? `Result mode: ${result.mode}; verdict: ${result.verdictLabel}; repos shown: ${result.repos.length}` : "",
+    "",
+    "Please do not include API keys, tokens, passwords, or private customer data."
+  ].filter(Boolean);
+
+  return `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 function initialTheme(): Theme {
@@ -1559,9 +1608,9 @@ function AboutModal({ onClose }: { onClose: () => void }) {
           ForkFirst is not about cloning apps. It is about starting from a working foundation, then rebranding,
           redesigning, refocusing, and building it into your own product.
         </p>
-        {SUPPORT_EMAIL ? (
+        {FEEDBACK_EMAIL ? (
           <p className="about-note">
-            For support, contact <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+            For feedback, contact <a href={buildFeedbackMailto({ kind: "general" })}>{FEEDBACK_EMAIL}</a>.
           </p>
         ) : null}
         <div className="about-actions">
@@ -2065,13 +2114,18 @@ function Landing({
               If it saves you time, tokens, or helps you avoid starting from scratch, stars, feedback, issues, and
               shares help the project improve.
             </p>
-            <p className="support-note">Optional public support links can be added through environment settings.</p>
+            <p className="support-note">Feedback opens a prefilled email draft. Please do not include API keys or private data.</p>
           </div>
-          {SUPPORT_URL ? (
-            <a className="btn ghost support-button" href={SUPPORT_URL} target="_blank" rel="noreferrer">
-              Support development <ExternalLink size={14} />
+          <div className="support-actions">
+            <a className="btn ghost support-button" href={buildFeedbackMailto({ kind: "general" })}>
+              Feedback <MessageSquare size={14} />
             </a>
-          ) : null}
+            {SUPPORT_URL ? (
+              <a className="btn ghost support-button" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+                Support development <ExternalLink size={14} />
+              </a>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -2101,7 +2155,7 @@ function Landing({
             <button type="button" onClick={() => setShowAbout(true)}>About</button>
             {REPOSITORY_URL ? <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">GitHub</a> : null}
             {SUPPORT_URL ? <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a> : null}
-            {SUPPORT_EMAIL ? <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a> : null}
+            <a href={buildFeedbackMailto({ kind: "general" })}>Feedback</a>
           </div>
           <div className="footer-link-group">
             <a href="/security">Security</a>
@@ -3028,6 +3082,7 @@ function FeaturedRepo({
   idea,
   saved,
   cautious = false,
+  feedbackHref,
   onOpen,
   onSave,
   onUse
@@ -3036,6 +3091,7 @@ function FeaturedRepo({
   idea: string;
   saved: boolean;
   cautious?: boolean;
+  feedbackHref?: string;
   onOpen: (repo: ClassifiedRepo) => void;
   onSave: (repo: ClassifiedRepo) => void;
   onUse: (repo: ClassifiedRepo) => void;
@@ -3143,6 +3199,11 @@ function FeaturedRepo({
               {safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) ? (
                 <a role="menuitem" href={safeProjectSiteUrl(repo.homepage, { repoUrl: repo.url, fullName: repo.fullName }) ?? "#"} target="_blank" rel="noreferrer">
                   Open project site
+                </a>
+              ) : null}
+              {feedbackHref ? (
+                <a role="menuitem" href={feedbackHref} onClick={() => setMenuOpen(false)}>
+                  Report bad match
                 </a>
               ) : null}
             </div>
@@ -3404,6 +3465,7 @@ function ChatResults({
       : "I did not find a strong repo yet. Try a more specific product shape or name a repo you expected to see.";
   const chatTailRef = useRef<HTMLDivElement | null>(null);
   const previousFollowUpCountRef = useRef(followUps.length);
+  const resultFeedbackHref = buildFeedbackMailto({ kind: "bad-match", prompt, result });
 
   useEffect(() => {
     const countGrew = followUps.length > previousFollowUpCountRef.current;
@@ -3469,6 +3531,7 @@ function ChatResults({
             idea={prompt}
             saved={isSavedRepo(best, savedRepos)}
             cautious={isWeakSearch}
+            feedbackHref={buildFeedbackMailto({ kind: "bad-match", prompt, repo: best, result })}
             onOpen={onOpenRepo}
             onSave={onSaveRepo}
             onUse={(repo) => {
@@ -3490,6 +3553,15 @@ function ChatResults({
             ))}
           </>
         ) : null}
+        <div className="feedback-inline">
+          <div>
+            <strong>Bad match or missing repo?</strong>
+            <span>Send a quick report so the search/ranking can be improved.</span>
+          </div>
+          <a className="btn ghost" href={resultFeedbackHref}>
+            <MessageSquare size={14} /> Report result
+          </a>
+        </div>
         {isWeakSearch ? (
           <div className="recovery-card">
             <div>
@@ -4303,6 +4375,7 @@ function RepoDrawer({
           <button className="btn accent" type="button" onClick={() => onUse(repo)}>Use</button>
           <RepoSiteLink url={repo.homepage} repoUrl={repo.url} fullName={repo.fullName} />
           <a className="btn ghost" href={repo.url} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open on GitHub</a>
+          <a className="btn ghost" href={buildFeedbackMailto({ kind: "bad-match", prompt: idea, repo })}><MessageSquare size={14} /> Report</a>
           <button className="btn ghost" type="button" onClick={() => onSave(repo)}>{saved ? <Check size={14} /> : <Bookmark size={14} />} {saved ? "Saved" : "Save"}</button>
         </div>
       </aside>
@@ -4993,7 +5066,8 @@ function SettingsScreen({
     { id: "keys", label: "Keys & privacy", description: "BYOK providers and local storage.", meta: keyStorageMeta },
     { id: "usage", label: "Usage", description: "API calls, tokens, and cost estimates.", meta: `${usageSummary.entries.toLocaleString()} calls` },
     { id: "backup", label: "Backup", description: "Move local data between browsers.", meta: `${backupItemCount.toLocaleString()} items` },
-    { id: "install", label: "Install", description: "Optional device shortcut.", meta: installStatus === "installed" ? "Installed" : "Optional" }
+    { id: "install", label: "Install", description: "Optional device shortcut.", meta: installStatus === "installed" ? "Installed" : "Optional" },
+    { id: "feedback", label: "Feedback", description: "Report bugs and bad matches.", meta: FEEDBACK_EMAIL }
   ];
 
   useEffect(() => {
@@ -5150,6 +5224,34 @@ function SettingsScreen({
               </button>
               {installMessage ? <p className="help install-message">{installMessage}</p> : null}
             </section>
+          ) : null}
+          {settingsTab === "feedback" ? (
+            <div className="feedback-settings-stack">
+              <section className="settings-utility" aria-label="Send product feedback">
+                <div>
+                  <span className="eyebrow">Feedback</span>
+                  <strong>Send feedback or a feature idea</strong>
+                  <p>
+                    Opens a prefilled email to {FEEDBACK_EMAIL}. This is best for confusing results, UX issues, missing repos, or anything that would make ForkFirst more useful.
+                  </p>
+                </div>
+                <a className="btn ghost" href={buildFeedbackMailto({ kind: "general" })}>
+                  <MessageSquare size={14} /> Feedback
+                </a>
+              </section>
+              <section className="settings-utility" aria-label="Report a bug">
+                <div>
+                  <span className="eyebrow">Bug report</span>
+                  <strong>Something broke or looked wrong</strong>
+                  <p>
+                    Include what you tried, what happened, and your browser/device. Do not include GitHub tokens, AI keys, passwords, or private customer data.
+                  </p>
+                </div>
+                <a className="btn ghost" href={buildFeedbackMailto({ kind: "bug" })}>
+                  <AlertTriangle size={14} /> Report bug
+                </a>
+              </section>
+            </div>
           ) : null}
         </div>
       </div>

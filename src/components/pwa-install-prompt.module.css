@@ -10,7 +10,7 @@
   right: 18px;
   bottom: max(18px, env(safe-area-inset-bottom));
   left: auto;
-  z-index: 40;
+  z-index: 70;
   width: auto;
   max-width: min(360px, calc(100vw - 36px));
   display: flex;

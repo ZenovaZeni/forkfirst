@@ -100,5 +100,9 @@ Expected early usage:
 - Prefer browser BYOK over shipping maintainer-owned production keys.
 - Confirm no screenshots or docs expose private tokens.
 - Run `npm test`, `npm run lint`, `npm run typecheck`, and `npm run build` before tagging a release.
+- Send beta users to `https://forkfirst.dev`, not the legacy Vercel URL.
+- Tell users demo mode works without keys, live GitHub search is better with a read-only GitHub token, and AI summaries/handoffs are better with their own AI key.
+- Tell users to use limited-scope GitHub tokens and AI keys with spend limits. They should never paste powerful production keys.
 - Support and contact email: configure only through `NEXT_PUBLIC_SUPPORT_EMAIL` if the project has a public support inbox.
+- Feedback email: configure `NEXT_PUBLIC_FEEDBACK_EMAIL` only after `feedback@forkfirst.dev` forwards to a monitored inbox. With Cloudflare Email Routing, create the custom address, forward it to the official mailbox, and add a Gmail label/filter for ForkFirst feedback.
 - Support page: configure only through `NEXT_PUBLIC_SUPPORT_URL` if the project has a public support page.

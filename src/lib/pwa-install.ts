@@ -6,6 +6,7 @@ export interface BeforeInstallPromptEvent extends Event {
 export const INSTALL_DISMISSED_KEY = "forkfirst:install-dismissed";
 export const LEGACY_INSTALL_DISMISSED_KEY = "open-repo:install-dismissed";
 export const INSTALL_EVENT_NAME = "forkfirst:pwa-install-ready";
+const INSTALL_SNOOZE_MS = 24 * 60 * 60 * 1000;
 
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 
@@ -21,15 +22,29 @@ export function isIOSDevice(): boolean {
 
 export function wasInstallDismissed(): boolean {
   if (typeof window === "undefined") return false;
-  return Boolean(
+  const value =
     window.localStorage.getItem(INSTALL_DISMISSED_KEY) ??
-    window.localStorage.getItem(LEGACY_INSTALL_DISMISSED_KEY)
-  );
+    window.localStorage.getItem(LEGACY_INSTALL_DISMISSED_KEY);
+
+  if (!value) return false;
+
+  const dismissedAt = Number(value);
+  if (!Number.isFinite(dismissedAt)) {
+    restoreInstallPrompt();
+    return false;
+  }
+
+  if (Date.now() - dismissedAt > INSTALL_SNOOZE_MS) {
+    restoreInstallPrompt();
+    return false;
+  }
+
+  return true;
 }
 
 export function dismissInstallPrompt(): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+  window.localStorage.setItem(INSTALL_DISMISSED_KEY, String(Date.now()));
 }
 
 export function restoreInstallPrompt(): void {

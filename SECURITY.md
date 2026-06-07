@@ -51,7 +51,7 @@ If you find a vulnerability, **do not** open a public issue.
 - Open a private security advisory in this GitHub repo, **or**
 - Use the public project's official support or security contact.
 
-Do not post working secrets, tokens, or exploit details in public issues or pull requests.
+Product feedback can go through `feedback@forkfirst.dev`, but do not send working secrets, tokens, or exploit details through normal feedback email, public issues, or pull requests.
 
 ## Disclaimer
 

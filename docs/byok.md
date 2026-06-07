@@ -67,4 +67,6 @@ Before launch, check:
 
 ForkFirst is free and open-source. If it saves time or tokens, users can support the project by sharing feedback, issues, and improvements.
 
-For support, feedback, or security-related questions, use the official project page or repository security channel.
+For product feedback or bug reports, use the in-app Feedback link or email `feedback@forkfirst.dev`. Do not include API keys, tokens, passwords, or private customer data.
+
+For security-related questions, use the official project page or repository security channel instead of normal feedback email.

@@ -78,6 +78,8 @@ Every Builder Handoff now includes a plain-English license summary, a copy-paste
 
 ForkFirst is free and open-source. Stars, issues, feedback, and shares help the project improve.
 
+For product feedback, confusing search results, or bug reports, use the in-app Feedback link or email `feedback@forkfirst.dev`. Do not include API keys, tokens, passwords, or private customer data in feedback emails.
+
 ## Security model
 
 ForkFirst is BYOK: bring your own GitHub and AI provider keys. Keys are session-only by default. Persistent browser storage is opt-in.
@@ -152,7 +154,9 @@ Do not open public issues with secrets, tokens, or exploit details. Use the priv
 
 ## Contact
 
-For support, feedback, or security-related questions, use the official project page or repository security channel.
+For product feedback or bug reports, use the in-app Feedback link or email `feedback@forkfirst.dev`.
+
+For security-related questions, use the official project page or repository security channel. Do not send secrets, tokens, or exploit details through normal feedback email.
 
 ## Docs
 
