@@ -102,6 +102,7 @@ const SECURITY_ADVISORY_URL = process.env.NEXT_PUBLIC_SECURITY_ADVISORY_URL ?? "
 const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "";
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
 const FEEDBACK_EMAIL = process.env.NEXT_PUBLIC_FEEDBACK_EMAIL || SUPPORT_EMAIL || "feedback@forkfirst.dev";
+const FEEDBACK_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://forkfirst.dev";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
 
@@ -222,11 +223,6 @@ function themeToStorage(value: Theme) {
 
 type FeedbackKind = "general" | "bug" | "bad-match";
 
-function currentFeedbackPage() {
-  if (typeof window === "undefined") return "https://forkfirst.dev";
-  return window.location.href.replace("forkfirst.vercel.app", "forkfirst.dev");
-}
-
 function buildFeedbackMailto({
   kind,
   prompt,
@@ -251,8 +247,10 @@ function buildFeedbackMailto({
     "",
     "Device/browser:",
     "",
-    "Page:",
-    currentFeedbackPage(),
+    "App URL:",
+    FEEDBACK_SITE_URL,
+    "Exact page/path, if relevant:",
+    "",
     "",
     "Prompt or search idea:",
     prompt || "(paste only if you are comfortable sharing it)",
