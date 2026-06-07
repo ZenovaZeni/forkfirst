@@ -98,6 +98,20 @@ describe("search planner", () => {
     expect(queries.join(" ")).not.toContain("anything");
   });
 
+  test("plans 3D printer model searches instead of game-engine searches", () => {
+    const refinement = planPromptRefinement("3d models for a 3d printer");
+
+    expect(refinement.probableMeaning).toContain("3D-printing");
+    expect(refinement.bestQuery).toBe("3d printing model library in:name,description,readme");
+    expect(refinement.queries.slice(0, 4)).toEqual([
+      "3d printing model library in:name,description,readme",
+      "stl model manager in:name,description,readme",
+      "3d printer file organizer in:name,description,readme",
+      "thingiverse clone in:name,description,readme"
+    ]);
+    expect(refinement.queries.join(" ")).not.toMatch(/\bgodot\b|\bphaser\b|\bgame engine\b/);
+  });
+
   test("plans grocery app searches around the product vertical, not generic make terms", () => {
     const refinement = planPromptRefinement("I want to make a grocery app");
 

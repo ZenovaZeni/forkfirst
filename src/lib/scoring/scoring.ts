@@ -155,6 +155,9 @@ function verticalMismatchPenalty(prompt: string, normalizedHaystack: string): nu
   if (isPetIdentificationPrompt(prompt) && (!petIdentificationEvidence(normalizedHaystack) || catCommandEvidence(normalizedHaystack))) {
     return 62;
   }
+  if (is3dPrintingPrompt(prompt) && gameEngineSignalFromText(normalizedHaystack) > 0 && !printingEvidence(normalizedHaystack)) {
+    return 68;
+  }
   return 0;
 }
 
@@ -327,8 +330,14 @@ function scoreFit(repo: NormalizedRepo, prompt: string): number {
   );
 }
 
+function is3dPrintingPrompt(prompt: string): boolean {
+  return /\b(3d\s*printer|3d\s*printing|3d\s*prints?|printables|thingiverse|makerworld|stl|gcode|slicer|cad models?)\b/i.test(prompt);
+}
+
 function isGameBuildPrompt(prompt: string): boolean {
-  return /\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|isometric|orthographic)\b/i.test(prompt);
+  if (is3dPrintingPrompt(prompt)) return false;
+  return /\b(game|games|game engine|gamedev|game dev|2\.5d|2d|isometric|orthographic)\b/i.test(prompt) ||
+    /\b3d\b/i.test(prompt) && /\b(game|engine|framework|gamedev|scene|level|character|unity|unreal)\b/i.test(prompt);
 }
 
 function isDeprecatedOrUnmaintained(repo: NormalizedRepo): boolean {
@@ -340,8 +349,7 @@ function isDeprecatedOrUnmaintained(repo: NormalizedRepo): boolean {
     /\buse\s+.+\s+instead\b/i.test(text);
 }
 
-function gameEngineSignal(repo: NormalizedRepo): number {
-  const text = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
+function gameEngineSignalFromText(text: string): number {
   const signals = [
     /\bgodot\b/,
     /\bbevy\b/,
@@ -358,6 +366,15 @@ function gameEngineSignal(repo: NormalizedRepo): number {
     /\becs\b/
   ];
   return signals.reduce((score, signal) => score + (signal.test(text) ? 1 : 0), 0);
+}
+
+function gameEngineSignal(repo: NormalizedRepo): number {
+  const text = `${repo.fullName} ${repo.description} ${repo.topics.join(" ")} ${repo.readme?.excerpt ?? ""}`.toLowerCase();
+  return gameEngineSignalFromText(text);
+}
+
+function printingEvidence(normalizedHaystack: string): boolean {
+  return /\b(3d\s*print|3d\s*printer|printer|printing|printables|thingiverse|makerworld|stl|gcode|slicer|cad|filament|model library|mesh)\b/i.test(normalizedHaystack);
 }
 
 export function scoreRepository(repo: NormalizedRepo, prompt: string): RepoScore {

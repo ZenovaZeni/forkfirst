@@ -123,6 +123,50 @@ describe("repo scoring", () => {
     expect(first.category).toBe("forkable");
   });
 
+  test("does not treat 3D printer model prompts as game-engine searches", () => {
+    const [first, second] = classifyRepositories(
+      [
+        repo({
+          owner: "melonjs",
+          name: "melonJS",
+          fullName: "melonjs/melonJS",
+          description: "A modern and lightweight HTML5 game engine.",
+          topics: ["game-engine", "javascript", "html5", "2d", "3d"],
+          stars: 6309,
+          forks: 663,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "melonJS is a modern lightweight HTML5 game engine and framework for 2D games.",
+            qualityScore: 90
+          }
+        }),
+        repo({
+          owner: "makers",
+          name: "stl-library",
+          fullName: "makers/stl-library",
+          description: "3D printing model library for organizing STL files, printer profiles, and printable CAD models.",
+          topics: ["3d-printing", "stl", "printer", "models", "cad"],
+          stars: 180,
+          forks: 28,
+          license: "MIT",
+          readme: {
+            ...repo().readme!,
+            excerpt: "Organize 3D printer models, STL files, slicer notes, printer profiles, and print-ready CAD assets.",
+            qualityScore: 80
+          }
+        })
+      ],
+      "3d models for a 3d printer"
+    );
+
+    expect(first.fullName).toBe("makers/stl-library");
+    expect(first.score.fit).toBeGreaterThanOrEqual(70);
+    expect(second.fullName).toBe("melonjs/melonJS");
+    expect(second.score.fit).toBeLessThan(35);
+    expect(second.score.reasons).toContain("Weak idea fit");
+  });
+
   test("ranks niche vertical lead-gen repos above popular generic AI agent repos", () => {
     const [first] = classifyRepositories(
       [

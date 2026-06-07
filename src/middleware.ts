@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
+  if (request.nextUrl.hostname === "forkfirst.vercel.app") {
+    const url = request.nextUrl.clone();
+    url.hostname = "forkfirst.dev";
+    return NextResponse.redirect(url, 308);
+  }
+
   const response = NextResponse.next();
   const scriptSrc =
     process.env.NODE_ENV === "development"

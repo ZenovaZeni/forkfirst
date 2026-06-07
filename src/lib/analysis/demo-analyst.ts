@@ -21,7 +21,7 @@ export function analyzeWithDemo(prompt: string, repos: ClassifiedRepo[]): Analys
   if (alreadyExists.length >= 2 && alreadyExists[0]?.score.total > 76) verdict = "already_exists";
   else if (alreadyExists.length > 0 && forkable.length > 0) verdict = "build_differentiated";
   else if (forkable.length > 0) verdict = "fork_candidate_found";
-  else if (repos.length <= 2 && references.length === 0) verdict = "open_gap";
+  else if (repos.length > 0 && repos.length <= 2 && references.length === 0) verdict = "open_gap";
   else if (references.length > 0) verdict = "build_differentiated";
 
   const summary =

@@ -1023,15 +1023,7 @@ export function searchCuratedRepos(prompt: string): { repos: NormalizedRepo[]; m
   const minScore = Math.max(2, Math.floor(topScore / 4));
   const scored = allScored.filter((item) => item.score >= minScore);
 
-  if (scored.length === 0) {
-    // No matches — return a sensible generic trio (dashboard, notes, CRM)
-    const fallback = [
-      CURATED.find((e) => e.id === 401), // cruip dashboard
-      CURATED.find((e) => e.id === 301), // AFFiNE notes
-      CURATED.find((e) => e.id === 201)  // twenty CRM
-    ].filter((e): e is CuratedEntry => Boolean(e)).map((e) => stripTags(e));
-    return { repos: fallback, matched: false };
-  }
+  if (scored.length === 0) return { repos: [], matched: false };
 
   const top = scored.slice(0, 3).map((item) => stripTags(item.repo as CuratedEntry));
 

@@ -112,6 +112,19 @@ const VERTICAL_SEARCH_PLANS = [
     ]
   },
   {
+    pattern: /\b(3d\s*printer|3d\s*printing|3d\s*prints?|3d\s*models?|printables|thingiverse|makerworld|stl|gcode|slicer|cad models?)\b/i,
+    label: "3d-printing",
+    meaning: "Find open-source 3D-printing model libraries, STL managers, slicers, or printable model workflows.",
+    queries: [
+      "3d printing model library in:name,description,readme",
+      "stl model manager in:name,description,readme",
+      "3d printer file organizer in:name,description,readme",
+      "thingiverse clone in:name,description,readme",
+      "printables makerworld alternative in:name,description,readme",
+      "3d printing slicer stl in:name,description,readme"
+    ]
+  },
+  {
     pattern: /\b(saas|subscription|subscriptions|stripe|billing portal|admin dashboard|multi[-\s]?tenant)\b/i,
     label: "saas-billing",
     meaning: "Find open-source SaaS starter kits, subscription billing portals, tenant dashboards, and admin foundations.",
@@ -431,7 +444,7 @@ function inferProbableMeaning(prompt: string, terms: string[]): string {
   if (/\b(voice|speech|audio|whisper|wisper|assistant|transcription|stt|wake word)\b/i.test(normalizedPrompt)) {
     return "Find open-source voice assistant, speech-to-text, or Whisper-powered projects that could be used or studied.";
   }
-  if (/\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold)\b/i.test(normalizedPrompt)) {
+  if (isGameDiscoveryPrompt(normalizedPrompt)) {
     return "Find game engines, frameworks, or starter projects that could help build the game idea.";
   }
   if (/\b(business owners?|small business|entrepreneurs?|founders?)\b/i.test(normalizedPrompt)) {
@@ -484,6 +497,16 @@ function extractRequestedName(prompt: string): string | null {
 function findVerticalSearchPlan(prompt: string): (typeof VERTICAL_SEARCH_PLANS)[number] | null {
   const normalizedPrompt = normalizePromptForSearch(prompt);
   return VERTICAL_SEARCH_PLANS.find((plan) => plan.pattern.test(normalizedPrompt)) ?? null;
+}
+
+function is3dPrintingPrompt(prompt: string): boolean {
+  return /\b(3d\s*printer|3d\s*printing|3d\s*prints?|printables|thingiverse|makerworld|stl|gcode|slicer|cad models?)\b/i.test(prompt);
+}
+
+function isGameDiscoveryPrompt(prompt: string): boolean {
+  if (is3dPrintingPrompt(prompt)) return false;
+  return /\b(game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold|2\.5d|2d|isometric|orthographic)\b/i.test(prompt) ||
+    /\b3d\b/i.test(prompt) && /\b(game|engine|framework|gamedev|scene|level|character|unity|unreal)\b/i.test(prompt);
 }
 
 const QUERY_PRODUCT_WORDS = new Set([
@@ -638,7 +661,7 @@ export function planSearches(prompt: string): string[] {
     !verticalPlan &&
     /\b(ai|artificial intelligence|machine learning|llm|agents?)\b/i.test(normalizedPrompt) &&
     /\b(cool|interesting|best|good|repos?|projects?|tools?)\b/i.test(normalizedPrompt);
-  const isGameDiscovery = /\b(2\.5d|2d|3d|game|games|game engine|gamedev|game dev|phaser|godot|bevy|defold)\b/i.test(normalizedPrompt);
+  const isGameDiscovery = isGameDiscoveryPrompt(normalizedPrompt);
   const isGameEngineDiscovery =
     isGameDiscovery && /\b(engine|framework|building|build|make|making|2\.5d|2d|3d|isometric|orthographic)\b/i.test(normalizedPrompt);
   const shouldSkipRawPrompt =

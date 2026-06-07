@@ -69,11 +69,16 @@ describe("searchCuratedRepos", () => {
     expect(repos.some((r) => /project|kanban|issue|task|jira|linear/i.test(r.description))).toBe(true);
   });
 
-  test("completely unknown idea falls back to 3 generic repos", () => {
+  test("completely unknown idea returns no curated repos instead of generic false positives", () => {
     const { repos, matched } = searchCuratedRepos("quantum entanglement blockchain metaverse nft synergy");
     expect(matched).toBe(false);
-    expect(repos.length).toBe(3);
-    expect(repos.every((r) => r.license !== null)).toBe(true); // fallbacks all have licenses
+    expect(repos.length).toBe(0);
+  });
+
+  test("3D printer prompts do not fall back to unrelated popular apps", () => {
+    const { repos, matched } = searchCuratedRepos("3d models for a 3d printer");
+    expect(matched).toBe(false);
+    expect(repos.length).toBe(0);
   });
 
   test("always returns at most 3 repos", () => {
