@@ -7,6 +7,14 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 
 const SITE_DESCRIPTION =
   "Chat through your app idea, find a working GitHub foundation, and give your AI builder the repo, prompt, and files it needs.";
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+const legacyPreviewHost = "forkfirst." + "vercel.app";
+const SITE_URL =
+  configuredSiteUrl && !configuredSiteUrl.includes(legacyPreviewHost)
+    ? configuredSiteUrl
+    : process.env.VERCEL
+      ? "https://forkfirst.dev"
+      : "http://localhost:3000";
 
 const APPLE_SPLASH_IMAGES = [
   { url: "/brand/splash/apple-splash-iphone-se-640x1136.png", media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" },
@@ -40,7 +48,7 @@ const APPLE_SPLASH_IMAGES = [
 ];
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: "ForkFirst - don't make your AI builder start from zero",
   description: SITE_DESCRIPTION,
   verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
