@@ -15,7 +15,12 @@ vi.mock("./enrich-candidates", () => ({ enrichTopCandidateReadmes: vi.fn() }));
 vi.mock("../github/structure", () => ({ enrichRepositoriesWithStructure: vi.fn(async (repos) => repos) }));
 vi.mock("@/lib/scoring/scoring", () => ({ classifyRepositories: vi.fn() }));
 vi.mock("@/lib/db/research-cases", () => ({ saveIdeaCheck: vi.fn() }));
-vi.mock("@/lib/security/server-keys", () => ({ optionalServerKey: vi.fn(() => null) }));
+vi.mock("@/lib/security/server-keys", () => ({
+  DEFAULT_GROQ_MODEL: "llama-3.1-8b-instant",
+  GROQ_OPENAI_BASE_URL: "https://api.groq.com/openai/v1",
+  optionalServerAiConfig: vi.fn(() => null),
+  optionalServerKey: vi.fn(() => null)
+}));
 
 function repo(): ClassifiedRepo {
   return {

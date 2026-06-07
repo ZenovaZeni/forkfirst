@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { runIdeaCheck } from "@/lib/idea-check/run";
-import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
+import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy-server";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
 import { serverDbEnabled } from "@/lib/security/server-db";
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 
   if (body.data.aiBaseUrl) {
     try {
-      requireSafeBaseUrl(body.data.aiBaseUrl, { allowUntrusted: body.data.aiBaseUrlAcknowledged === true });
+      await requireSafeBaseUrl(body.data.aiBaseUrl, { allowUntrusted: body.data.aiBaseUrlAcknowledged === true });
     } catch (err) {
       return NextResponse.json({ error: (err as Error).message, code: "BASE_URL_BLOCKED" }, { status: 400 });
     }

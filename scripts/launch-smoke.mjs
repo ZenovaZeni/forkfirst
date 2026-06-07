@@ -214,21 +214,72 @@ async function runUiHandoffSmoke(testCase, outputDir) {
     const topRepo = (resultText.match(/START HERE[\s\S]*?\n([^\n]+\/[A-Za-z0-9_.-]+)/) || resultText.match(/I'd start with\s+([^\.\s]+\/[^\.\s]+)/) || [])[1] ?? null;
     const score = Number((resultText.match(/(\d+)%\s*FIT/) || [])[1] ?? 0) || null;
 
-    if (!(await page.locator("button:has-text(\"Use\")").count())) {
+    const featuredUseButton = page.locator("article.repo-card.featured button.btn.accent:has-text(\"Use\")");
+    const compactUseButton = page.locator("article.repo-card.compact button:has-text(\"Use\")");
+    const featuredUseCount = await featuredUseButton.count();
+    const compactUseCount = await compactUseButton.count();
+
+    if (!featuredUseCount && !compactUseCount) {
       throw new Error("No Use button appeared after prompt result.");
     }
 
-    await page.locator("button:has-text(\"Use\")").first().click({ timeout: 10_000 });
+    if (featuredUseCount) {
+      await featuredUseButton.first().click({ timeout: 10_000 });
+    } else {
+      await compactUseButton.first().click({ timeout: 10_000 });
+    }
+
+    const reachedBuilderQuestions = await page.waitForFunction(() => {
+      const text = document.body.innerText;
+      return text.includes("STEP 1 OF 3") || text.includes("Step 1 of 3") || text.includes("Got it, let's continue") || text.includes("Create handoff");
+    }, null, { timeout: 10_000 }).then(() => true, () => false);
+
+    if (!reachedBuilderQuestions) {
+      const createHandoffButton = page.locator("button.btn.accent:has-text(\"Create handoff\")");
+      const createHandoffCount = await createHandoffButton.count();
+      if (!createHandoffCount) {
+        throw new Error("No Create handoff button appeared after selecting a repo.");
+      }
+      await createHandoffButton.first().click({ timeout: 10_000 });
+    }
+
     logStep("UI waiting for builder questions or handoff card");
     await page.waitForFunction(() => {
       const text = document.body.innerText;
-      return text.includes("Skip and create simple handoff") || text.includes("Download zip") || text.includes("AI-builder handoff");
+      return (
+        text.includes("Got it, let's continue") ||
+        text.includes("STEP 1 OF 3") ||
+        text.includes("Step 1 of 3") ||
+        text.includes("Skip and create simple handoff") ||
+        text.includes("Download zip") ||
+        text.includes("AI-builder handoff")
+      );
     }, null, { timeout: UI_HANDOFF_TIMEOUT_MS });
+
+    const licenseContinueButton = page.locator("button:has-text(\"Got it, let's continue\")");
+    if (await licenseContinueButton.count()) {
+      logStep("UI acknowledging repo setup warning");
+      await licenseContinueButton.first().click({ timeout: 10_000 });
+      await page.waitForFunction(() => {
+        const text = document.body.innerText;
+        return text.includes("STEP 1 OF 3") || text.includes("Step 1 of 3") || text.includes("Skip and create simple handoff") || text.includes("Download zip");
+      }, null, { timeout: UI_HANDOFF_TIMEOUT_MS });
+    }
 
     const skipHandoffButton = page.locator("button:has-text(\"Skip and create simple handoff\")");
     if (await skipHandoffButton.count()) {
       logStep("UI skipping builder questions");
       await skipHandoffButton.first().click({ timeout: 10_000 });
+      await page.waitForFunction(() => {
+        const text = document.body.innerText;
+        return text.includes("Download zip") || text.includes("AI-builder handoff");
+      }, null, { timeout: UI_HANDOFF_TIMEOUT_MS });
+    }
+
+    const guidedSkipButton = page.locator(".brand-question button:has-text(\"Skip\")");
+    if (await guidedSkipButton.count()) {
+      logStep("UI skipping guided builder questions");
+      await guidedSkipButton.first().click({ timeout: 10_000 });
       await page.waitForFunction(() => {
         const text = document.body.innerText;
         return text.includes("Download zip") || text.includes("AI-builder handoff");

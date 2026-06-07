@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getRepoKindInsight } from "@/lib/analysis/repo-kind";
-import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
+import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy-server";
 import { checkRateLimitForRequest } from "@/lib/security/rate-limit";
 import { readJsonRequest } from "@/lib/security/request-json";
 import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
@@ -497,7 +497,7 @@ export async function POST(request: Request) {
 
   if (body.data.aiBaseUrl) {
     try {
-      requireSafeBaseUrl(body.data.aiBaseUrl, { allowUntrusted: body.data.aiBaseUrlAcknowledged === true });
+      await requireSafeBaseUrl(body.data.aiBaseUrl, { allowUntrusted: body.data.aiBaseUrlAcknowledged === true });
     } catch (err) {
       return NextResponse.json({ error: (err as Error).message, code: "BASE_URL_BLOCKED" }, { status: 400 });
     }

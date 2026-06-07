@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { analyzeWithDemo } from "./demo-analyst";
-import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy";
+import { requireSafeBaseUrl } from "@/lib/keys/base-url-policy-server";
 import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL, optionalServerAiConfig } from "@/lib/security/server-keys";
 import type { AnalysisResult, ClassifiedRepo } from "./types";
 
@@ -34,7 +34,7 @@ export async function analyzeWithOpenAI(
   const baseURL = options.apiKey ? options.baseUrl || defaults.baseUrl : serverAi?.baseUrl || options.baseUrl || defaults.baseUrl;
   if (provider === "custom" && baseURL) {
     try {
-      requireSafeBaseUrl(baseURL, { allowUntrusted: true });
+      await requireSafeBaseUrl(baseURL, { allowUntrusted: true });
     } catch {
       return analyzeWithDemo(prompt, repos);
     }

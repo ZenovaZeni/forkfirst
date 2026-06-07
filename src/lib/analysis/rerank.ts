@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { requireSafeBaseUrl } from "../keys/base-url-policy";
+import { requireSafeBaseUrl } from "../keys/base-url-policy-server";
 import { DEFAULT_GROQ_MODEL, GROQ_OPENAI_BASE_URL } from "../security/server-keys";
 import type { ClassifiedRepo } from "./types";
 
@@ -109,7 +109,7 @@ export async function rerankWithUserAi({ prompt, repos, apiKey, provider = "groq
   const baseURL = baseUrl || defaults.baseUrl;
   if (provider === "custom" && baseURL) {
     try {
-      requireSafeBaseUrl(baseURL, { allowUntrusted: true });
+      await requireSafeBaseUrl(baseURL, { allowUntrusted: true });
     } catch {
       return repos;
     }

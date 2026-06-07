@@ -11,25 +11,36 @@ export type BaseUrlClassification =
   | { ok: true; trusted: false; host: string; privateHost: boolean }
   | { ok: false; reason: "invalid" | "bad-scheme" | "empty" };
 
-function privateBaseUrlsEnabled(): boolean {
+export function privateBaseUrlsEnabled(): boolean {
   const value = typeof process !== "undefined" ? process.env.FORKFIRST_ALLOW_PRIVATE_BASE_URLS ?? process.env.OPEN_REPO_ALLOW_PRIVATE_BASE_URLS : undefined;
   return new Set(["1", "true", "yes", "on"]).has((value ?? "").toLowerCase());
 }
 
-function isPrivateHost(hostname: string): boolean {
+function isPrivateIpv4(host: string): boolean {
+  const parts = host.split(".").map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return false;
+  const [first, second] = parts;
+
+  if (first === 0 || first === 10 || first === 127) return true;
+  if (first === 169 && second === 254) return true;
+  if (first === 172 && second >= 16 && second <= 31) return true;
+  if (first === 192 && second === 168) return true;
+  return false;
+}
+
+function isPrivateIpv6(host: string): boolean {
+  const normalized = host.toLowerCase();
+  if (normalized === "::" || normalized === "::1") return true;
+  if (normalized.startsWith("fc") || normalized.startsWith("fd") || normalized.startsWith("fe80:")) return true;
+  if (normalized.startsWith("::ffff:")) return true;
+  return false;
+}
+
+export function isPrivateHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, "");
-  if (host === "localhost" || host === "::" || host === "::1") return true;
-  if (host === "0.0.0.0" || host.startsWith("127.")) return true;
-  if (host.startsWith("10.") || host.startsWith("192.168.") || host.startsWith("169.254.")) return true;
-  if (host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80:")) return true;
-  if (host.startsWith("::ffff:")) return true;
-
-  const match = host.match(/^172\.(\d{1,2})\./);
-  if (match) {
-    const secondOctet = Number(match[1]);
-    if (secondOctet >= 16 && secondOctet <= 31) return true;
-  }
-
+  if (host === "localhost") return true;
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return isPrivateIpv4(host);
+  if (host.includes(":")) return isPrivateIpv6(host);
   return false;
 }
 
