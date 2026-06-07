@@ -26,10 +26,10 @@ Full pre-launch pass focused on the user-facing repo search, mobile navigation, 
 - Mobile result composer after a real idea check: passed; input stays inside composer bounds.
 - Launch smoke UI path: passed idea check -> result -> skip builder questions -> handoff ready -> zip download -> zip content inspection.
 
-Screenshots were written to temp audit folders during the run:
+Screenshots were written to temporary audit folders during the run:
 
-- `C:\Users\joshs\AppData\Local\Temp\forkfirst-full-audit-1779400353048`
-- `C:\Users\joshs\AppData\Local\Temp\forkfirst-mobile-audit-1779400791741`
+- Full audit temp folder.
+- Mobile audit temp folder.
 
 ## Verification Commands
 
@@ -80,7 +80,7 @@ npm run build
 npm run smoke:launch
 ```
 
-Live deployment check against `https://forkfirst.vercel.app` also passed:
+Live deployment check against the hosted deployment also passed:
 
 - Landing loaded with title `ForkFirst - don't make your AI builder start from zero`.
 - No browser console errors or 500 responses.

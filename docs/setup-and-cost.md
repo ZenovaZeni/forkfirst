@@ -100,5 +100,5 @@ Expected early usage:
 - Prefer browser BYOK over shipping maintainer-owned production keys.
 - Confirm no screenshots or docs expose private tokens.
 - Run `npm test`, `npm run lint`, `npm run typecheck`, and `npm run build` before tagging a release.
-- Support and contact email: support@zenovaai.com.
-- Ko-fi support page: https://ko-fi.com/zenovaai.
+- Support and contact email: configure only through `NEXT_PUBLIC_SUPPORT_EMAIL` if the project has a public support inbox.
+- Support page: configure only through `NEXT_PUBLIC_SUPPORT_URL` if the project has a public support page.

@@ -32,8 +32,8 @@ const trustCards = [
 ];
 
 const builderCards = ["Claude Code", "Codex", "Cursor", "Replit", "Lovable", "v0", "Gemini CLI", "Markdown"];
-const securityAdvisoryUrl = "https://github.com/ZenovaZeni/forkfirst/security/advisories/new";
-const supportEmail = "support@zenovaai.com";
+const securityAdvisoryUrl = process.env.NEXT_PUBLIC_SECURITY_ADVISORY_URL ?? "";
+const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
 
 const sectionStyle = {
   borderTop: "1px solid var(--line)",
@@ -74,13 +74,17 @@ export default function SecurityPage() {
         ForkFirst is open source, BYOK, and <Highlight>session-only by default</Highlight>. We <Highlight>do not use accounts</Highlight>, <Highlight>do not store API keys
         server-side</Highlight>, and <Highlight>only forward keys to GitHub or your selected AI provider when you trigger a request</Highlight>.
       </p>
-      <p style={{ margin: "22px 0 0" }}>
-        <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">
-          Report a security issue privately
-        </a>
-        <span> · </span>
-        <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
-      </p>
+      {(securityAdvisoryUrl || supportEmail) ? (
+        <p style={{ margin: "22px 0 0" }}>
+          {securityAdvisoryUrl ? (
+            <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">
+              Report a security issue privately
+            </a>
+          ) : null}
+          {securityAdvisoryUrl && supportEmail ? <span> - </span> : null}
+          {supportEmail ? <a href={`mailto:${supportEmail}`}>{supportEmail}</a> : null}
+        </p>
+      ) : null}
 
       <div className="legal-page__trust-grid">
         {trustCards.map((card) => (
@@ -213,13 +217,16 @@ export default function SecurityPage() {
         <h2 style={{ fontSize: 30, margin: "0 0 10px" }}>Report a vulnerability</h2>
         <p>
           Please <Highlight>do not open a public issue with secrets or exploit details</Highlight>. Use a private GitHub Security Advisory so
-          the maintainer can fix and disclose responsibly, or email <Highlight>{supportEmail}</Highlight>.
+          the maintainer can fix and disclose responsibly. If the project publishes a support email, use that for
+          non-sensitive questions.
         </p>
-        <p>
-          <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">
-            Open a private security advisory
-          </a>
-        </p>
+        {securityAdvisoryUrl ? (
+          <p>
+            <a href={securityAdvisoryUrl} target="_blank" rel="noreferrer">
+              Open a private security advisory
+            </a>
+          </p>
+        ) : null}
       </section>
       </main>
     </div>

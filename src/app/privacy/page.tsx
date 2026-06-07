@@ -13,7 +13,7 @@ const sectionStyle = {
   paddingTop: 34,
   marginTop: 42
 };
-const supportEmail = "support@zenovaai.com";
+const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
 
 const privacyCards = [
   {
@@ -133,9 +133,16 @@ export default function PrivacyPage() {
 
         <section className="legal-page__section" style={sectionStyle}>
           <h2>Contact</h2>
-          <p>
-            For privacy, support, feedback, or security-related questions, email <Highlight>{supportEmail}</Highlight>.
-          </p>
+          {supportEmail ? (
+            <p>
+              For privacy, support, feedback, or security-related questions, email <Highlight>{supportEmail}</Highlight>.
+            </p>
+          ) : (
+            <p>
+              For privacy, support, feedback, or security-related questions, use the official project page or repository
+              security channel.
+            </p>
+          )}
         </section>
       </main>
     </div>

@@ -35,7 +35,7 @@ Expected: no production-facing stale identity remains, except test URLs that int
 
 - [ ] **Step 2: Normalize metadata**
 
-Update `package.json` so `homepage`, `repository.url`, and `bugs.url` point to `https://github.com/ZenovaZeni/forkfirst`, then add launch-facing keywords, author, and Node engine metadata.
+Update `package.json` so public metadata points to the intended project homepage and repository, then add launch-facing keywords, author, and Node engine metadata.
 
 - [ ] **Step 3: Update lockfile**
 
@@ -87,7 +87,7 @@ Focus the first viewport on the promise: find the best open-source starting poin
 
 - [ ] **Step 2: Add service bridge**
 
-Superseded before launch: keep support subtle with the Ko-fi link and contact email instead of publishing service tiers inside the free app.
+Superseded before launch: keep support subtle with optional public support links instead of publishing service tiers inside the free app.
 
 - [ ] **Step 3: Keep visual language flat**
 
@@ -145,7 +145,7 @@ Run:
 npx vercel deploy --prod --yes
 ```
 
-Expected: Vercel returns a ready production URL and `https://forkfirst.vercel.app` returns `200 OK`.
+Expected: Vercel returns a ready production URL and the hosted deployment returns `200 OK`.
 
 - [ ] **Step 4: Commit and push**
 

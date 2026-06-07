@@ -4,8 +4,8 @@
   "private": false,
   "description": "ForkFirst: repo-first idea discovery and AI builder handoffs.",
   "license": "MIT",
-  "author": "Josh Douglas",
-  "homepage": "https://github.com/ZenovaZeni/forkfirst#readme",
+  "author": "ForkFirst contributors",
+  "homepage": "https://forkfirst.dev",
   "keywords": [
     "ai-tools",
     "ai-builder",
@@ -23,17 +23,6 @@
   ],
   "engines": {
     "node": ">=20"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ZenovaZeni/forkfirst.git"
-  },
-  "bugs": {
-    "url": "https://github.com/ZenovaZeni/forkfirst/security/advisories/new"
-  },
-  "funding": {
-    "type": "ko-fi",
-    "url": "https://ko-fi.com/zenovaai"
   },
   "scripts": {
     "dev": "next dev",

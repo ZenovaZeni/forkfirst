@@ -44,4 +44,4 @@ If you host ForkFirst for other users, configure durable rate limiting with `UPS
 
 Report security issues privately at:
 
-https://github.com/ZenovaZeni/forkfirst/security/advisories/new
+Use the private security advisory flow for the public repository.

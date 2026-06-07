@@ -49,7 +49,7 @@ Without Upstash Redis REST env vars, ForkFirst falls back to in-memory rate limi
 If you find a vulnerability, **do not** open a public issue.
 
 - Open a private security advisory in this GitHub repo, **or**
-- Email support@zenovaai.com.
+- Use the public project's official support or security contact.
 
 Do not post working secrets, tokens, or exploit details in public issues or pull requests.
 

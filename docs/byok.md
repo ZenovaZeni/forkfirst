@@ -65,6 +65,6 @@ Before launch, check:
 
 ## Support and Contact
 
-ForkFirst is free and open-source. If it saves time or tokens, users can support future development at https://ko-fi.com/zenovaai.
+ForkFirst is free and open-source. If it saves time or tokens, users can support the project by sharing feedback, issues, and improvements.
 
-For support, feedback, or security-related questions, email support@zenovaai.com.
+For support, feedback, or security-related questions, use the official project page or repository security channel.

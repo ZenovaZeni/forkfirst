@@ -96,8 +96,10 @@ const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
 const ACTIVE_CHAT_SESSION_KEY = "forkfirst:active-chat";
 const MIN_LOADING_SPLASH_MS = 1100;
-const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "https://ko-fi.com/zenovaai";
-const SUPPORT_EMAIL = "support@zenovaai.com";
+const REPOSITORY_URL = process.env.NEXT_PUBLIC_REPOSITORY_URL ?? "";
+const SECURITY_ADVISORY_URL = process.env.NEXT_PUBLIC_SECURITY_ADVISORY_URL ?? "";
+const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "";
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "";
 
 const SCREENS: Screen[] = ["landing", "app", "loading", "results", "more", "branding", "generating", "ready", "handoff", "library", "settings", "trending", "packs"];
 
@@ -1538,7 +1540,7 @@ function AboutModal({ onClose }: { onClose: () => void }) {
             <X size={18} />
           </button>
         </div>
-        <p>ForkFirst is a free open-source tool by Josh Douglas, powered by Zenova AI.</p>
+        <p>ForkFirst is a free open-source tool for repo-first idea research and AI-builder handoffs.</p>
         <p>
           It helps AI builders find a working open-source foundation for their app idea, then turn it into a clean
           handoff for Cursor, Claude Code, Codex, Replit, v0, and other AI builders.
@@ -1557,16 +1559,22 @@ function AboutModal({ onClose }: { onClose: () => void }) {
           ForkFirst is not about cloning apps. It is about starting from a working foundation, then rebranding,
           redesigning, refocusing, and building it into your own product.
         </p>
-        <p className="about-note">
-          For support, contact <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
-        </p>
+        {SUPPORT_EMAIL ? (
+          <p className="about-note">
+            For support, contact <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+          </p>
+        ) : null}
         <div className="about-actions">
-          <a className="btn accent" href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">
-            GitHub <ExternalLink size={14} />
-          </a>
-          <a className="btn ghost" href={SUPPORT_URL} target="_blank" rel="noreferrer">
-            Support development
-          </a>
+          {REPOSITORY_URL ? (
+            <a className="btn accent" href={REPOSITORY_URL} target="_blank" rel="noreferrer">
+              GitHub <ExternalLink size={14} />
+            </a>
+          ) : null}
+          {SUPPORT_URL ? (
+            <a className="btn ghost" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+              Support development
+            </a>
+          ) : null}
         </div>
       </div>
     </div>
@@ -1694,17 +1702,19 @@ function Landing({
           >
             See sample handoff
           </button>
-          <a
-            className="github-star-pill"
-            href="https://github.com/ZenovaZeni/forkfirst"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackForkFirstEvent("github_star_clicked", { source: "landing_hero" })}
-          >
-            <Star size={15} />
-            <span>Open Source · Star on GitHub</span>
-            <ArrowRight size={14} />
-          </a>
+          {REPOSITORY_URL ? (
+            <a
+              className="github-star-pill"
+              href={REPOSITORY_URL}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackForkFirstEvent("github_star_clicked", { source: "landing_hero" })}
+            >
+              <Star size={15} />
+              <span>Open Source · Star on GitHub</span>
+              <ArrowRight size={14} />
+            </a>
+          ) : null}
         </div>
         <div className="hero-meta">
           <span>Save tokens</span>
@@ -1719,7 +1729,7 @@ function Landing({
             <span className="dot" />
             <span className="dot" />
             <span className="dot" />
-            <span className="url">forkfirst.vercel.app / new idea</span>
+            <span className="url">forkfirst.dev / new idea</span>
           </div>
           <div className="hero-mock-body">
             <p className="hero-mock-prompt">
@@ -2052,14 +2062,16 @@ function Landing({
         <div className="support-panel">
           <div>
             <p>
-              If it saves you time, tokens, or helps you avoid starting from scratch, you can support future
-              development here.
+              If it saves you time, tokens, or helps you avoid starting from scratch, stars, feedback, issues, and
+              shares help the project improve.
             </p>
-            <p className="support-note">No pressure — stars, feedback, issues, and shares help too.</p>
+            <p className="support-note">Optional public support links can be added through environment settings.</p>
           </div>
-          <a className="btn ghost support-button" href={SUPPORT_URL} target="_blank" rel="noreferrer">
-            Support development <ExternalLink size={14} />
-          </a>
+          {SUPPORT_URL ? (
+            <a className="btn ghost support-button" href={SUPPORT_URL} target="_blank" rel="noreferrer">
+              Support development <ExternalLink size={14} />
+            </a>
+          ) : null}
         </div>
       </section>
 
@@ -2082,20 +2094,20 @@ function Landing({
             <Logo />
             <Wordmark />
           </button>
-          <span className="footer-meta">Built by Josh Douglas · Powered by Zenova AI · MIT</span>
+          <span className="footer-meta">ForkFirst · Open source · MIT</span>
         </div>
         <nav className="footer-links" aria-label="Footer">
           <div className="footer-link-group">
             <button type="button" onClick={() => setShowAbout(true)}>About</button>
-            <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">GitHub</a>
-            <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a>
-            <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a>
+            {REPOSITORY_URL ? <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">GitHub</a> : null}
+            {SUPPORT_URL ? <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Support</a> : null}
+            {SUPPORT_EMAIL ? <a href={`mailto:${SUPPORT_EMAIL}`}>Contact</a> : null}
           </div>
           <div className="footer-link-group">
             <a href="/security">Security</a>
             <a href="/privacy">Privacy</a>
-            <a href="https://github.com/ZenovaZeni/forkfirst/security/advisories/new" target="_blank" rel="noreferrer">Report security issue</a>
-            <a href="https://github.com/ZenovaZeni/forkfirst" target="_blank" rel="noreferrer">Contributing</a>
+            {SECURITY_ADVISORY_URL ? <a href={SECURITY_ADVISORY_URL} target="_blank" rel="noreferrer">Report security issue</a> : null}
+            {REPOSITORY_URL ? <a href={REPOSITORY_URL} target="_blank" rel="noreferrer">Contributing</a> : null}
           </div>
         </nav>
       </footer>

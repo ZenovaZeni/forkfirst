@@ -12,7 +12,7 @@ ForkFirst keeps a project-level `postcss` override so npm installs a patched Pos
 - Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
 - Review Next.js, React, Vercel, GitHub, and provider advisories before major launches.
 - Confirm screenshots, docs, and examples do not contain real tokens, API keys, or private repo data.
-- Report security questions or concerns to support@zenovaai.com or via the GitHub private security advisory flow.
+- Report security questions or concerns via the project's official support channel or GitHub private security advisory flow.
 
 ## BYOK Reminder
 

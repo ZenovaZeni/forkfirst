@@ -1,18 +1,17 @@
 # ForkFirst
 
-[![CI](https://github.com/ZenovaZeni/forkfirst/actions/workflows/ci.yml/badge.svg)](https://github.com/ZenovaZeni/forkfirst/actions/workflows/ci.yml)
-[![Deploy](https://img.shields.io/badge/deploy-forkfirst.vercel.app-000000.svg)](https://forkfirst.vercel.app)
+[![Deploy](https://img.shields.io/badge/deploy-forkfirst.dev-000000.svg)](https://forkfirst.dev)
 [![License: MIT](https://img.shields.io/badge/license-MIT-111111.svg)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-111111.svg)](https://nextjs.org/)
 [![BYOK](https://img.shields.io/badge/BYOK-demo_mode_ready-2647F0.svg)](#security-model)
 
 ForkFirst helps you find a working open-source foundation for your app idea, then turn it into a clean handoff for Cursor, Claude Code, Codex, Replit, v0, and other AI builders.
 
-A free open-source tool by Josh Douglas, powered by Zenova AI.
+A free open-source tool for repo-first idea research and AI-builder handoffs.
 
 > Start with a working foundation. Build your own product faster.
 
-[Try the hosted demo](https://forkfirst.vercel.app) · [Read the security model](./SECURITY.md) · [View sample handoffs](#public-sample-handoffs)
+[Try the hosted demo](https://forkfirst.dev) - [Read the security model](./SECURITY.md) - [View sample handoffs](#public-sample-handoffs)
 
 ## What it does
 
@@ -77,13 +76,7 @@ Every Builder Handoff now includes a plain-English license summary, a copy-paste
 
 ## Support
 
-ForkFirst is free and open-source.
-
-If it saves you time, tokens, or helps you build faster from a working foundation, you can support future development here:
-
-[Support development on Ko-fi](https://ko-fi.com/zenovaai)
-
-No pressure — stars, issues, feedback, and shares help too.
+ForkFirst is free and open-source. Stars, issues, feedback, and shares help the project improve.
 
 ## Security model
 
@@ -128,7 +121,7 @@ Server-side fallback keys are dangerous on a public no-login site because visito
 Requires Node.js 20 or newer. No keys are required for demo mode.
 
 ```bash
-git clone https://github.com/ZenovaZeni/forkfirst.git
+git clone <your-forkfirst-repo-url>
 cd forkfirst
 npm install
 cp .env.example .env.local   # optional
@@ -155,15 +148,11 @@ npm run build
 
 ## Report a security issue
 
-Do not open public issues with secrets, tokens, or exploit details. Use a private GitHub Security Advisory or email support@zenovaai.com:
-
-[Report a vulnerability privately](https://github.com/ZenovaZeni/forkfirst/security/advisories/new)
+Do not open public issues with secrets, tokens, or exploit details. Use the private security advisory flow for the public repository.
 
 ## Contact
 
-For support, feedback, or security-related questions, email:
-
-support@zenovaai.com
+For support, feedback, or security-related questions, use the official project page or repository security channel.
 
 ## Docs
 
