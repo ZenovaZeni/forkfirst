@@ -239,6 +239,138 @@ input, textarea, select { font: inherit; color: inherit; }
   border-radius: 10px;
 }
 
+.launch-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 1;
+  transition: opacity 320ms ease, visibility 320ms ease;
+}
+.launch-splash.is-done {
+  opacity: 0;
+  visibility: hidden;
+}
+.launch-splash-aura {
+  position: absolute;
+  width: min(78vmin, 720px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent) 14%, transparent) 0 34%, color-mix(in srgb, var(--accent) 5%, transparent) 35% 58%, transparent 59%),
+    conic-gradient(from 120deg, transparent, color-mix(in srgb, var(--accent) 18%, transparent), transparent 42%);
+  animation: launchAura 3.2s ease-in-out infinite;
+}
+.launch-splash-lockup {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: clamp(18px, 4vmin, 36px);
+  transform: translateY(3vh);
+  animation: launchLockupIn 720ms cubic-bezier(.2,.8,.2,1) both;
+}
+.launch-splash-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(76px, 18vmin, 150px);
+  aspect-ratio: 1;
+}
+.launch-splash-mark svg {
+  position: relative;
+  z-index: 2;
+  width: 76%;
+  height: 76%;
+  overflow: visible;
+  animation: launchMarkFloat 2.4s ease-in-out infinite;
+}
+.launch-splash-mark path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 74;
+  stroke-dashoffset: 74;
+  animation: launchStroke 820ms cubic-bezier(.2,.8,.2,1) 120ms forwards;
+}
+.launch-splash-mark .launch-splash-accent {
+  stroke: var(--accent);
+  stroke-dasharray: 31;
+  stroke-dashoffset: 31;
+  animation-delay: 260ms;
+}
+.launch-splash-mark i {
+  position: absolute;
+  inset: 7%;
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.78);
+  animation: launchRing 2.2s ease-out infinite;
+}
+.launch-splash-mark i:last-child {
+  animation-delay: 1.1s;
+}
+.launch-splash-word {
+  display: flex;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-size: clamp(42px, 12vmin, 112px);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: 0;
+  animation: launchWordIn 720ms cubic-bezier(.2,.8,.2,1) 220ms both;
+}
+.launch-splash-word span:last-child {
+  color: var(--accent);
+}
+@keyframes launchAura {
+  0%, 100% { transform: scale(0.96) rotate(0deg); opacity: 0.7; }
+  50% { transform: scale(1.04) rotate(16deg); opacity: 1; }
+}
+@keyframes launchLockupIn {
+  from { opacity: 0; transform: translateY(5vh) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes launchMarkFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes launchStroke {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes launchRing {
+  0% { opacity: 0; transform: scale(0.78); }
+  18% { opacity: 0.72; }
+  100% { opacity: 0; transform: scale(1.28); }
+}
+@keyframes launchWordIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (max-width: 560px) {
+  .launch-splash-lockup {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+  .launch-splash-mark {
+    width: clamp(96px, 32vmin, 132px);
+  }
+  .launch-splash-word {
+    font-size: clamp(42px, 14vmin, 58px);
+  }
+  @keyframes launchWordIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
 .brand-name {
   display: inline-flex;
   align-items: center;

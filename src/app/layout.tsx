@@ -130,11 +130,51 @@ const themeBootScript = `
 })();
 `;
 
+const launchBootScript = `
+(function () {
+  var startedAt = Date.now();
+  var finished = false;
+  function finish() {
+    if (finished) return;
+    finished = true;
+    var splash = document.getElementById("forkfirst-launch-splash");
+    if (!splash) return;
+    var remaining = Math.max(900 - (Date.now() - startedAt), 0);
+    window.setTimeout(function () {
+      splash.classList.add("is-done");
+      window.setTimeout(function () {
+        if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+      }, 360);
+    }, remaining);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", finish, { once: true });
+  else finish();
+})();
+`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <div id="forkfirst-launch-splash" className="launch-splash" aria-hidden="true">
+          <div className="launch-splash-aura" />
+          <div className="launch-splash-lockup">
+            <span className="launch-splash-mark">
+              <svg viewBox="0 0 64 64" focusable="false">
+                <path d="M14 12 L32 36 L32 54" />
+                <path className="launch-splash-accent" d="M50 12 L33 35" />
+              </svg>
+              <i />
+              <i />
+            </span>
+            <span className="launch-splash-word">
+              <span>Fork</span>
+              <span>First</span>
+            </span>
+          </div>
+        </div>
+        <script dangerouslySetInnerHTML={{ __html: launchBootScript }} />
         {children}
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <Analytics enableVercel={process.env.VERCEL === "1"} />
