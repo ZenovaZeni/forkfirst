@@ -35,7 +35,7 @@ The root `public/manifest.json` points at the icons in `brand/favicon/`:
 - `icon-512.png`
 - `icon-maskable-512.png`
 
-The PWA background and theme color are set to ink so install and splash surfaces match the new mark.
+The PWA background and theme color are set to the app paper surface so install and splash surfaces match the default landing screen.
 
 ## Apple Startup Images
 

@@ -95,6 +95,7 @@ const THEME_STORAGE_KEY = "forkfirst:theme";
 const LEGACY_THEME_STORAGE_KEY = "open-repo:theme";
 const ACTIVE_SCREEN_SESSION_KEY = "forkfirst:active-screen";
 const ACTIVE_CHAT_SESSION_KEY = "forkfirst:active-chat";
+const MIN_LOADING_SPLASH_MS = 1100;
 const SUPPORT_URL = process.env.NEXT_PUBLIC_SUPPORT_URL ?? "https://ko-fi.com/zenovaai";
 const SUPPORT_EMAIL = "support@zenovaai.com";
 
@@ -1679,9 +1680,8 @@ function Landing({
           <span className="muted-word">start from zero.</span>
         </h1>
         <p className="hero-sub">
-          Talk through your app idea like you would with ChatGPT. ForkFirst finds a working open-source foundation that
-          matches what you want to build, then creates the repo, prompt, and handoff files your AI builder needs to
-          clone, customize, and build your version faster.
+          Talk through your app idea. ForkFirst finds a working open-source foundation, then packages the repo, prompt,
+          and build files your AI builder needs to customize it faster.
         </p>
         <div className="hero-cta-row">
           <button className="btn accent xl" type="button" onClick={() => startApp("hero")}>
@@ -2980,6 +2980,11 @@ function LoadingView({ prompt }: { prompt: string }) {
         <h2 className="results-question">{prompt}</h2>
       </div>
       <div className="loading-card">
+        <div className="loading-splash-mark" aria-hidden="true">
+          <Mark />
+          <span className="loading-splash-ring" />
+          <span className="loading-splash-ring" />
+        </div>
         <div className="v-eyebrow">Checking your idea</div>
         <h3>Looking at what&apos;s already out there...</h3>
         <div className="steps-loading">
@@ -6138,6 +6143,13 @@ export function ForkFirstRedesignApp() {
     const displayPrompt = trimmed;
     const submittedPrompt = buildFoundationIdeaPrompt(foundationDraft, trimmed);
     if (promptOverride || foundationDraft) setPrompt(displayPrompt);
+    const loadingStartedAt = Date.now();
+    const waitForSplash = async () => {
+      const remaining = MIN_LOADING_SPLASH_MS - (Date.now() - loadingStartedAt);
+      if (remaining > 0) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, remaining));
+      }
+    };
     setLoading(true);
     setError(null);
     setScreen("loading");
@@ -6216,8 +6228,10 @@ export function ForkFirstRedesignApp() {
       upsertChat(chat);
       setFollowUps([]);
       setFoundationDraft(null);
+      await waitForSplash();
       setScreen("results");
     } catch (err) {
+      await waitForSplash();
       setError((err as Error).message);
       setScreen("app");
     } finally {
