@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="256" height="256" role="img" aria-label="ForkFirst">
-  <title>ForkFirst</title>
-  <rect width="64" height="64" rx="14" fill="#2647F0"></rect>
-  <path d="M14 12 L 32 36 L 32 54" fill="none" stroke="#F6F4EF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path>
-  <path d="M50 12 L 33 35" fill="none" stroke="#0A0B0E" stroke-width="9" stroke-linecap="round"></path>
-</svg>

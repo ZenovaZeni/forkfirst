@@ -12,7 +12,7 @@
 cobalt commit dot).
 
 **IN:** a new mark called **"The Y"** — a confident two-stroke letter Y
-on a dark rounded tile. **Left arm + trunk are paper; right arm is
+without the old box. **Left arm + trunk are ink/paper; right arm is
 cobalt-bright.** The wordmark **ForkFirst** stays exactly as is —
 Geist 700, two-tone ("Fork" in ink / "First" in cobalt).
 
@@ -43,12 +43,11 @@ Please swap the ForkFirst logo to the new "Y" mark.
    menu, marketing pages), use the new lockup:
      - Default:  /brand/logo/lockup-horizontal.svg     (32px tall)
      - Dark:     /brand/logo/lockup-horizontal-on-ink.svg
-     - Square:   /brand/logo/lockup-stacked.svg        (avatars, mobile)
+     - Stacked:  /brand/logo/lockup-stacked.svg        (avatars, mobile)
    The wordmark file path is unchanged — wordmark.svg still works.
 
 5. Find-and-replace: any inline <svg> of the OLD fork-tile mark must be
-   deleted and replaced with the new mark (the rounded ink tile with
-   the two-stroke Y). The old mark had: two circles at top, a curved
+   deleted and replaced with the new no-box Y mark. The old mark had: two circles at top, a curved
    stroke between them, a vertical stem, and a cobalt commit dot.
    The new mark has: two strokes forming a Y — paper left+trunk, cobalt
    right arm. Use <img src="/brand/logo/mark.svg"/> as the cleanest
@@ -63,7 +62,7 @@ Please swap the ForkFirst logo to the new "Y" mark.
    unchanged. Don't touch them.
 
 After deploying, verify in a real browser:
-  - Browser tab favicon shows the Y on a dark tile (not the old fork)
+  - Browser tab favicon shows the Y mark (not the old fork or boxed mark)
   - iOS "Add to Home Screen" shows the Y
   - Sharing the URL to Slack / iMessage / Twitter shows the new OG
     card (you may need to pass the URL through each platform's debugger
@@ -72,8 +71,7 @@ After deploying, verify in a real browser:
   - No 404s in DevTools → Network for /brand/* URLs
 
 Don't add a drop shadow, glow, gradient, or container around the new
-mark. The tile already has its own rounded corners (rx=14 on a 64-grid)
-— don't double-round it.
+mark.
 ```
 
 ---
@@ -84,17 +82,15 @@ mark. The tile already has its own rounded corners (rx=14 on a 64-grid)
 brand-y/                            ← rename to `brand/` on copy
 ├── HANDOFF.md                      ← this file
 ├── logo/
-│   ├── mark.svg                    ← THE Y — primary mark (dark tile)
+│   ├── mark.svg                    ← THE Y — primary mark
 │   ├── mark-on-ink.svg             ← Y stroked, no tile (for placement
 │   │                                  on existing dark surfaces)
-│   ├── mark-inverted.svg           ← paper tile + ink/cobalt Y (light
-│   │                                  contexts, business cards, print)
-│   ├── mark-cobalt-tile.svg        ← cobalt tile + paper/ink Y (bold)
+│   ├── mark-inverted.svg           ← light-surface mark variant
 │   ├── wordmark.svg                ← UNCHANGED — same ForkFirst as before
 │   ├── wordmark-on-ink.svg         ← UNCHANGED
 │   ├── lockup-horizontal.svg       ← DEFAULT for nav / footer
 │   ├── lockup-horizontal-on-ink.svg
-│   ├── lockup-stacked.svg          ← square contexts, avatars, mobile
+│   ├── lockup-stacked.svg          ← stacked contexts, avatars, mobile
 │   └── lockup-stacked-on-ink.svg
 ├── favicon/
 │   ├── favicon.svg                 ← modern browsers
@@ -262,7 +258,7 @@ still around.
 
 After deploying, verify each of these visually:
 
-- [ ] Browser tab favicon shows **the Y** on a dark tile (not the old fork)
+- [ ] Browser tab favicon shows **the Y** mark (not the old fork or boxed mark)
 - [ ] iOS Safari "Add to Home Screen" picks up the new apple-touch-icon
 - [ ] Android "Add to Home Screen" picks up the maskable icon and the Y
       survives the device's mask shape (test on a circle-mask launcher)
@@ -298,14 +294,14 @@ existing 28-px and 32-px slots in the UI still fit perfectly.
 
 ```
 viewBox 0 0 64 64
-tile:        rect 0,0,64,64  rx=14  fill #0A0B0E
-left+trunk:  M14,12 L32,36 L32,54   stroke #F6F4EF  width 9   round cap+join
+ring:        circle 32,32 r=25      stroke #5577FF  opacity .16
+left+trunk:  M14,12 L32,36 L32,54   stroke ink/paper  width 9   round cap+join
 right arm:   M50,12 L33,35          stroke #5577FF  width 9   round cap
 ```
 
 The right arm intentionally ends at `(33, 35)` — one unit above and
 right of the joint — so the cobalt stroke tucks against the paper
-trunk with a 1-px gap that reveals the ink tile underneath. **Don't
+trunk with a 1-px gap. **Don't
 "clean this up"** — that gap is the join.
 
 For dark surfaces use `#5577FF` on the right arm; for paper surfaces

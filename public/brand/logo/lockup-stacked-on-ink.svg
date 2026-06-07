@@ -2,7 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="640" height="400" role="img" aria-label="ForkFirst stacked lockup">
   <title>ForkFirst stacked lockup</title>
   <g transform="translate(128 0)">
-  <rect width="64" height="64" rx="14" fill="#0A0B0E"/>
+  <circle cx="32" cy="32" r="25" fill="none" stroke="#5577FF" stroke-opacity="0.22" stroke-width="1.5"/>
+  <circle cx="32" cy="32" r="19" fill="none" stroke="#5577FF" stroke-opacity="0.22" stroke-width="1.5"/>
   <path d="M14 12 L32 36 L32 54" fill="none" stroke="#F6F4EF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M50 12 L33 35" fill="none" stroke="#5577FF" stroke-width="9" stroke-linecap="round"/>
 </g><text x="160" y="132" text-anchor="middle" font-family="Geist, Inter, Arial, Helvetica, sans-serif" font-size="52" font-weight="800" letter-spacing="-3"><tspan fill="#F6F4EF">Fork</tspan><tspan fill="#5577FF">First</tspan></text>

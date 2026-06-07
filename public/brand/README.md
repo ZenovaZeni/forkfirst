@@ -4,7 +4,7 @@ ForkFirst uses the new **Y mark** with the existing two-tone **ForkFirst** wordm
 
 ## Logo Rules
 
-- Use `logo/mark.svg` for square icon contexts, favicons, app icons, and avatars.
+- Use `logo/mark.svg` for icon contexts, favicons, app icons, and avatars.
 - Use `logo/lockup-horizontal.svg` when the mark and wordmark appear together on light surfaces.
 - Use `logo/lockup-horizontal-on-ink.svg` on dark surfaces.
 - Keep the wordmark intact: `Fork` in ink/paper, `First` in cobalt/accent.
@@ -14,10 +14,9 @@ ForkFirst uses the new **Y mark** with the existing two-tone **ForkFirst** wordm
 
 | Asset | Use |
 |---|---|
-| `logo/mark.svg` | Default Y mark on an ink tile |
+| `logo/mark.svg` | Default Y mark with a paper ring |
 | `logo/mark-on-ink.svg` | Y mark without tile for dark surfaces |
-| `logo/mark-cobalt-tile.svg` | Cobalt tile variant |
-| `logo/mark-inverted.svg` | Paper tile variant |
+| `logo/mark-inverted.svg` | Light-surface mark variant |
 | `logo/wordmark.svg` | Existing light-surface wordmark |
 | `logo/wordmark-on-ink.svg` | Existing dark-surface wordmark |
 | `logo/lockup-horizontal.svg` | Mark + existing wordmark |
